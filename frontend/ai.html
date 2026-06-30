@@ -1,0 +1,1377 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI助手 - 陈嘉怡的个人主页</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+      background: #f7fbff;
+      color: #0f172a;
+      line-height: 1.8;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .container {
+      width: 86%;
+      max-width: 1180px;
+      margin: 0 auto;
+    }
+
+    header {
+      height: 72px;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .nav {
+      height: 72px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 30px;
+      font-weight: 600;
+      color: #0f172a;
+      font-family: "Segoe Script", "Brush Script MT", "Lucida Handwriting", "Comic Sans MS", cursive;
+      letter-spacing: 0.4px;
+      white-space: nowrap;
+    }
+
+    .logo span {
+      color: #2563eb;
+      margin-left: 6px;
+      font-weight: 700;
+    }
+
+    .nav-links a {
+      margin-left: 30px;
+      font-size: 15px;
+      color: #334155;
+      font-weight: 500;
+      padding-bottom: 6px;
+      transition: 0.3s;
+    }
+
+    .nav-links a:hover,
+    .nav-links a.active {
+      color: #2563eb;
+      border-bottom: 2px solid #2563eb;
+    }
+
+    .page-hero {
+      padding: 80px 0 58px;
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 48px;
+      align-items: stretch;
+    }
+
+    .intro-panel {
+      background: linear-gradient(135deg, #eef6ff, #ffffff);
+      border-radius: 30px;
+      padding: 42px;
+      box-shadow: 0 18px 38px rgba(59, 130, 246, 0.12);
+    }
+
+    .intro-panel .hello {
+      color: #64748b;
+      font-size: 20px;
+      margin-bottom: 12px;
+    }
+
+    .intro-panel h1 {
+      font-size: 46px;
+      line-height: 1.25;
+      margin-bottom: 18px;
+    }
+
+    .intro-panel h1 span {
+      color: #3b82f6;
+    }
+
+    .intro-panel p {
+      color: #64748b;
+      font-size: 16px;
+      margin-bottom: 18px;
+    }
+
+    .tips {
+      margin-top: 28px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+
+    .tip {
+      background: white;
+      border-radius: 16px;
+      padding: 15px;
+      color: #2563eb;
+      font-weight: 600;
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+    }
+
+    .chat-card {
+      background: white;
+      border-radius: 30px;
+      box-shadow: 0 18px 42px rgba(15, 23, 42, 0.12);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 650px;
+    }
+
+    .chat-header {
+      padding: 22px 26px;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: rgba(248, 251, 255, 0.9);
+    }
+
+    .bot-avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #60a5fa, #6366f1);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      box-shadow: 0 8px 18px rgba(59, 130, 246, 0.25);
+    }
+
+    .chat-header h3 {
+      font-size: 22px;
+      color: #0f172a;
+    }
+
+    .chat-header p {
+      color: #64748b;
+      font-size: 14px;
+    }
+
+    .chat-body {
+      flex: 1;
+      padding: 24px;
+      background: #f8fbff;
+      overflow-y: auto;
+      max-height: 430px;
+    }
+
+    .message {
+      max-width: 82%;
+      padding: 13px 17px;
+      border-radius: 16px;
+      margin-bottom: 16px;
+      font-size: 15px;
+      line-height: 1.8;
+      white-space: pre-line;
+    }
+
+    .message.bot {
+      background: white;
+      color: #334155;
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+      border-top-left-radius: 4px;
+    }
+
+    .message.user {
+      background: #3b82f6;
+      color: white;
+      margin-left: auto;
+      border-top-right-radius: 4px;
+      box-shadow: 0 8px 20px rgba(59, 130, 246, 0.22);
+    }
+
+    .quick-questions {
+      padding: 18px 24px 8px;
+      background: #f8fbff;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .quick-questions button {
+      border: 1px solid #bfdbfe;
+      color: #2563eb;
+      background: white;
+      border-radius: 999px;
+      padding: 8px 15px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: 0.3s;
+    }
+
+    .quick-questions button:hover {
+      background: #eff6ff;
+      transform: translateY(-2px);
+    }
+
+    .chat-input {
+      padding: 18px 24px 24px;
+      background: #f8fbff;
+      display: flex;
+      gap: 12px;
+    }
+
+    .chat-input input {
+      flex: 1;
+      border: 1px solid #bfdbfe;
+      border-radius: 15px;
+      padding: 13px 16px;
+      outline: none;
+      font-size: 15px;
+      color: #334155;
+      background: white;
+    }
+
+    .chat-input input:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+    }
+
+    .chat-input button {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: none;
+      background: #3b82f6;
+      color: white;
+      font-size: 22px;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(59, 130, 246, 0.25);
+      transition: 0.3s;
+    }
+
+    .chat-input button:hover {
+      background: #2563eb;
+      transform: translateY(-2px);
+    }
+
+    section {
+      padding: 48px 0;
+    }
+
+    .section-title {
+      font-size: 30px;
+      margin-bottom: 28px;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-title span {
+      color: #3b82f6;
+    }
+
+    .guide-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 22px;
+    }
+
+    .guide-card {
+      background: white;
+      border-radius: 22px;
+      padding: 26px;
+      box-shadow: 0 12px 30px rgba(59, 130, 246, 0.1);
+      transition: 0.3s;
+    }
+
+    .guide-card:hover {
+      transform: translateY(-6px);
+    }
+
+    .guide-card .icon {
+      font-size: 34px;
+      margin-bottom: 10px;
+    }
+
+    .guide-card h3 {
+      font-size: 20px;
+      margin-bottom: 8px;
+    }
+
+    .guide-card p {
+      color: #64748b;
+      font-size: 14px;
+    }
+
+    .summary-box {
+      background: linear-gradient(135deg, #eef6ff, #ffffff);
+      border-radius: 28px;
+      padding: 44px;
+      text-align: center;
+      box-shadow: 0 14px 34px rgba(59, 130, 246, 0.1);
+      margin-bottom: 54px;
+    }
+
+    .summary-box .quote {
+      font-size: 56px;
+      color: #93c5fd;
+      line-height: 1;
+    }
+
+    .summary-box p {
+      color: #334155;
+      font-size: 20px;
+      line-height: 1.9;
+      margin-top: 8px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 28px 0;
+      color: #64748b;
+      border-top: 1px solid #e2e8f0;
+      font-size: 14px;
+    }
+
+    @media (max-width: 1000px) {
+      .page-hero {
+        grid-template-columns: 1fr;
+      }
+
+      .guide-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .nav-links {
+        display: none;
+      }
+
+      .intro-panel h1 {
+        font-size: 38px;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .tips,
+      .guide-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .logo {
+        font-size: 24px;
+      }
+
+      .intro-panel h1 {
+        font-size: 32px;
+      }
+
+      .message {
+        max-width: 94%;
+      }
+
+      .chat-card {
+        min-height: 580px;
+      }
+    }
+  
+    /* 留言与回复模块 */
+    .message-wall {
+      background: linear-gradient(135deg, #eef6ff, #ffffff);
+      border-radius: 28px;
+      padding: 42px;
+      box-shadow: 0 14px 34px rgba(59, 130, 246, 0.1);
+      margin: 50px auto 70px;
+    }
+
+    .message-wall-intro {
+      color: #64748b;
+      font-size: 16px;
+      margin-bottom: 24px;
+    }
+
+    .message-form {
+      display: grid;
+      grid-template-columns: 220px 1fr 120px;
+      gap: 14px;
+      margin-bottom: 30px;
+    }
+
+    .message-form input,
+    .message-form textarea {
+      border: 1px solid #bfdbfe;
+      border-radius: 14px;
+      padding: 13px 15px;
+      outline: none;
+      font-size: 15px;
+      background: white;
+      color: #334155;
+      font-family: inherit;
+    }
+
+    .message-form textarea {
+      resize: none;
+      height: 52px;
+    }
+
+    .message-form button {
+      border: none;
+      background: #3b82f6;
+      color: white;
+      border-radius: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 8px 18px rgba(59, 130, 246, 0.24);
+      transition: 0.3s;
+    }
+
+    .message-form button:hover {
+      background: #2563eb;
+      transform: translateY(-2px);
+    }
+
+    .message-list {
+      display: grid;
+      gap: 18px;
+    }
+
+    .guest-message {
+      background: white;
+      border-radius: 22px;
+      padding: 24px;
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+    }
+
+    .guest-message-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+      color: #64748b;
+      font-size: 14px;
+    }
+
+    .guest-name {
+      color: #2563eb;
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    .guest-content {
+      color: #334155;
+      line-height: 1.8;
+      margin-bottom: 12px;
+      white-space: pre-wrap;
+    }
+
+    .owner-reply {
+      background: #eff6ff;
+      color: #334155;
+      border-left: 4px solid #3b82f6;
+      border-radius: 14px;
+      padding: 13px 16px;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .no-reply {
+      color: #94a3b8;
+      font-size: 14px;
+    }
+
+    @media (max-width: 900px) {
+      .message-form {
+        grid-template-columns: 1fr;
+      }
+
+      .message-form button {
+        height: 48px;
+      }
+    }
+
+    /* 恢复原版 Logo 字体 */
+    .logo {
+      font-size: 30px !important;
+      font-weight: 600 !important;
+      color: #0f172a !important;
+      font-family: "Segoe Script", "Brush Script MT", "Lucida Handwriting", "Comic Sans MS", cursive !important;
+      letter-spacing: 0.4px !important;
+      white-space: nowrap !important;
+    }
+
+    .logo span {
+      color: #2563eb !important;
+      margin-left: 6px !important;
+      font-family: "Segoe Script", "Brush Script MT", "Lucida Handwriting", "Comic Sans MS", cursive !important;
+      font-weight: 700 !important;
+    }
+
+  
+    /* 页面字体统一优化：标题宋体，正文楷体，英文 Times New Roman */
+    body {
+      font-family: "Times New Roman", "KaiTi", "楷体", "STKaiti", "Microsoft YaHei", serif;
+    }
+
+    /* 保留原版 Logo 字体，不再覆盖 */
+    .logo,
+    .logo span {
+      font-family: "Segoe Script", "Brush Script MT", "Lucida Handwriting", "Comic Sans MS", cursive !important;
+    }
+
+    /* 大标题：宋体 */
+    h1,
+    h2,
+    .section-title,
+    .hero-title,
+    .page-title,
+    .main-title,
+    .hero h1,
+    .hero-text h1,
+    section > h2 {
+      font-family: "Times New Roman", "SimSun", "宋体", serif !important;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+    }
+
+    /* 小标题：宋体，稍微轻一点 */
+    h3,
+    h4,
+    .card h3,
+    .skill-card h3,
+    .experience-card h3,
+    .timeline-title,
+    .item-title {
+      font-family: "Times New Roman", "SimSun", "宋体", serif !important;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+    }
+
+    /* 正文内容：楷体 */
+    p,
+    li,
+    .desc,
+    .text,
+    .about-text,
+    .card p,
+    .skill-card p,
+    .experience-card p,
+    .timeline p,
+    .timeline-item p,
+    .message,
+    .message.bot,
+    .message.user,
+    .guest-content,
+    .owner-reply,
+    .intro,
+    .subtitle {
+      font-family: "Times New Roman", "KaiTi", "楷体", "STKaiti", serif !important;
+      font-weight: 400;
+    }
+
+    /* 导航、按钮、输入框：保持清爽一点 */
+    .nav a,
+    button,
+    .btn,
+    input,
+    textarea {
+      font-family: "Times New Roman", "Microsoft YaHei", "PingFang SC", sans-serif !important;
+    }
+
+  </style>
+
+  <style>
+    /* AI 回复 Markdown 显示优化 */
+    .message.bot h1,
+    .message.bot h2,
+    .message.bot h3 {
+      margin: 10px 0 8px;
+      color: #0f172a;
+      line-height: 1.4;
+    }
+
+    .message.bot p {
+      margin: 8px 0;
+      line-height: 1.8;
+    }
+
+    .message.bot ul,
+    .message.bot ol {
+      margin: 8px 0 8px 22px;
+      padding-left: 14px;
+    }
+
+    .message.bot li {
+      margin: 6px 0;
+      line-height: 1.75;
+    }
+
+    .message.bot strong {
+      color: #1d4ed8;
+      font-weight: 700;
+    }
+
+    .message.bot code {
+      background: #eef6ff;
+      color: #2563eb;
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-family: Consolas, Monaco, monospace;
+      font-size: 0.92em;
+    }
+
+    .message.bot pre {
+      background: #0f172a;
+      color: #e5e7eb;
+      padding: 14px;
+      border-radius: 12px;
+      overflow-x: auto;
+      margin: 10px 0;
+      line-height: 1.6;
+    }
+
+    .message.bot blockquote {
+      border-left: 4px solid #3b82f6;
+      background: #eff6ff;
+      padding: 8px 14px;
+      margin: 10px 0;
+      border-radius: 8px;
+      color: #334155;
+    }
+
+    /* 恢复原版 Logo 字体 */
+    .logo {
+      font-size: 30px !important;
+      font-weight: 600 !important;
+      color: #0f172a !important;
+      font-family: "Segoe Script", "Brush Script MT", "Lucida Handwriting", "Comic Sans MS", cursive !important;
+      letter-spacing: 0.4px !important;
+      white-space: nowrap !important;
+    }
+
+    .logo span {
+      color: #2563eb !important;
+      margin-left: 6px !important;
+      font-family: "Segoe Script", "Brush Script MT", "Lucida Handwriting", "Comic Sans MS", cursive !important;
+      font-weight: 700 !important;
+    }
+
+  
+    /* 页面字体统一优化：标题宋体，正文楷体，英文 Times New Roman */
+    body {
+      font-family: "Times New Roman", "KaiTi", "楷体", "STKaiti", "Microsoft YaHei", serif;
+    }
+
+    /* 保留原版 Logo 字体，不再覆盖 */
+    .logo,
+    .logo span {
+      font-family: "Segoe Script", "Brush Script MT", "Lucida Handwriting", "Comic Sans MS", cursive !important;
+    }
+
+    /* 大标题：宋体 */
+    h1,
+    h2,
+    .section-title,
+    .hero-title,
+    .page-title,
+    .main-title,
+    .hero h1,
+    .hero-text h1,
+    section > h2 {
+      font-family: "Times New Roman", "SimSun", "宋体", serif !important;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+    }
+
+    /* 小标题：宋体，稍微轻一点 */
+    h3,
+    h4,
+    .card h3,
+    .skill-card h3,
+    .experience-card h3,
+    .timeline-title,
+    .item-title {
+      font-family: "Times New Roman", "SimSun", "宋体", serif !important;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+    }
+
+    /* 正文内容：楷体 */
+    p,
+    li,
+    .desc,
+    .text,
+    .about-text,
+    .card p,
+    .skill-card p,
+    .experience-card p,
+    .timeline p,
+    .timeline-item p,
+    .message,
+    .message.bot,
+    .message.user,
+    .guest-content,
+    .owner-reply,
+    .intro,
+    .subtitle {
+      font-family: "Times New Roman", "KaiTi", "楷体", "STKaiti", serif !important;
+      font-weight: 400;
+    }
+
+    /* 导航、按钮、输入框：保持清爽一点 */
+    .nav a,
+    button,
+    .btn,
+    input,
+    textarea {
+      font-family: "Times New Roman", "Microsoft YaHei", "PingFang SC", sans-serif !important;
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+  <header>
+    <div class="container nav">
+      <div class="logo">Hello, I'm <span>Chen Jiayi</span></div>
+
+      <nav class="nav-links">
+        <a href="index.html">首页</a>
+        <a href="about.html">关于我</a>
+        <a href="skills.html">技能</a>
+        <a href="experience.html">经历</a>
+        <a href="life.html">生活</a>
+        <a href="ai.html" class="active">AI助手</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container page-hero">
+    <div class="intro-panel">
+      <div class="hello">AI Assistant 🤖</div>
+      <h1>嘉怡的<span>AI小助手</span></h1>
+
+      <p>
+        你好呀，我是嘉怡个人主页里的 AI 小助手～你可以问我关于她的专业、技能、经历、生活、
+        云计算大作业，也可以问我这个网站是怎么部署的。
+      </p>
+
+      <p>
+        目前我是一个基于 JavaScript 关键词匹配实现的半智能问答助手。虽然还不是真正接入大模型，
+        但已经可以根据问题内容返回对应介绍，适合作为云计算大作业中的交互模块展示。
+      </p>
+
+      <div class="tips">
+        <div class="tip">👩‍💻 了解她是谁</div>
+        <div class="tip">⚙️ 查看技能方向</div>
+        <div class="tip">📷 询问校园经历</div>
+        <div class="tip">☁️ 了解网站部署</div>
+      </div>
+    </div>
+
+    <div class="chat-card">
+      <div class="chat-header">
+        <div class="bot-avatar">🤖</div>
+        <div>
+          <h3>嘉怡的小助手</h3>
+          <p>在线中 · 试着问我一些问题吧</p>
+        </div>
+      </div>
+
+      <div class="chat-body" id="chatBody">
+        <div class="message bot">
+G副官已就位。
+
+你好，欢迎进入陈嘉怡的个人主页 AI 通讯频道。
+我是 G副官，G 既代表 Greatest，也代表 GPT。
+我的任务是作为嘉怡长官的专属副官，向访客介绍她的学习经历、学生工作、志愿服务、竞赛成果、生活记录以及云计算大作业。
+
+你可以问我：
+1. 陈嘉怡是谁？
+2. 她为什么转入人工智能方向？
+3. 她有哪些学生工作和志愿经历？
+4. 她获得过哪些奖项？
+5. 她的生活和兴趣是什么？
+6. 这个云计算个人主页是怎么实现的？
+
+G副官将以最可靠的情报整理能力，为你介绍嘉怡长官的成长档案。Salute！
+        </div>
+      </div>
+
+      <div class="quick-questions">
+        <button onclick="quickAsk('介绍一下陈嘉怡')">介绍一下陈嘉怡</button>
+        <button onclick="quickAsk('你有哪些技能？')">技能</button>
+        <button onclick="quickAsk('你有哪些经历？')">经历</button>
+        <button onclick="quickAsk('你的生活是什么样的？')">生活</button>
+        <button onclick="quickAsk('你的云计算大作业做了什么？')">云计算大作业</button>
+        <button onclick="quickAsk('这个网站怎么部署的？')">网站部署</button>
+        <button onclick="quickAsk('你未来想做什么？')">未来计划</button>
+        <button onclick="quickAsk('怎么联系你？')">联系方式</button>
+      </div>
+
+      <div class="chat-input">
+        <input id="userInput" type="text" placeholder="输入你想问的问题..." />
+        <button onclick="sendMessage()">➜</button>
+      </div>
+    </div>
+  </main>
+
+  <section class="container">
+    <h2 class="section-title"><span>✦</span> 你可以问什么</h2>
+
+    <div class="guide-grid">
+      <div class="guide-card">
+        <div class="icon">👩‍💻</div>
+        <h3>关于我</h3>
+        <p>可以问她是谁、专业班级、学习方向、性格特点和未来目标。</p>
+      </div>
+
+      <div class="guide-card">
+        <div class="icon">⚙️</div>
+        <h3>技能学习</h3>
+        <p>可以问她会哪些技术、学过什么编程语言、为什么学人工智能。</p>
+      </div>
+
+      <div class="guide-card">
+        <div class="icon">📷</div>
+        <h3>经历生活</h3>
+        <p>可以问军训、马拉松、学生组织、RoboMaster、志愿服务和旅行记录。</p>
+      </div>
+
+      <div class="guide-card">
+        <div class="icon">☁️</div>
+        <h3>云计算作业</h3>
+        <p>可以问网站部署、Nginx、阿里云 ECS、2核2G服务器和负载均衡思路。</p>
+      </div>
+    </div>
+  </section>
+
+  
+  <section id="messageWall" class="container">
+    <h2 class="section-title"><span>✉</span> 留言与回复</h2>
+
+    <div class="message-wall">
+      <p class="message-wall-intro">
+        你也可以在这里给嘉怡留一句话。留言会保存到服务器中，后续嘉怡可以给留言添加回复。
+      </p>
+
+      <div class="message-form">
+        <input id="guestName" type="text" placeholder="你的昵称，例如：同学A">
+        <textarea id="guestContent" placeholder="写下你想说的话..."></textarea>
+        <button onclick="submitGuestMessage()">提交留言</button>
+      </div>
+
+      <div class="message-list" id="messageList">
+        <div class="guest-message">
+          <div class="guest-content">留言加载中...</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <footer>
+    © 2026 陈嘉怡的个人网站 | 用热爱记录生活，用代码改变世界
+  </footer>
+
+  <script>
+    const chatBody = document.getElementById("chatBody");
+    const userInput = document.getElementById("userInput");
+
+    function addMessage(text, type) {
+      const msg = document.createElement("div");
+      msg.className = "message " + type;
+      msg.innerText = text;
+      chatBody.appendChild(msg);
+      chatBody.scrollTop = chatBody.scrollHeight;
+    }
+
+    function typingReply(reply) {
+      const loading = document.createElement("div");
+      loading.className = "message bot";
+      loading.innerText = "正在思考中～";
+      chatBody.appendChild(loading);
+      chatBody.scrollTop = chatBody.scrollHeight;
+
+      setTimeout(() => {
+        loading.innerText = reply;
+        chatBody.scrollTop = chatBody.scrollHeight;
+      }, 500);
+    }
+
+    function getBotReply(question) {
+      const q = question.toLowerCase();
+
+      if (
+        q.includes("介绍") ||
+        q.includes("是谁") ||
+        q.includes("自己") ||
+        q.includes("陈嘉怡")
+      ) {
+        return "陈嘉怡是人工智能2401班的学生，目前对前端开发、AI应用、云计算部署和用户体验设计比较感兴趣。她希望通过项目实践，把课堂里学到的知识真正做出来。";
+      }
+
+      if (
+        q.includes("专业") ||
+        q.includes("班级") ||
+        q.includes("人工智能") ||
+        q.includes("学什么")
+      ) {
+        return "她的专业方向是人工智能，班级是人工智能2401班。她对 AI 技术本身感兴趣，也更关注 AI 如何真正应用到生活和实际项目中。";
+      }
+
+      if (
+        q.includes("技能") ||
+        q.includes("技术") ||
+        q.includes("编程") ||
+        q.includes("会什么") ||
+        q.includes("python") ||
+        q.includes("html") ||
+        q.includes("css") ||
+        q.includes("javascript") ||
+        q.includes("linux") ||
+        q.includes("nginx")
+      ) {
+        return "她目前正在学习和使用的技术包括 HTML、CSS、JavaScript、Python、Linux、Nginx、阿里云 ECS 和 GitHub 文档管理等。这个个人主页就是她把前端页面设计和云服务器部署结合起来的一次实践。";
+      }
+
+      if (
+        q.includes("经历") ||
+        q.includes("活动") ||
+        q.includes("军训") ||
+        q.includes("红军") ||
+        q.includes("蓝军") ||
+        q.includes("学生组织") ||
+        q.includes("部长")
+      ) {
+        return "她的经历包括军训红军蓝军汇演、校园活动、学生组织部长、竞赛实践、RoboMaster相关经历、志愿服务、蠡湖半程马拉松和旅行记录。这些经历共同组成了她大学生活里很重要的一部分。";
+      }
+
+      if (
+        q.includes("竞赛") ||
+        q.includes("比赛") ||
+        q.includes("项目")
+      ) {
+        return "在竞赛和项目实践中，她接触到了更多真实问题，也逐渐意识到技术不能只停留在理论里，还需要通过实践不断理解和应用。技能页面里也会放一些项目和竞赛相关文档。";
+      }
+
+      if (
+        q.includes("robomaster") ||
+        q.includes("机器人") ||
+        q.includes("讲解")
+      ) {
+        return "RoboMaster相关经历让她接触到了机器人竞赛和工程实践的魅力。作为志愿者进行讲解时，她也体会到技术展示和表达分享的乐趣。";
+      }
+
+      if (
+        q.includes("志愿") ||
+        q.includes("服务")
+      ) {
+        return "她参加过志愿服务和技术讲解相关活动。对她来说，志愿服务不仅是参与活动，也是一种表达、沟通和分享的过程。";
+      }
+
+      if (
+        q.includes("马拉松") ||
+        q.includes("蠡湖") ||
+        q.includes("运动")
+      ) {
+        return "她参加过蠡湖半程马拉松相关活动。这是一段和运动、坚持有关的经历，也让她感受到完成一件事情带来的成就感。";
+      }
+
+      if (
+        q.includes("生活") ||
+        q.includes("兴趣") ||
+        q.includes("爱好") ||
+        q.includes("摄影") ||
+        q.includes("音乐") ||
+        q.includes("阅读") ||
+        q.includes("旅行")
+      ) {
+        return "她的兴趣爱好包括摄影、音乐、阅读和旅行。她喜欢记录生活中的小瞬间，也希望生活里不只有任务和安排，还有热爱、风景和一些值得保存的回忆。";
+      }
+
+      if (
+        q.includes("家人") ||
+        q.includes("家庭") ||
+        q.includes("父母") ||
+        q.includes("弟弟") ||
+        q.includes("小时候") ||
+        q.includes("童年")
+      ) {
+        return "她来自一个普通而温暖的家庭，家人一直给了她很多陪伴和支持。生活页面里也放了一些和家庭陪伴、童年回忆有关的照片，用来记录这些珍贵的小瞬间。";
+      }
+
+      if (
+        q.includes("云计算") ||
+        q.includes("大作业") ||
+        q.includes("作业")
+      ) {
+        return "她的云计算大作业是一个部署在阿里云 ECS 上的个人主页系统。网站包含首页、关于我、技能文档、经历相册、生活记录和 AI 助手模块，使用 Nginx 提供静态网页服务。";
+      }
+
+      if (
+        q.includes("部署") ||
+        q.includes("服务器") ||
+        q.includes("阿里云") ||
+        q.includes("ecs") ||
+        q.includes("公网") ||
+        q.includes("ip")
+      ) {
+        return "这个网站部署在阿里云 ECS 服务器上。访问者通过公网 IP 访问网页，请求到达服务器后，由 Nginx 返回 HTML、图片和 PDF 等静态资源。当前 2核2G 配置用于个人主页展示已经够用。";
+      }
+
+      if (
+        q.includes("负载均衡") ||
+        q.includes("slb") ||
+        q.includes("高并发") ||
+        q.includes("访问量")
+      ) {
+        return "目前这个网站是个人主页，访问量不大，所以暂时不需要真正配置负载均衡。后续如果访问量增加，可以扩展为：用户浏览器 → 阿里云 SLB 负载均衡 → 多台 ECS Web 节点 → 静态资源存储或 CDN。";
+      }
+
+      if (
+        q.includes("nginx")
+      ) {
+        return "Nginx 在这个项目中主要负责提供 Web 服务，把服务器上的 HTML、图片、PDF 等静态资源返回给访问者。它轻量、稳定，很适合部署个人主页。";
+      }
+
+      if (
+        q.includes("图片") ||
+        q.includes("pdf") ||
+        q.includes("文件") ||
+        q.includes("放在哪里")
+      ) {
+        return "这个网站的图片一般放在 /var/www/html/images/ 目录下，PDF 文档放在 /var/www/html/docs/ 目录下。这样浏览器就可以通过 images/xxx.jpg 或 docs/xxx.pdf 访问对应资源。";
+      }
+
+      if (
+        q.includes("未来") ||
+        q.includes("目标") ||
+        q.includes("想做什么") ||
+        q.includes("计划")
+      ) {
+        return "她希望之后继续学习前端、后端、云计算和 AI 应用相关知识，做出更加完整、实用，也更有自己想法的作品。";
+      }
+
+      if (
+        q.includes("联系") ||
+        q.includes("qq") ||
+        q.includes("联系方式")
+      ) {
+        return "主页里展示了她的 QQ：2896397309。如果是课程交流、项目交流或者同学之间联系，可以通过这个方式找到她。";
+      }
+
+      if (
+        q.includes("你好") ||
+        q.includes("hello") ||
+        q.includes("hi")
+      ) {
+        return "你好呀～我是嘉怡的小助手。你可以问我她的专业、技能、经历、生活，或者这个网站是怎么部署到云服务器上的。";
+      }
+
+      return "这个问题我暂时还没有学习到呢～你可以换个方式问我，比如：嘉怡是谁、她有哪些技能、参加过哪些经历、生活是什么样的、云计算大作业做了什么，或者这个网站是怎么部署的。";
+    }
+
+    function sendMessage() {
+      const text = userInput.value.trim();
+
+      if (!text) {
+        return;
+      }
+
+      addMessage(text, "user");
+      userInput.value = "";
+
+      const reply = getBotReply(text);
+      typingReply(reply);
+    }
+
+    function quickAsk(text) {
+      addMessage(text, "user");
+
+      const reply = getBotReply(text);
+      typingReply(reply);
+    }
+
+    userInput.addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        sendMessage();
+      }
+    });
+  </script>
+
+
+  <script>
+    async function loadGuestMessages() {
+      const list = document.getElementById("messageList");
+
+      if (!list) return;
+
+      try {
+        const res = await fetch("/api/messages");
+        const messages = await res.json();
+
+        if (!messages.length) {
+          list.innerHTML = `
+            <div class="guest-message">
+              <div class="guest-content">目前还没有留言，欢迎留下第一句话～</div>
+            </div>
+          `;
+          return;
+        }
+
+        list.innerHTML = messages.map(item => `
+          <div class="guest-message">
+            <div class="guest-message-top">
+              <span class="guest-name">${escapeHtml(item.nickname)}</span>
+              <span>${escapeHtml(item.created_at)}</span>
+            </div>
+
+            <div class="guest-content">${escapeHtml(item.content)}</div>
+
+            ${
+              item.reply
+                ? `<div class="owner-reply"><strong>嘉怡回复：</strong>${escapeHtml(item.reply)}</div>`
+                : `<div class="no-reply">嘉怡还没有回复这条留言～</div>`
+            }
+          </div>
+        `).join("");
+      } catch (err) {
+        list.innerHTML = `
+          <div class="guest-message">
+            <div class="guest-content">留言加载失败，请检查后端服务是否启动。</div>
+          </div>
+        `;
+      }
+    }
+
+    async function submitGuestMessage() {
+      const nickname = document.getElementById("guestName").value.trim() || "匿名访客";
+      const content = document.getElementById("guestContent").value.trim();
+
+      if (!content) {
+        alert("留言内容不能为空哦～");
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/messages", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            nickname,
+            content
+          })
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          alert(err.detail || "留言提交失败");
+          return;
+        }
+
+        document.getElementById("guestName").value = "";
+        document.getElementById("guestContent").value = "";
+
+        alert("留言成功～");
+        loadGuestMessages();
+      } catch (err) {
+        alert("留言失败，请检查后端服务是否启动。");
+      }
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    loadGuestMessages();
+  </script>
+
+
+  <!-- Markdown 渲染库：marked + DOMPurify -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+
+  <script>
+    function renderMarkdown(text) {
+      if (window.marked && window.DOMPurify) {
+        marked.setOptions({
+          breaks: true,
+          gfm: true
+        });
+
+        return DOMPurify.sanitize(marked.parse(text || ""));
+      }
+
+      return String(text || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll("\n", "<br>");
+    }
+
+    async function realAIReply(question) {
+      const chatBodyBox = document.getElementById("chatBody");
+
+      const loading = document.createElement("div");
+      loading.className = "message bot";
+      loading.innerText = "G副官正在进行战术推演";
+      chatBodyBox.appendChild(loading);
+      chatBodyBox.scrollTop = chatBodyBox.scrollHeight;
+
+      let dotCount = 0;
+      const timer = setInterval(() => {
+        dotCount = (dotCount + 1) % 4;
+        loading.innerText = "G副官正在进行战术推演" + ".".repeat(dotCount);
+        chatBodyBox.scrollTop = chatBodyBox.scrollHeight;
+      }, 450);
+
+      try {
+        const res = await fetch("/api/ai-chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            message: question
+          })
+        });
+
+        const data = await res.json();
+        clearInterval(timer);
+
+        if (!res.ok) {
+          loading.innerHTML = renderMarkdown(
+            "报告访客，AI 通讯链路暂时异常：\n\n" + (data.detail || "未知错误")
+          );
+          return;
+        }
+
+        loading.innerHTML = renderMarkdown(
+          data.reply || "G副官暂时没有收到有效回复。"
+        );
+
+        chatBodyBox.scrollTop = chatBodyBox.scrollHeight;
+      } catch (err) {
+        clearInterval(timer);
+        loading.innerHTML = renderMarkdown(
+          "报告访客，G副官连接失败，请检查后端服务或 API 配置。"
+        );
+      }
+    }
+
+    function sendMessage() {
+      const inputBox = document.getElementById("userInput");
+      const text = inputBox.value.trim();
+
+      if (!text) {
+        return;
+      }
+
+      addMessage(text, "user");
+      inputBox.value = "";
+
+      realAIReply(text);
+    }
+
+    function quickAsk(text) {
+      addMessage(text, "user");
+      realAIReply(text);
+    }
+  </script>
+
+</body>
+</html>
+
+<script>
+  async function realAIReply(question) {
+    const chatBodyBox = document.getElementById("chatBody");
+
+    const loading = document.createElement("div");
+    loading.className = "message bot";
+    loading.innerText = "G副官正在进行战术推演";
+    chatBodyBox.appendChild(loading);
+    chatBodyBox.scrollTop = chatBodyBox.scrollHeight;
+
+    let dotCount = 0;
+    const timer = setInterval(() => {
+      dotCount = (dotCount + 1) % 4;
+      loading.innerText = "G副官正在进行战术推演" + ".".repeat(dotCount);
+      chatBodyBox.scrollTop = chatBodyBox.scrollHeight;
+    }, 450);
+
+    try {
+      const res = await fetch("/api/ai-chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          message: question
+        })
+      });
+
+      const data = await res.json();
+
+      clearInterval(timer);
+
+      if (!res.ok) {
+        loading.innerText = "报告长官，AI 通讯链路暂时异常：\n" + (data.detail || "未知错误");
+        return;
+      }
+
+      loading.innerText = data.reply || "报告长官，G副官暂时没有收到有效回复。";
+      chatBodyBox.scrollTop = chatBodyBox.scrollHeight;
+    } catch (err) {
+      clearInterval(timer);
+      loading.innerText = "报告长官，G副官连接失败，请检查后端服务或 API 配置。";
+    }
+  }
+
+  function sendMessage() {
+    const inputBox = document.getElementById("userInput");
+    const text = inputBox.value.trim();
+
+    if (!text) {
+      return;
+    }
+
+    addMessage(text, "user");
+    inputBox.value = "";
+
+    realAIReply(text);
+  }
+
+  function quickAsk(text) {
+    addMessage(text, "user");
+    realAIReply(text);
+  }
+</script>
+

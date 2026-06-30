@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>陈嘉怡的个人网页</title>
+<style>
+/* ================== 全局样式 ================== */
+body {
+    margin: 0;
+    font-family: "KaiTi", "楷体", "Times New Roman", serif;
+    background-color: #f8faff;
+    color: #1f2937;
+}
+
+a { text-decoration: none; color: inherit; }
+.container { width: 90%; max-width: 1000px; margin: 0 auto; padding: 40px 0; }
+
+/* ================== 头部 ================== */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+}
+.header nav a {
+    margin-left: 20px;
+    color: #374151;
+    font-weight: 500;
+}
+.header nav a.active { color: #2563eb; border-bottom: 2px solid #2563eb; }
+
+/* ================== 个人信息卡 ================== */
+.profile {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-top: 60px;
+    gap: 40px;
+}
+.profile-info { flex: 1; min-width: 280px; }
+.profile-info h1 { font-size: 36px; margin-bottom: 10px; }
+.profile-info h2 { font-size: 28px; color: #2563eb; margin-bottom: 20px; }
+.profile-info p { font-size: 18px; margin: 6px 0; }
+.profile-info .buttons { margin-top: 20px; }
+.profile-info .buttons a {
+    display: inline-block;
+    padding: 10px 20px;
+    margin-right: 12px;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: 0.3s;
+}
+.profile-info .buttons a.primary { background-color: #2563eb; color: white; }
+.profile-info .buttons a.primary:hover { background-color: #1e40af; }
+.profile-info .buttons a.secondary { border: 1px solid #2563eb; color: #2563eb; }
+.profile-info .buttons a.secondary:hover { background-color: #2563eb; color: white; }
+
+/* 头像 */
+.profile-img {
+    flex: 1;
+    min-width: 280px;
+}
+.profile-img img {
+    width: 100%;
+    border-radius: 16px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+/* ================== 关于我 & 兴趣 ================== */
+.section { margin-top: 80px; }
+.section h3 { font-size: 24px; color: #2563eb; margin-bottom: 20px; }
+.section-content { display: flex; flex-wrap: wrap; gap: 40px; }
+
+/* 关于我文字 */
+.about-text { flex: 2; min-width: 280px; }
+
+/* 兴趣图标 */
+.interests { flex: 1; display: flex; flex-wrap: wrap; gap: 16px; }
+.interests div {
+    flex: 1 0 40%;
+    text-align: center;
+    background-color: white;
+    padding: 12px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(37,99,235,0.1);
+}
+
+/* ================== Footer ================== */
+footer {
+    text-align: center;
+    color: #6b7280;
+    margin: 60px 0 20px;
+    font-size: 14px;
+}
+</style>
+</head>
+<body>
+
+<!-- 头部导航 -->
+<div class="header container">
+    <div class="logo">Hello, I'm 陈嘉怡</div>
+    <nav>
+        <a href="#" class="active">首页</a>
+        <a href="#">关于我</a>
+        <a href="#">技能</a>
+        <a href="#">作品</a>
+        <a href="#">生活</a>
+        <a href="#">联系我</a>
+    </nav>
+</div>
+
+<!-- 个人信息 -->
+<div class="container profile">
+    <div class="profile-info">
+        <h1>你好，我是 陈嘉怡</h1>
+        <h2>人工智能2401 班</h2>
+        <p>学号：1104230102</p>
+        <p>QQ：2896397309</p>
+        <div class="buttons">
+            <a href="#about" class="primary">了解更多关于我</a>
+            <a href="#" class="secondary">我的主页</a>
+        </div>
+    </div>
+    <div class="profile-img">
+        <img src="image.jpg" alt="头像">
+    </div>
+</div>
+
+<!-- 关于我 & 兴趣 -->
+<div class="container section" id="about">
+    <h3>关于我</h3>
+    <div class="section-content">
+        <div class="about-text">
+            <p>我是一名人工智能专业的学生，热衷于前端开发、UI/UX设计和用户体验优化。在学习和项目实践中不断提升自己，追求卓越的细节与极致的用户体验。</p>
+            <p>兴趣：摄影 / 音乐 / 阅读 / 旅行</p>
+        </div>
+        <div class="interests">
+            <div><p>摄影</p></div>
+            <div><p>音乐</p></div>
+            <div><p>阅读</p></div>
+            <div><p>旅行</p></div>
+        </div>
+    </div>
+</div>
+
+<footer>
+    © 2026 陈嘉怡的个人网站 | 用热爱记录生活，用代码改变世界
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>经历 - 陈嘉怡的个人主页</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+      background: #f7fbff;
+      color: #0f172a;
+      line-height: 1.8;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .container {
+      width: 86%;
+      max-width: 1180px;
+      margin: 0 auto;
+    }
+
+    header {
+      height: 72px;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .nav {
+      height: 72px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 30px;
+      font-weight: 600;
+      color: #0f172a;
+      font-family: "Segoe Script", "Brush Script MT", "Lucida Handwriting", "Comic Sans MS", cursive;
+      letter-spacing: 0.4px;
+      white-space: nowrap;
+    }
+
+    .logo span {
+      color: #2563eb;
+      margin-left: 6px;
+      font-weight: 700;
+    }
+
+    .nav-links a {
+      margin-left: 30px;
+      font-size: 15px;
+      color: #334155;
+      font-weight: 500;
+      padding-bottom: 6px;
+      transition: 0.3s;
+    }
+
+    .nav-links a:hover,
+    .nav-links a.active {
+      color: #2563eb;
+      border-bottom: 2px solid #2563eb;
+    }
+
+    .page-hero {
+      padding: 86px 0 54px;
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 56px;
+      align-items: center;
+    }
+
+    .page-text .hello {
+      color: #64748b;
+      font-size: 20px;
+      margin-bottom: 12px;
+    }
+
+    .page-text h1 {
+      font-size: 48px;
+      line-height: 1.25;
+      margin-bottom: 16px;
+    }
+
+    .page-text h1 span {
+      color: #3b82f6;
+    }
+
+    .page-text p {
+      color: #64748b;
+      font-size: 16px;
+      margin-bottom: 16px;
+    }
+
+    .hero-card {
+      background: linear-gradient(135deg, #eef6ff, #ffffff);
+      border-radius: 28px;
+      padding: 42px;
+      box-shadow: 0 18px 38px rgba(59, 130, 246, 0.12);
+    }
+
+    .hero-card h2 {
+      font-size: 28px;
+      margin-bottom: 18px;
+    }
+
+    .keyword-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      margin-top: 20px;
+    }
+
+    .keyword {
+      background: white;
+      border-radius: 16px;
+      padding: 15px;
+      color: #2563eb;
+      font-weight: 600;
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+    }
+
+    .category-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      padding: 18px 0 40px;
+    }
+
+    .category-nav a {
+      background: white;
+      color: #2563eb;
+      border: 1px solid #bfdbfe;
+      padding: 10px 18px;
+      border-radius: 999px;
+      font-weight: 600;
+      box-shadow: 0 8px 20px rgba(59, 130, 246, 0.08);
+      transition: 0.3s;
+    }
+
+    .category-nav a:hover {
+      background: #3b82f6;
+      color: white;
+      transform: translateY(-3px);
+    }
+
+    section {
+      padding: 54px 0;
+    }
+
+    .section-title {
+      font-size: 30px;
+      margin-bottom: 28px;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-title span {
+      color: #3b82f6;
+    }
+
+    .experience-card {
+      background: white;
+      border-radius: 28px;
+      padding: 34px;
+      box-shadow: 0 14px 34px rgba(59, 130, 246, 0.1);
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 34px;
+      align-items: center;
+    }
+
+    .experience-card.reverse {
+      grid-template-columns: 1.1fr 0.9fr;
+    }
+
+    .experience-text h3 {
+      font-size: 28px;
+      margin-bottom: 8px;
+      color: #0f172a;
+    }
+
+    .time {
+      color: #2563eb;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    .experience-text p {
+      color: #64748b;
+      font-size: 16px;
+      margin-bottom: 18px;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .tags span {
+      background: #eff6ff;
+      color: #2563eb;
+      padding: 6px 13px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .album {
+      background: #eef6ff;
+      border-radius: 24px;
+      padding: 14px;
+      box-shadow: inset 0 0 0 1px rgba(191, 219, 254, 0.8);
+    }
+
+    .album-image-wrap {
+      width: 100%;
+      height: 360px;
+      background: #f8fbff;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .album img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      border-radius: 14px;
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+
+    .album img.fade {
+      opacity: 0;
+      transform: scale(0.98);
+    }
+
+    .album-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 14px;
+      gap: 12px;
+    }
+
+    .album-controls button {
+      border: none;
+      background: #3b82f6;
+      color: white;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 18px;
+      box-shadow: 0 8px 18px rgba(59, 130, 246, 0.24);
+      transition: 0.25s;
+    }
+
+    .album-controls button:hover {
+      background: #2563eb;
+      transform: translateY(-2px);
+    }
+
+    .album-controls button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .album-count {
+      color: #334155;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .summary-box {
+      background: linear-gradient(135deg, #eef6ff, #ffffff);
+      border-radius: 28px;
+      padding: 44px;
+      text-align: center;
+      box-shadow: 0 14px 34px rgba(59, 130, 246, 0.1);
+      margin-bottom: 54px;
+    }
+
+    .summary-box .quote {
+      font-size: 56px;
+      color: #93c5fd;
+      line-height: 1;
+    }
+
+    .summary-box p {
+      color: #334155;
+      font-size: 20px;
+      line-height: 1.9;
+      margin-top: 8px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 28px 0;
+      color: #64748b;
+      border-top: 1px solid #e2e8f0;
+      font-size: 14px;
+    }
+
+    @media (max-width: 1000px) {
+      .page-hero,
+      .experience-card,
+      .experience-card.reverse {
+        grid-template-columns: 1fr;
+      }
+
+      .nav-links {
+        display: none;
+      }
+
+      .page-text h1 {
+        font-size: 38px;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .logo {
+        font-size: 24px;
+      }
+
+      .page-text h1 {
+        font-size: 32px;
+      }
+
+      .keyword-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .album-image-wrap {
+        height: 260px;
+      }
+
+      .experience-card {
+        padding: 22px;
+      }
+    }
+
+    /* 恢复原版 Logo 字体 */
+    .logo {
+      font-size: 30px !important;
+      font-weight: 600 !important;
+      color: #0f172a !important;
+      font-family: "Segoe Script", "Brush Script MT", "Lucida Handwriting", "Comic Sans MS", cursive !important;
+      letter-spacing: 0.4px !important;
+      white-space: nowrap !important;
+    }
+
+    .logo span {
+      color: #2563eb !important;
+      margin-left: 6px !important;
+      font-family: "Segoe Script", "Brush Script MT", "Lucida Handwriting", "Comic Sans MS", cursive !important;
+      font-weight: 700 !important;
+    }
+
+  
+    /* 页面字体统一优化：标题宋体，正文楷体，英文 Times New Roman */
+    body {
+      font-family: "Times New Roman", "KaiTi", "楷体", "STKaiti", "Microsoft YaHei", serif;
+    }
+
+    /* 保留原版 Logo 字体，不再覆盖 */
+    .logo,
+    .logo span {
+      font-family: "Segoe Script", "Brush Script MT", "Lucida Handwriting", "Comic Sans MS", cursive !important;
+    }
+
+    /* 大标题：宋体 */
+    h1,
+    h2,
+    .section-title,
+    .hero-title,
+    .page-title,
+    .main-title,
+    .hero h1,
+    .hero-text h1,
+    section > h2 {
+      font-family: "Times New Roman", "SimSun", "宋体", serif !important;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+    }
+
+    /* 小标题：宋体，稍微轻一点 */
+    h3,
+    h4,
+    .card h3,
+    .skill-card h3,
+    .experience-card h3,
+    .timeline-title,
+    .item-title {
+      font-family: "Times New Roman", "SimSun", "宋体", serif !important;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+    }
+
+    /* 正文内容：楷体 */
+    p,
+    li,
+    .desc,
+    .text,
+    .about-text,
+    .card p,
+    .skill-card p,
+    .experience-card p,
+    .timeline p,
+    .timeline-item p,
+    .message,
+    .message.bot,
+    .message.user,
+    .guest-content,
+    .owner-reply,
+    .intro,
+    .subtitle {
+      font-family: "Times New Roman", "KaiTi", "楷体", "STKaiti", serif !important;
+      font-weight: 400;
+    }
+
+    /* 导航、按钮、输入框：保持清爽一点 */
+    .nav a,
+    button,
+    .btn,
+    input,
+    textarea {
+      font-family: "Times New Roman", "Microsoft YaHei", "PingFang SC", sans-serif !important;
+    }
+
+  
+/* EXPERIENCE_ART_ENDING */
+.experience-art-ending {
+  position: relative;
+  text-align: center;
+  padding: 58px 24px !important;
+  background: linear-gradient(180deg, #eef7ff 0%, #f8fbff 100%);
+}
+
+.experience-art-ending::before,
+.experience-art-ending::after {
+  content: none !important;
+}
+
+.experience-art-ending,
+.experience-art-ending p {
+  font-family: "STXingkai", "华文行楷", "FZShuTi", "方正舒体", "HanziPen SC", "LiSu", "隶书", cursive !important;
+  font-size: 28px !important;
+  line-height: 2.1 !important;
+  letter-spacing: 3px !important;
+  color: #1e3a5f !important;
+  font-weight: 500 !important;
+}
+
+.experience-art-ending p {
+  margin: 0 auto !important;
+  max-width: 860px;
+}
+
+@media (max-width: 768px) {
+  .experience-art-ending,
+  .experience-art-ending p {
+    font-size: 21px !important;
+    letter-spacing: 1.5px !important;
+  }
+}
+
+
+/* EXPERIENCE_ART_FONT_V2 */
+.experience-art-ending,
+.experience-art-ending p {
+  font-family: "STXingkai", "华文行楷", "FZShuTi", "方正舒体", "HanziPen SC", "LiSu", "隶书", cursive !important;
+  font-size: 30px !important;
+  line-height: 2.15 !important;
+  letter-spacing: 4px !important;
+  color: #16365c !important;
+  font-weight: 400 !important;
+  text-shadow: 0 2px 8px rgba(96, 165, 250, 0.18);
+}
+
+.experience-art-ending::before,
+.experience-art-ending::after {
+  content: none !important;
+}
+
+
+/* EXPERIENCE_XINGKAI_FONT */
+.experience-art-ending,
+.experience-art-ending p {
+  font-family: "STXingkai", "华文行楷", "Xingkai SC", "HanziPen SC", cursive !important;
+  font-size: 32px !important;
+  line-height: 2.15 !important;
+  letter-spacing: 4px !important;
+  color: #17365d !important;
+  font-weight: 400 !important;
+  text-shadow: 0 3px 10px rgba(96, 165, 250, 0.18);
+}
+
+.experience-art-ending::before,
+.experience-art-ending::after {
+  content: none !important;
+}
+
+
+/* SUMMARY_ART_TEXT */
+.summary-art-box {
+  background: linear-gradient(180deg, #eef7ff 0%, #f8fbff 100%) !important;
+  padding: 68px 24px !important;
+  text-align: center !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.summary-art-box::before,
+.summary-art-box::after,
+.summary-art-text::before,
+.summary-art-text::after {
+  content: none !important;
+}
+
+.summary-art-text {
+  margin: 0 auto !important;
+  max-width: 980px !important;
+  font-family: "STXingkai", "华文行楷", "FZShuTi", "方正舒体", "HanziPen SC", "LiSu", "隶书", cursive !important;
+  font-size: 34px !important;
+  line-height: 2.25 !important;
+  letter-spacing: 5px !important;
+  color: #17365d !important;
+  font-weight: 400 !important;
+  text-align: center !important;
+  text-shadow: 0 4px 14px rgba(96, 165, 250, 0.25);
+}
+
+@media (max-width: 768px) {
+  .summary-art-text {
+    font-size: 24px !important;
+    letter-spacing: 2px !important;
+  }
+}
+
+
+/* SAFE_SUMMARY_ART_STYLE */
+.summary-box .quote {
+  display: none !important;
+}
+
+.summary-box::before,
+.summary-box::after {
+  content: none !important;
+  display: none !important;
+}
+
+.summary-box {
+  text-align: center !important;
+  padding: 70px 24px !important;
+  background: linear-gradient(180deg, #eef7ff 0%, #f8fbff 100%) !important;
+  box-shadow: none !important;
+}
+
+.summary-box p {
+  margin: 0 auto !important;
+  max-width: 960px !important;
+  font-family: "STXingkai", "华文行楷", "FZShuTi", "方正舒体", "LiSu", "隶书", cursive !important;
+  font-size: 32px !important;
+  line-height: 2.2 !important;
+  letter-spacing: 4px !important;
+  color: #123c69 !important;
+  font-weight: 400 !important;
+  text-shadow: 0 3px 12px rgba(80, 130, 190, 0.18);
+}
+
+@media (max-width: 768px) {
+  .summary-box p {
+    font-size: 24px !important;
+    letter-spacing: 2px !important;
+  }
+}
+
+</style>
+  <link rel="stylesheet" href="summary-art.css?v=1">
+</head>
+
+<body>
+
+  <header>
+    <div class="container nav">
+      <div class="logo">Hello, I'm <span>Chen Jiayi</span></div>
+
+      <nav class="nav-links">
+        <a href="index.html">首页</a>
+        <a href="about.html">关于我</a>
+        <a href="skills.html">技能</a>
+        <a href="experience.html" class="active">经历</a>
+        <a href="life.html">生活</a>
+        <a href="ai.html">AI助手</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container page-hero">
+    <div class="page-text">
+      <div class="hello">My Experience 📷</div>
+      <h1>我的<span>经历</span>与成长记录</h1>
+
+      <p>
+        这些经历记录了我大学生活中不同侧面的成长。有集体训练中的坚持，
+        有校园活动里的参与，也有学生组织中的责任、竞赛实践中的尝试和旅行生活中的美好瞬间。
+      </p>
+
+      <p>
+        我希望这个页面不只是简单展示照片，而是把每一段经历背后的感受也记录下来。
+        它们不一定都是很大的事情，但都是我大学生活里真实而重要的一部分。
+      </p>
+    </div>
+
+    <div class="hero-card">
+      <h2>经历关键词</h2>
+      <div class="keyword-grid">
+        <div class="keyword">🎓 校园生活</div>
+        <div class="keyword">🏆 竞赛实践</div>
+        <div class="keyword">🧩 学生工作</div>
+        <div class="keyword">🤝 志愿服务</div>
+        <div class="keyword">🏃 运动坚持</div>
+        <div class="keyword">✈️ 旅行记录</div>
+      </div>
+    </div>
+  </main>
+
+  <div class="container category-nav">
+    <a href="#military">军训</a>
+    <a href="#campus">校园活动</a>
+    <a href="#competition">竞赛实践</a>
+    <a href="#minister">学生工作</a>
+    <a href="#robomaster">RoboMaster</a>
+    <a href="#volunteer">志愿服务</a>
+    <a href="#marathon">马拉松</a>
+    <a href="#travel">旅行</a>
+  </div>
+
+  <section id="military" class="container">
+    <h2 class="section-title"><span>01</span> 军训：红军蓝军汇演</h2>
+    <div class="experience-card">
+      <div class="experience-text">
+        <h3>军训：红军蓝军汇演</h3>
+        <div class="time">2024年9月</div>
+        <p>
+          军训是大学生活开始时很特别的一段记忆。红军蓝军汇演让我感受到集体配合的重要性，
+          虽然训练过程很累，但大家一起完成任务、一起留下照片的感觉很难忘。
+        </p>
+        <div class="tags">
+          <span>团队协作</span>
+          <span>集体荣誉</span>
+          <span>大学开始</span>
+        </div>
+      </div>
+      <div class="album" data-album="military" data-total="5"></div>
+    </div>
+  </section>
+
+  <section id="campus" class="container">
+    <h2 class="section-title"><span>02</span> 校园活动</h2>
+    <div class="experience-card reverse">
+      <div class="album" data-album="campus" data-total="5"></div>
+      <div class="experience-text">
+        <h3>校园活动</h3>
+        <div class="time">大学期间</div>
+        <p>
+          校园活动让我的大学生活变得更加丰富。很多活动看起来只是一次参与，
+          但真正投入进去之后，会发现它们也在慢慢锻炼我的表达、合作和组织能力。
+        </p>
+        <div class="tags">
+          <span>校园生活</span>
+          <span>活动参与</span>
+          <span>表达沟通</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="competition" class="container">
+    <h2 class="section-title"><span>03</span> 竞赛实践</h2>
+    <div class="experience-card">
+      <div class="experience-text">
+        <h3>竞赛实践</h3>
+        <div class="time">大学期间</div>
+        <p>
+          在竞赛和项目实践中，我接触到了更多真实问题。相比单纯完成课堂任务，
+          竞赛更需要主动思考、查找资料、解决问题，也让我更真切地感受到技术实践的意义。
+        </p>
+        <div class="tags">
+          <span>项目实践</span>
+          <span>问题解决</span>
+          <span>技术探索</span>
+        </div>
+      </div>
+      <div class="album" data-album="competition" data-total="3"></div>
+    </div>
+  </section>
+
+  <section id="minister" class="container">
+    <h2 class="section-title"><span>04</span> 学生组织部长</h2>
+    <div class="experience-card reverse">
+      <div class="album" data-album="minister" data-total="2"></div>
+      <div class="experience-text">
+        <h3>学生组织部长</h3>
+        <div class="time">2024年 - 至今</div>
+        <p>
+          担任学生组织部长之后，我接触到了更多活动安排、任务协调和成员沟通的工作。
+          很多事情看起来不大，但真正做起来需要耐心和责任心，也让我慢慢学会从整体角度考虑问题。
+        </p>
+        <div class="tags">
+          <span>组织管理</span>
+          <span>沟通协调</span>
+          <span>责任感</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="robomaster" class="container">
+    <h2 class="section-title"><span>05</span> RoboMaster 相关经历</h2>
+    <div class="experience-card">
+      <div class="experience-text">
+        <h3>RoboMaster 技术展示</h3>
+        <div class="time">2025年</div>
+        <p>
+          RoboMaster 相关经历让我接触到了机器人竞赛和工程实践的魅力。
+          这类活动不仅有技术内容，也有团队协作、现场展示和实际应用，让我对技术落地有了更直观的感受。
+        </p>
+        <div class="tags">
+          <span>机器人</span>
+          <span>技术展示</span>
+          <span>工程实践</span>
+        </div>
+      </div>
+      <div class="album" data-album="robomaster" data-total="6"></div>
+    </div>
+  </section>
+
+  <section id="volunteer" class="container">
+    <h2 class="section-title"><span>06</span> 志愿服务</h2>
+    <div class="experience-card reverse">
+      <div class="album" data-album="volunteer" data-total="3"></div>
+      <div class="experience-text">
+        <h3>志愿服务与讲解</h3>
+        <div class="time">大学期间</div>
+        <p>
+          志愿服务让我有机会把自己了解的内容分享给别人。尤其是在讲解 RoboMaster 相关内容时，
+          我发现表达清楚并不容易，但当别人真的听懂并产生兴趣时，会很有成就感。
+        </p>
+        <div class="tags">
+          <span>志愿服务</span>
+          <span>技术分享</span>
+          <span>表达能力</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="marathon" class="container">
+    <h2 class="section-title"><span>07</span> 蠡湖半程马拉松</h2>
+    <div class="experience-card">
+      <div class="experience-text">
+        <h3>蠡湖半程马拉松</h3>
+        <div class="time">2025年</div>
+        <p>
+          蠡湖半程马拉松是一段和运动、坚持有关的经历。现场氛围很热烈，
+          大家在同一个目标下奔跑、加油，也让我感受到坚持完成一件事带来的成就感。
+        </p>
+        <div class="tags">
+          <span>运动</span>
+          <span>坚持</span>
+          <span>热爱生活</span>
+        </div>
+      </div>
+      <div class="album" data-album="marathon" data-total="11"></div>
+    </div>
+  </section>
+
+  <section id="travel" class="container">
+    <h2 class="section-title"><span>08</span> 旅行记录</h2>
+    <div class="experience-card reverse">
+      <div class="album" data-album="travel" data-total="9"></div>
+      <div class="experience-text">
+        <h3>旅行与生活片段</h3>
+        <div class="time">生活记录</div>
+        <p>
+          旅行让我在学习之外看到更多生活的状态。无论是在路上看到的风景，
+          还是随手记录下来的瞬间，都会让我觉得生活不只是任务和安排，也应该有热爱和记录。
+        </p>
+        <div class="tags">
+          <span>旅行</span>
+          <span>记录生活</span>
+          <span>发现美好</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="container">
+    <div class="summary-box summary-art-box">
+      <p class="summary-art-text">
+        这些经历不一定都是很大的事情，<br>
+        但它们共同组成了我大学生活里真实而重要的一部分。
+      </p>
+    </div>
+  </div>
+
+  <footer>
+    © 2026 陈嘉怡的个人网站 | 用热爱记录生活，用代码改变世界
+  </footer>
+
+  <script>
+    const albumStates = {};
+
+    function createAlbum(albumElement) {
+      const name = albumElement.dataset.album;
+      const total = Number(albumElement.dataset.total);
+
+      albumStates[name] = {
+        index: 1,
+        total: total,
+        locked: false
+      };
+
+      albumElement.innerHTML = `
+        <div class="album-image-wrap">
+          <img id="${name}-img" src="images/${name}1.jpg" alt="${name} 相册">
+        </div>
+        <div class="album-controls">
+          <button id="${name}-prev" onclick="changePhoto('${name}', -1)">‹</button>
+          <div class="album-count" id="${name}-count">1 / ${total}</div>
+          <button id="${name}-next" onclick="changePhoto('${name}', 1)">›</button>
+        </div>
+      `;
+    }
+
+    function setAlbumButtons(name, disabled) {
+      const prevBtn = document.getElementById(`${name}-prev`);
+      const nextBtn = document.getElementById(`${name}-next`);
+
+      if (prevBtn && nextBtn) {
+        prevBtn.disabled = disabled;
+      }
+    }
+
+    function changePhoto(name, direction) {
+      const state = albumStates[name];
+
+      if (!state || state.locked) {
+        return;
+      }
+
+      state.locked = true;
+      setAlbumButtons(name, true);
+
+      const img = document.getElementById(`${name}-img`);
+      const count = document.getElementById(`${name}-count`);
+
+      let nextIndex = state.index + direction;
+
+      if (nextIndex < 1) {
+        nextIndex = state.total;
+      }
+
+      if (nextIndex > state.total) {
+        nextIndex = 1;
+      }
+
+      const nextSrc = `images/${name}${nextIndex}.jpg`;
+
+      img.classList.add("fade");
+
+      const preloadImg = new Image();
+      preloadImg.src = nextSrc;
+
+      preloadImg.onload = function () {
+        setTimeout(() => {
+          state.index = nextIndex;
+          img.src = nextSrc;
+          count.innerText = `${state.index} / ${state.total}`;
+          img.classList.remove("fade");
+
+          setTimeout(() => {
+            state.locked = false;
+            setAlbumButtons(name, false);
+          }, 220);
+        }, 120);
+      };
+
+      preloadImg.onerror = function () {
+        alert(`图片加载失败：${nextSrc}\n请检查文件名是否正确，例如 ${name}${nextIndex}.jpg`);
+
+        img.classList.remove("fade");
+        state.locked = false;
+        setAlbumButtons(name, false);
+      };
+    }
+
+    document.querySelectorAll(".album").forEach(createAlbum);
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,41 @@
+version: "3.8"
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: personal-redis
+    restart: always
+
+  api1:
+    image: personal-site-api:1.0
+    container_name: personal-api-1
+    ports:
+      - "127.0.0.1:8001:8000"
+    env_file:
+      - .env
+    environment:
+      - INSTANCE_NAME=api1
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    volumes:
+      - /opt/personal-site-api:/opt/personal-site-api
+    depends_on:
+      - redis
+    restart: always
+
+  api2:
+    image: personal-site-api:1.0
+    container_name: personal-api-2
+    ports:
+      - "127.0.0.1:8002:8000"
+    env_file:
+      - .env
+    environment:
+      - INSTANCE_NAME=api2
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    volumes:
+      - /opt/personal-site-api:/opt/personal-site-api
+    depends_on:
+      - redis
+    restart: always

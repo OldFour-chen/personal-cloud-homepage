@@ -1,0 +1,40 @@
+/* 只修改经历页底部总结文字 */
+
+.summary-box {
+  text-align: center !important;
+  padding: 72px 24px !important;
+  background: linear-gradient(180deg, #f8fbff 0%, #eef7ff 100%) !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+.summary-box::before,
+.summary-box::after,
+.quote::before,
+.quote::after {
+  content: none !important;
+  display: none !important;
+}
+
+.summary-box .quote {
+  text-align: center !important;
+}
+
+.summary-box p {
+  margin: 0 auto !important;
+  max-width: 980px !important;
+  font-family: "STXingkai", "华文行楷", "FZShuTi", "方正舒体", "LiSu", "隶书", cursive !important;
+  font-size: 34px !important;
+  line-height: 2.25 !important;
+  letter-spacing: 5px !important;
+  color: #17365d !important;
+  font-weight: 400 !important;
+  text-shadow: 0 4px 14px rgba(96, 165, 250, 0.24) !important;
+}
+
+@media (max-width: 768px) {
+  .summary-box p {
+    font-size: 24px !important;
+    letter-spacing: 2px !important;
+  }
+}

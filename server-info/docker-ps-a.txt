@@ -1,0 +1,6 @@
+CONTAINER ID   IMAGE                   COMMAND                  CREATED       STATUS                   PORTS                      NAMES
+f06bb9c4027b   personal-site-api:1.0   "uvicorn app:app --h…"   3 weeks ago   Up 3 minutes             127.0.0.1:8001->8000/tcp   personal-api-1
+3aa09b090318   personal-site-api:1.0   "uvicorn app:app --h…"   3 weeks ago   Up 3 minutes             127.0.0.1:8002->8000/tcp   personal-api-2
+71286ea06363   redis:7-alpine          "docker-entrypoint.s…"   3 weeks ago   Up 3 minutes             6379/tcp                   personal-redis
+99d3e66e7e12   d237450d848f            "/bin/sh -c 'pip ins…"   4 weeks ago   Exited (2) 4 weeks ago                              nice_herschel
+12c431c8d10f   d237450d848f            "/bin/sh -c 'pip ins…"   4 weeks ago   Exited (2) 4 weeks ago                              jolly_kepler

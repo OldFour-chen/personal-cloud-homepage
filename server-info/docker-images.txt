@@ -1,0 +1,5 @@
+WARNING: This output is designed for human readability. For machine-readable output, please use --format.
+IMAGE                   ID             DISK USAGE   CONTENT SIZE   EXTRA
+personal-site-api:1.0   8fcf594db2c0        273MB         64.2MB   U    
+python:3.10-slim        70f65c721aad        185MB         47.1MB        
+redis:7-alpine          6ab0b6e73817       57.8MB         16.8MB   U    

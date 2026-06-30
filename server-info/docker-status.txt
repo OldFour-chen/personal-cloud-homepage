@@ -1,0 +1,24 @@
+● docker.service - Docker Application Container Engine
+     Loaded: loaded (/lib/systemd/system/docker.service; enabled; vendor preset: enabled)
+     Active: active (running) since Tue 2026-06-30 16:30:56 CST; 3min 28s ago
+TriggeredBy: ● docker.socket
+       Docs: https://docs.docker.com
+   Main PID: 1137 (dockerd)
+      Tasks: 29
+     Memory: 124.5M
+        CPU: 2.306s
+     CGroup: /system.slice/docker.service
+             ├─1137 /usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock
+             ├─1622 /usr/bin/docker-proxy -proto tcp -host-ip 127.0.0.1 -host-port 8002 -container-ip 172.18.0.3 -container-port 8000 -use-listen-fd
+             └─1651 /usr/bin/docker-proxy -proto tcp -host-ip 127.0.0.1 -host-port 8001 -container-ip 172.18.0.4 -container-port 8000 -use-listen-fd
+
+Jun 30 16:30:55 iZbp19oaghsb0wf7t666boZ dockerd[1137]: time="2026-06-30T16:30:55.385656435+08:00" level=info msg="sbJoin: gwep4 ''->'ffed214d54c0', gwep6 ''->''" eid=ffed214d54c0 ep=personal-redis net=personal-site-api_default nid=47a83c1308cd
+Jun 30 16:30:55 iZbp19oaghsb0wf7t666boZ dockerd[1137]: time="2026-06-30T16:30:55.390492853+08:00" level=info msg="sbJoin: gwep4 ''->'bc4e5f0e8a64', gwep6 ''->''" eid=bc4e5f0e8a64 ep=personal-api-2 net=personal-site-api_default nid=47a83c1308cd
+Jun 30 16:30:55 iZbp19oaghsb0wf7t666boZ dockerd[1137]: time="2026-06-30T16:30:55.396201761+08:00" level=info msg="sbJoin: gwep4 ''->'30d0b5783565', gwep6 ''->''" eid=30d0b5783565 ep=personal-api-1 net=personal-site-api_default nid=47a83c1308cd
+Jun 30 16:30:55 iZbp19oaghsb0wf7t666boZ dockerd[1137]: time="2026-06-30T16:30:55.843012170+08:00" level=info msg="Loading containers: done."
+Jun 30 16:30:55 iZbp19oaghsb0wf7t666boZ dockerd[1137]: time="2026-06-30T16:30:55.889736132+08:00" level=info msg="Docker daemon" commit="29.1.3-0ubuntu3~22.04.2" containerd-snapshotter=true storage-driver=overlayfs version=29.1.3
+Jun 30 16:30:55 iZbp19oaghsb0wf7t666boZ dockerd[1137]: time="2026-06-30T16:30:55.891367208+08:00" level=info msg="Initializing buildkit"
+Jun 30 16:30:55 iZbp19oaghsb0wf7t666boZ dockerd[1137]: time="2026-06-30T16:30:55.957182959+08:00" level=info msg="Completed buildkit initialization"
+Jun 30 16:30:56 iZbp19oaghsb0wf7t666boZ dockerd[1137]: time="2026-06-30T16:30:56.024345631+08:00" level=info msg="Daemon has completed initialization"
+Jun 30 16:30:56 iZbp19oaghsb0wf7t666boZ systemd[1]: Started Docker Application Container Engine.
+Jun 30 16:30:56 iZbp19oaghsb0wf7t666boZ dockerd[1137]: time="2026-06-30T16:30:56.029914350+08:00" level=info msg="API listen on /run/docker.sock"

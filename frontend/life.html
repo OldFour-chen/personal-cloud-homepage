@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>生活 - 陈嘉怡的个人主页</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+      background: #f7fbff;
+      color: #0f172a;
+      line-height: 1.8;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .container {
+      width: 86%;
+      max-width: 1180px;
+      margin: 0 auto;
+    }
+
+    header {
+      height: 72px;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .nav {
+      height: 72px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 30px;
+      font-weight: 600;
+      color: #0f172a;
+      font-family: "Segoe Script", "Brush Script MT", "Lucida Handwriting", "Comic Sans MS", cursive;
+      letter-spacing: 0.4px;
+      white-space: nowrap;
+    }
+
+    .logo span {
+      color: #2563eb;
+      margin-left: 6px;
+      font-weight: 700;
+    }
+
+    .nav-links a {
+      margin-left: 30px;
+      font-size: 15px;
+      color: #334155;
+      font-weight: 500;
+      padding-bottom: 6px;
+      transition: 0.3s;
+    }
+
+    .nav-links a:hover,
+    .nav-links a.active {
+      color: #2563eb;
+      border-bottom: 2px solid #2563eb;
+    }
+
+    .page-hero {
+      padding: 86px 0 54px;
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 56px;
+      align-items: center;
+    }
+
+    .page-text .hello {
+      color: #64748b;
+      font-size: 20px;
+      margin-bottom: 12px;
+    }
+
+    .page-text h1 {
+      font-size: 48px;
+      line-height: 1.25;
+      margin-bottom: 16px;
+    }
+
+    .page-text h1 span {
+      color: #3b82f6;
+    }
+
+    .page-text p {
+      color: #64748b;
+      font-size: 16px;
+      margin-bottom: 16px;
+    }
+
+    .life-card {
+      background: linear-gradient(135deg, #eef6ff, #ffffff);
+      border-radius: 28px;
+      padding: 42px;
+      box-shadow: 0 18px 38px rgba(59, 130, 246, 0.12);
+    }
+
+    .life-card h2 {
+      font-size: 28px;
+      margin-bottom: 18px;
+    }
+
+    .life-card p {
+      color: #64748b;
+      margin-bottom: 18px;
+    }
+
+    .keyword-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      margin-top: 20px;
+    }
+
+    .keyword {
+      background: white;
+      border-radius: 16px;
+      padding: 15px;
+      color: #2563eb;
+      font-weight: 600;
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+    }
+
+    section {
+      padding: 58px 0;
+    }
+
+    .section-title {
+      font-size: 30px;
+      margin-bottom: 28px;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-title span {
+      color: #3b82f6;
+    }
+
+    .hobby-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+    }
+
+    .hobby-card {
+      background: white;
+      border-radius: 22px;
+      overflow: hidden;
+      box-shadow: 0 12px 30px rgba(59, 130, 246, 0.1);
+      transition: 0.3s;
+    }
+
+    .hobby-card:hover {
+      transform: translateY(-6px);
+    }
+
+    .hobby-card img {
+      width: 100%;
+      height: 170px;
+      object-fit: cover;
+    }
+
+    .hobby-content {
+      padding: 20px;
+      text-align: center;
+    }
+
+    .hobby-content h3 {
+      font-size: 20px;
+      margin-bottom: 6px;
+    }
+
+    .hobby-content p {
+      color: #64748b;
+      font-size: 14px;
+    }
+
+    .family-section {
+      display: grid;
+      grid-template-columns: 0.95fr 1.05fr;
+      gap: 34px;
+      align-items: center;
+    }
+
+    .family-text {
+      background: white;
+      border-radius: 26px;
+      padding: 38px;
+      box-shadow: 0 12px 30px rgba(59, 130, 246, 0.1);
+    }
+
+    .family-text h3 {
+      font-size: 26px;
+      margin-bottom: 14px;
+      color: #0f172a;
+    }
+
+    .family-text p {
+      color: #64748b;
+      font-size: 16px;
+      margin-bottom: 14px;
+    }
+
+    .family-photos {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .family-photo {
+      background: #eef6ff;
+      border-radius: 22px;
+      padding: 10px;
+      box-shadow: 0 12px 30px rgba(59, 130, 246, 0.1);
+      transition: 0.3s;
+    }
+
+    .family-photo:hover {
+      transform: translateY(-6px);
+    }
+
+    .family-photo img {
+      width: 100%;
+      height: 260px;
+      object-fit: contain;
+      border-radius: 16px;
+      background: #f8fbff;
+    }
+
+    .family-photo p {
+      text-align: center;
+      color: #334155;
+      font-weight: 600;
+      margin-top: 8px;
+      font-size: 14px;
+    }
+
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 22px;
+    }
+
+    .gallery-item {
+      background: #eef6ff;
+      border-radius: 22px;
+      padding: 10px;
+      box-shadow: 0 12px 30px rgba(59, 130, 246, 0.1);
+      transition: 0.3s;
+    }
+
+    .gallery-item:hover {
+      transform: translateY(-6px) scale(1.01);
+    }
+
+    .gallery-item img {
+      width: 100%;
+      height: 240px;
+      object-fit: contain;
+      background: #f8fbff;
+      border-radius: 16px;
+    }
+
+    .summary-box {
+      background: linear-gradient(135deg, #eef6ff, #ffffff);
+      border-radius: 28px;
+      padding: 44px;
+      text-align: center;
+      box-shadow: 0 14px 34px rgba(59, 130, 246, 0.1);
+      margin-bottom: 54px;
+    }
+
+    .summary-box .quote {
+      font-size: 56px;
+      color: #93c5fd;
+      line-height: 1;
+    }
+
+    .summary-box p {
+      color: #334155;
+      font-size: 20px;
+      line-height: 1.9;
+      margin-top: 8px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 28px 0;
+      color: #64748b;
+      border-top: 1px solid #e2e8f0;
+      font-size: 14px;
+    }
+
+    @media (max-width: 1000px) {
+      .page-hero,
+      .family-section {
+        grid-template-columns: 1fr;
+      }
+
+      .hobby-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .gallery-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .nav-links {
+        display: none;
+      }
+
+      .page-text h1 {
+        font-size: 38px;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .hobby-grid,
+      .family-photos,
+      .gallery-grid,
+      .keyword-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .logo {
+        font-size: 24px;
+      }
+
+      .page-text h1 {
+        font-size: 32px;
+      }
+
+      .family-photo img,
+      .gallery-item img {
+        height: 220px;
+      }
+    }
+
+    /* 恢复原版 Logo 字体 */
+    .logo {
+      font-size: 30px !important;
+      font-weight: 600 !important;
+      color: #0f172a !important;
+      font-family: "Segoe Script", "Brush Script MT", "Lucida Handwriting", "Comic Sans MS", cursive !important;
+      letter-spacing: 0.4px !important;
+      white-space: nowrap !important;
+    }
+
+    .logo span {
+      color: #2563eb !important;
+      margin-left: 6px !important;
+      font-family: "Segoe Script", "Brush Script MT", "Lucida Handwriting", "Comic Sans MS", cursive !important;
+      font-weight: 700 !important;
+    }
+
+  
+    /* 页面字体统一优化：标题宋体，正文楷体，英文 Times New Roman */
+    body {
+      font-family: "Times New Roman", "KaiTi", "楷体", "STKaiti", "Microsoft YaHei", serif;
+    }
+
+    /* 保留原版 Logo 字体，不再覆盖 */
+    .logo,
+    .logo span {
+      font-family: "Segoe Script", "Brush Script MT", "Lucida Handwriting", "Comic Sans MS", cursive !important;
+    }
+
+    /* 大标题：宋体 */
+    h1,
+    h2,
+    .section-title,
+    .hero-title,
+    .page-title,
+    .main-title,
+    .hero h1,
+    .hero-text h1,
+    section > h2 {
+      font-family: "Times New Roman", "SimSun", "宋体", serif !important;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+    }
+
+    /* 小标题：宋体，稍微轻一点 */
+    h3,
+    h4,
+    .card h3,
+    .skill-card h3,
+    .experience-card h3,
+    .timeline-title,
+    .item-title {
+      font-family: "Times New Roman", "SimSun", "宋体", serif !important;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+    }
+
+    /* 正文内容：楷体 */
+    p,
+    li,
+    .desc,
+    .text,
+    .about-text,
+    .card p,
+    .skill-card p,
+    .experience-card p,
+    .timeline p,
+    .timeline-item p,
+    .message,
+    .message.bot,
+    .message.user,
+    .guest-content,
+    .owner-reply,
+    .intro,
+    .subtitle {
+      font-family: "Times New Roman", "KaiTi", "楷体", "STKaiti", serif !important;
+      font-weight: 400;
+    }
+
+    /* 导航、按钮、输入框：保持清爽一点 */
+    .nav a,
+    button,
+    .btn,
+    input,
+    textarea {
+      font-family: "Times New Roman", "Microsoft YaHei", "PingFang SC", sans-serif !important;
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <div class="container nav">
+      <div class="logo">Hello, I'm <span>Chen Jiayi</span></div>
+
+      <nav class="nav-links">
+        <a href="index.html">首页</a>
+        <a href="about.html">关于我</a>
+        <a href="skills.html">技能</a>
+        <a href="experience.html">经历</a>
+        <a href="life.html" class="active">生活</a>
+        <a href="ai.html">AI助手</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container page-hero">
+    <div class="page-text">
+      <div class="hello">My Life 🌿</div>
+      <h1>我的<span>生活碎片</span></h1>
+
+      <p>
+        除了学习和项目，我也喜欢记录生活里的小瞬间。可能是一张照片、一段旅行、一首歌，
+        或者和家人在一起的普通日常。
+      </p>
+
+      <p>
+        这些看起来很小的片段，也组成了我真实而温暖的生活。这个页面记录了一些兴趣爱好、
+        家庭陪伴、童年回忆和旅行中的照片。
+      </p>
+    </div>
+
+    <div class="life-card">
+      <h2>生活关键词</h2>
+      <p>我希望自己的生活里不只有任务和安排，也有热爱、记录和一点点浪漫。</p>
+
+      <div class="keyword-grid">
+        <div class="keyword">📷 摄影记录</div>
+        <div class="keyword">🎧 音乐陪伴</div>
+        <div class="keyword">📖 阅读思考</div>
+        <div class="keyword">✈️ 旅行风景</div>
+        <div class="keyword">🏠 家庭陪伴</div>
+        <div class="keyword">🌱 童年回忆</div>
+      </div>
+    </div>
+  </main>
+
+  <section class="container">
+    <h2 class="section-title"><span>✦</span> 兴趣爱好</h2>
+
+    <div class="hobby-grid">
+      <div class="hobby-card">
+        <img src="images/photo.jpg" alt="摄影">
+        <div class="hobby-content">
+          <h3>📷 摄影</h3>
+          <p>喜欢用照片记录生活中值得留下来的瞬间。</p>
+        </div>
+      </div>
+
+      <div class="hobby-card">
+        <img src="images/music.jpg" alt="音乐">
+        <div class="hobby-content">
+          <h3>🎧 音乐</h3>
+          <p>音乐是放松和整理心情的一种方式。</p>
+        </div>
+      </div>
+
+      <div class="hobby-card">
+        <img src="images/read.jpg" alt="阅读">
+        <div class="hobby-content">
+          <h3>📖 阅读</h3>
+          <p>阅读让我看到不同的想法，也让生活慢下来。</p>
+        </div>
+      </div>
+
+      <div class="hobby-card">
+        <img src="images/travel.jpg" alt="旅行">
+        <div class="hobby-content">
+          <h3>✈️ 旅行</h3>
+          <p>旅行让我在学习之外发现更多生活的美好。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="container">
+    <h2 class="section-title"><span>☻</span> 家庭与陪伴</h2>
+
+    <div class="family-section">
+      <div class="family-text">
+        <h3>普通日常里的温暖</h3>
+        <p>
+          家人一直是我成长中很重要的陪伴。很多时候，普通的日常、简单的合照、
+          小时候的照片，都会让我觉得生活里有很多值得珍惜的东西。
+        </p>
+
+        <p>
+          在这个页面里，我没有写太多具体的信息，只是想用几张照片记录那些温暖的小片段。
+          它们不一定隆重，但对我来说很重要。
+        </p>
+      </div>
+
+      <div class="family-photos">
+        <div class="family-photo">
+          <img src="images/brother1.jpg" alt="家人陪伴照片1">
+          <p>家人的陪伴</p>
+        </div>
+
+        <div class="family-photo">
+          <img src="images/brother2.jpg" alt="家人陪伴照片2">
+          <p>温暖日常</p>
+        </div>
+
+        <div class="family-photo">
+          <img src="images/childhood1.jpg" alt="童年照片">
+          <p>童年回忆</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="container">
+    <h2 class="section-title"><span>✧</span> 旅行照片墙</h2>
+
+    <div class="gallery-grid">
+      <div class="gallery-item"><img src="images/travel1.jpg" alt="旅行照片1"></div>
+      <div class="gallery-item"><img src="images/travel2.jpg" alt="旅行照片2"></div>
+      <div class="gallery-item"><img src="images/travel3.jpg" alt="旅行照片3"></div>
+      <div class="gallery-item"><img src="images/travel4.jpg" alt="旅行照片4"></div>
+      <div class="gallery-item"><img src="images/travel5.jpg" alt="旅行照片5"></div>
+      <div class="gallery-item"><img src="images/travel6.jpg" alt="旅行照片6"></div>
+      <div class="gallery-item"><img src="images/travel7.jpg" alt="旅行照片7"></div>
+      <div class="gallery-item"><img src="images/travel8.jpg" alt="旅行照片8"></div>
+      <div class="gallery-item"><img src="images/travel9.jpg" alt="旅行照片9"></div>
+    </div>
+  </section>
+
+  <div class="container">
+    <div class="summary-box">
+      <div class="quote">“</div>
+      <p>
+        生活不是只有忙碌和目标，<br>
+        也有值得停下来记录的小小瞬间。
+      </p>
+    </div>
+  </div>
+
+  <footer>
+    © 2026 陈嘉怡的个人网站 | 用热爱记录生活，用代码改变世界
+  </footer>
+
+</body>
+</html>

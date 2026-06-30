@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>关于我 - 陈嘉怡的个人主页</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+      background: #f7fbff;
+      color: #0f172a;
+      line-height: 1.8;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .container {
+      width: 86%;
+      max-width: 1180px;
+      margin: 0 auto;
+    }
+
+    header {
+      height: 72px;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .nav {
+      height: 72px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 30px;
+      font-weight: 600;
+      color: #0f172a;
+      font-family: "Segoe Script", "Brush Script MT", "Lucida Handwriting", "Comic Sans MS", cursive;
+      letter-spacing: 0.4px;
+      white-space: nowrap;
+    }
+
+    .logo span {
+      color: #2563eb;
+      margin-left: 6px;
+      font-weight: 700;
+    }
+
+    .nav-links a {
+      margin-left: 30px;
+      font-size: 15px;
+      color: #334155;
+      font-weight: 500;
+      padding-bottom: 6px;
+      transition: 0.3s;
+    }
+
+    .nav-links a:hover,
+    .nav-links a.active {
+      color: #2563eb;
+      border-bottom: 2px solid #2563eb;
+    }
+
+    .page-hero {
+      padding: 86px 0 54px;
+      display: grid;
+      grid-template-columns: 0.95fr 1.05fr;
+      gap: 58px;
+      align-items: center;
+    }
+
+    .page-text .hello {
+      color: #64748b;
+      font-size: 20px;
+      margin-bottom: 12px;
+    }
+
+    .page-text h1 {
+      font-size: 48px;
+      line-height: 1.25;
+      margin-bottom: 16px;
+    }
+
+    .page-text h1 span {
+      color: #3b82f6;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 8px 16px;
+      background: #eff6ff;
+      color: #2563eb;
+      border-radius: 999px;
+      font-weight: 600;
+      margin-bottom: 22px;
+    }
+
+    .page-text p {
+      color: #64748b;
+      font-size: 16px;
+      margin-bottom: 16px;
+    }
+
+    .about-image {
+      position: relative;
+    }
+
+    .about-image::before {
+      content: "";
+      position: absolute;
+      width: 260px;
+      height: 260px;
+      background: #eaf2ff;
+      border-radius: 50%;
+      top: -35px;
+      right: -35px;
+      z-index: -1;
+    }
+
+    .about-image img {
+      width: 100%;
+      height: 430px;
+      object-fit: cover;
+      border-radius: 24px;
+      box-shadow: 0 18px 35px rgba(15, 23, 42, 0.12);
+    }
+
+    section {
+      padding: 56px 0;
+    }
+
+    .section-title {
+      font-size: 30px;
+      margin-bottom: 28px;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-title span {
+      color: #3b82f6;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 22px;
+    }
+
+    .info-card {
+      background: white;
+      border-radius: 20px;
+      padding: 28px 20px;
+      text-align: center;
+      box-shadow: 0 12px 30px rgba(59, 130, 246, 0.1);
+      transition: 0.3s;
+    }
+
+    .info-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .info-card .icon {
+      font-size: 34px;
+      margin-bottom: 10px;
+    }
+
+    .info-card h3 {
+      font-size: 18px;
+      margin-bottom: 6px;
+    }
+
+    .info-card p {
+      color: #64748b;
+      font-size: 14px;
+    }
+
+    .story-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 26px;
+    }
+
+    .story-card {
+      background: white;
+      border-radius: 24px;
+      padding: 34px;
+      box-shadow: 0 12px 30px rgba(59, 130, 246, 0.1);
+    }
+
+    .story-card h3 {
+      font-size: 22px;
+      margin-bottom: 12px;
+      color: #0f172a;
+    }
+
+    .story-card p {
+      color: #64748b;
+      font-size: 16px;
+    }
+
+    .goal-box {
+      background: linear-gradient(135deg, #eef6ff, #ffffff);
+      border-radius: 26px;
+      padding: 44px;
+      text-align: center;
+      box-shadow: 0 14px 34px rgba(59, 130, 246, 0.1);
+    }
+
+    .goal-box .quote {
+      font-size: 56px;
+      color: #93c5fd;
+      line-height: 1;
+    }
+
+    .goal-box p {
+      color: #334155;
+      font-size: 20px;
+      line-height: 1.9;
+      margin-top: 8px;
+    }
+
+    .buttons {
+      margin-top: 30px;
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+
+    .btn-primary {
+      background: #3b82f6;
+      color: white;
+      box-shadow: 0 8px 20px rgba(59, 130, 246, 0.28);
+    }
+
+    .btn-primary:hover {
+      background: #2563eb;
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      background: white;
+      color: #334155;
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+    }
+
+    .btn-secondary:hover {
+      transform: translateY(-2px);
+    }
+
+    footer {
+      text-align: center;
+      padding: 28px 0;
+      color: #64748b;
+      border-top: 1px solid #e2e8f0;
+      font-size: 14px;
+    }
+
+    @media (max-width: 1000px) {
+      .page-hero {
+        grid-template-columns: 1fr;
+      }
+
+      .info-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .story-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .nav-links {
+        display: none;
+      }
+
+      .page-text h1 {
+        font-size: 38px;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .info-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .logo {
+        font-size: 24px;
+      }
+
+      .page-text h1 {
+        font-size: 32px;
+      }
+    }
+
+    /* 恢复原版 Logo 字体 */
+    .logo {
+      font-size: 30px !important;
+      font-weight: 600 !important;
+      color: #0f172a !important;
+      font-family: "Segoe Script", "Brush Script MT", "Lucida Handwriting", "Comic Sans MS", cursive !important;
+      letter-spacing: 0.4px !important;
+      white-space: nowrap !important;
+    }
+
+    .logo span {
+      color: #2563eb !important;
+      margin-left: 6px !important;
+      font-family: "Segoe Script", "Brush Script MT", "Lucida Handwriting", "Comic Sans MS", cursive !important;
+      font-weight: 700 !important;
+    }
+
+  
+    /* 页面字体统一优化：标题宋体，正文楷体，英文 Times New Roman */
+    body {
+      font-family: "Times New Roman", "KaiTi", "楷体", "STKaiti", "Microsoft YaHei", serif;
+    }
+
+    /* 保留原版 Logo 字体，不再覆盖 */
+    .logo,
+    .logo span {
+      font-family: "Segoe Script", "Brush Script MT", "Lucida Handwriting", "Comic Sans MS", cursive !important;
+    }
+
+    /* 大标题：宋体 */
+    h1,
+    h2,
+    .section-title,
+    .hero-title,
+    .page-title,
+    .main-title,
+    .hero h1,
+    .hero-text h1,
+    section > h2 {
+      font-family: "Times New Roman", "SimSun", "宋体", serif !important;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+    }
+
+    /* 小标题：宋体，稍微轻一点 */
+    h3,
+    h4,
+    .card h3,
+    .skill-card h3,
+    .experience-card h3,
+    .timeline-title,
+    .item-title {
+      font-family: "Times New Roman", "SimSun", "宋体", serif !important;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+    }
+
+    /* 正文内容：楷体 */
+    p,
+    li,
+    .desc,
+    .text,
+    .about-text,
+    .card p,
+    .skill-card p,
+    .experience-card p,
+    .timeline p,
+    .timeline-item p,
+    .message,
+    .message.bot,
+    .message.user,
+    .guest-content,
+    .owner-reply,
+    .intro,
+    .subtitle {
+      font-family: "Times New Roman", "KaiTi", "楷体", "STKaiti", serif !important;
+      font-weight: 400;
+    }
+
+    /* 导航、按钮、输入框：保持清爽一点 */
+    .nav a,
+    button,
+    .btn,
+    input,
+    textarea {
+      font-family: "Times New Roman", "Microsoft YaHei", "PingFang SC", sans-serif !important;
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <div class="container nav">
+      <div class="logo">Hello, I'm <span>Chen Jiayi</span></div>
+
+      <nav class="nav-links">
+        <a href="index.html">首页</a>
+        <a href="about.html" class="active">关于我</a>
+        <a href="skills.html">技能</a>
+        <a href="experience.html">经历</a>
+        <a href="life.html">生活</a>
+        <a href="ai.html">AI助手</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container page-hero">
+    <div class="page-text">
+      <div class="hello">About Me 👋</div>
+      <div class="tag">人工智能2401班</div>
+
+      <h1>你好，我是<span>陈嘉怡</span></h1>
+
+      <p>
+        我是一名人工智能专业的学生，目前对前端开发、AI 应用、云计算部署和用户体验设计比较感兴趣。
+        我喜欢把课堂中学到的知识应用到实际项目中，也希望通过一次次实践不断提升自己的能力。
+      </p>
+
+      <p>
+        这个个人主页是我在云计算课程中的一次综合实践。我希望它不只是一个简单的展示页面，
+        也可以记录我的学习经历、校园生活、兴趣爱好和项目成果。
+      </p>
+
+      <div class="buttons">
+        <a href="index.html" class="btn btn-primary">返回首页 →</a>
+        <a href="index.html#ai" class="btn btn-secondary">问问 AI 助手</a>
+      </div>
+    </div>
+
+    <div class="about-image">
+      <img src="images/about.jpg" alt="关于我的照片">
+    </div>
+  </main>
+
+  <section class="container">
+    <h2 class="section-title"><span>✦</span> 基本信息</h2>
+
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="icon">🎓</div>
+        <h3>专业班级</h3>
+        <p>人工智能2401班</p>
+      </div>
+
+      <div class="info-card">
+        <div class="icon">🆔</div>
+        <h3>学号</h3>
+        <p>1104230102</p>
+      </div>
+
+      <div class="info-card">
+        <div class="icon">💬</div>
+        <h3>联系方式</h3>
+        <p>QQ：2896397309</p>
+      </div>
+
+      <div class="info-card">
+        <div class="icon">💙</div>
+        <h3>兴趣爱好</h3>
+        <p>摄影 / 音乐 / 阅读 / 旅行</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="container">
+    <h2 class="section-title"><span>✧</span> 更了解我一点</h2>
+
+    <div class="story-grid">
+      <div class="story-card">
+        <h3>关于学习</h3>
+        <p>
+          在专业学习中，我对人工智能、前端开发和云计算部署都比较感兴趣。
+          我希望自己不只是完成课程任务，也能真正理解技术的使用场景，并把它们做成可以展示的作品。
+        </p>
+      </div>
+
+      <div class="story-card">
+        <h3>关于实践</h3>
+        <p>
+          我比较喜欢做看得见效果的项目，比如网页设计、图像识别系统、课程实验和云端部署。
+          每次把一个功能真正跑起来，都会让我觉得很有成就感。
+        </p>
+      </div>
+
+      <div class="story-card">
+        <h3>关于生活</h3>
+        <p>
+          除了学习，我也喜欢用照片记录生活。军训、马拉松、校园活动和志愿讲解这些经历，
+          都是我大学生活里很值得留下来的片段。
+        </p>
+      </div>
+
+      <div class="story-card">
+        <h3>关于未来</h3>
+        <p>
+          之后我希望继续学习前端、后端、云计算和 AI 应用相关知识，
+          做出更加完整、实用，也更有自己想法的作品。
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="container">
+    <div class="goal-box">
+      <div class="quote">“</div>
+      <p>
+        保持好奇，持续学习。<br>
+        把想法写进代码里，把经历留在页面中。
+      </p>
+    </div>
+  </section>
+
+  <footer>
+    © 2026 陈嘉怡的个人网站 | 用热爱记录生活，用代码改变世界
+  </footer>
+
+</body>
+</html>
