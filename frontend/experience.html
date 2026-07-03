@@ -598,6 +598,99 @@
   }
 }
 
+.dynamic-feed {
+  margin: 12px auto 10px;
+}
+
+.dynamic-feed-head {
+  margin-bottom: 24px;
+}
+
+.dynamic-feed-head p {
+  color: #64748b;
+}
+
+.dynamic-feed-list {
+  display: grid;
+  gap: 24px;
+}
+
+.dynamic-experience-card {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  background: #fff;
+  border-radius: 24px;
+  padding: 26px;
+  box-shadow: 0 14px 34px rgba(59, 130, 246, 0.1);
+}
+
+.dynamic-experience-time {
+  color: #2563eb;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.dynamic-experience-card h3 {
+  margin: 0 0 12px;
+  font-size: 28px;
+}
+
+.dynamic-experience-card p {
+  color: #64748b;
+  line-height: 1.9;
+}
+
+.dynamic-experience-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.dynamic-experience-tags span {
+  background: #eff6ff;
+  color: #2563eb;
+  padding: 6px 13px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.dynamic-experience-gallery {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.dynamic-experience-gallery img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 18px;
+  background: #eef6ff;
+}
+
+.dynamic-empty {
+  background: #fff;
+  border-radius: 20px;
+  padding: 24px;
+  border: 1px dashed #bfdbfe;
+  color: #64748b;
+}
+
+@media (max-width: 1000px) {
+  .dynamic-experience-card {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .dynamic-experience-gallery {
+    grid-template-columns: 1fr;
+  }
+}
+
 </style>
   <link rel="stylesheet" href="summary-art.css?v=1">
 </head>
@@ -658,6 +751,16 @@
     <a href="#marathon">马拉松</a>
     <a href="#travel">旅行</a>
   </div>
+
+  <section class="container dynamic-feed">
+    <div class="dynamic-feed-head">
+      <h2 id="dynamicExperienceTitle" class="section-title"><span>NEW</span> 后台新增经历</h2>
+      <p id="dynamicExperienceIntro">这里展示通过后台管理系统新增的经历条目，支持多图绑定与持续更新。</p>
+    </div>
+    <div id="dynamicExperienceList" class="dynamic-feed-list">
+      <div class="dynamic-empty">动态经历加载中...</div>
+    </div>
+  </section>
 
   <section id="military" class="container">
     <h2 class="section-title"><span>01</span> 军训：红军蓝军汇演</h2>
@@ -921,6 +1024,8 @@
 
     document.querySelectorAll(".album").forEach(createAlbum);
   </script>
+
+  <script src="js/site-dynamic.js"></script>
 
 </body>
 </html>

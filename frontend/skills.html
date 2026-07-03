@@ -527,7 +527,86 @@
       font-family: "Times New Roman", "Microsoft YaHei", "PingFang SC", sans-serif !important;
     }
 
-  </style>
+.dynamic-doc-head {
+  margin-bottom: 24px;
+}
+
+.dynamic-doc-head p {
+  color: #64748b;
+  line-height: 1.8;
+}
+
+.dynamic-doc-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+  margin-bottom: 28px;
+}
+
+.dynamic-doc-card {
+  display: grid;
+  grid-template-columns: 84px 1fr;
+  gap: 16px;
+  background: white;
+  border-radius: 22px;
+  padding: 22px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+}
+
+.dynamic-doc-icon {
+  width: 84px;
+  height: 84px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #e9f1ff, #f8fbff);
+  color: #2563eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.dynamic-doc-content h3 {
+  margin: 0 0 8px;
+}
+
+.dynamic-doc-content p,
+.dynamic-doc-meta {
+  color: #64748b;
+}
+
+.dynamic-doc-meta {
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.dynamic-doc-content a {
+  display: inline-flex;
+  margin-top: 12px;
+  color: #2563eb;
+  font-weight: 700;
+}
+
+.dynamic-empty {
+  background: white;
+  border-radius: 20px;
+  padding: 22px;
+  border: 1px dashed #bfdbfe;
+  color: #64748b;
+}
+
+@media (max-width: 900px) {
+  .dynamic-doc-list {
+    grid-template-columns: 1fr;
+  }
+
+  .dynamic-doc-card {
+    grid-template-columns: 1fr;
+  }
+}
+
+</style>
 </head>
 
 <body>
@@ -702,6 +781,15 @@
   <section id="docs" class="container">
     <h2 class="section-title"><span>📄</span> 项目与文档</h2>
 
+    <div class="dynamic-doc-head">
+      <h3 id="dynamicSkillDocsTitle">技能证明与项目文档</h3>
+      <p id="dynamicSkillDocsIntro">这里会展示通过后台上传的技能证明、证书与项目相关 PDF 文档。</p>
+    </div>
+
+    <div id="dynamicSkillDocsList" class="dynamic-doc-list">
+      <div class="dynamic-empty">动态 PDF 文档加载中...</div>
+    </div>
+
     <div class="docs-grid">
       <div class="doc-card">
         <div class="doc-icon">☁️</div>
@@ -819,5 +907,6 @@
     © 2026 陈嘉怡的个人网站 | 用热爱记录生活，用代码改变世界
   </footer>
 
+  <script src="js/site-dynamic.js"></script>
 </body>
 </html>

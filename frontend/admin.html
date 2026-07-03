@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CloudHome Admin</title>
+  <style>
+    :root {
+      --bg: #f3f6fb;
+      --panel: rgba(255, 255, 255, 0.94);
+      --line: #d8e1ee;
+      --text: #122033;
+      --muted: #607086;
+      --brand: #246bff;
+      --brand-deep: #114ed1;
+      --danger: #d64545;
+      --success: #16945f;
+      --shadow: 0 18px 44px rgba(18, 32, 51, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(36, 107, 255, 0.14), transparent 30%),
+        radial-gradient(circle at bottom right, rgba(22, 148, 95, 0.12), transparent 28%),
+        linear-gradient(180deg, #f9fbff 0%, var(--bg) 100%);
+    }
+
+    button, input, textarea, select {
+      font: inherit;
+    }
+
+    .hidden { display: none !important; }
+
+    .login-shell,
+    .app-shell {
+      width: min(1280px, calc(100% - 32px));
+      margin: 24px auto;
+    }
+
+    .login-card,
+    .sidebar,
+    .panel,
+    .stat-card,
+    .toast {
+      background: var(--panel);
+      border: 1px solid rgba(216, 225, 238, 0.88);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .login-card {
+      width: min(460px, 100%);
+      margin: 12vh auto 0;
+      border-radius: 28px;
+      padding: 32px;
+    }
+
+    .login-card h1 {
+      margin: 0 0 10px;
+      font-size: 32px;
+    }
+
+    .login-card p {
+      margin: 0 0 24px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .field {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .field label {
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .field input,
+    .field textarea,
+    .field select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 12px 14px;
+      background: #fff;
+      color: var(--text);
+      outline: none;
+    }
+
+    .field textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .field input:focus,
+    .field textarea:focus,
+    .field select:focus {
+      border-color: rgba(36, 107, 255, 0.72);
+      box-shadow: 0 0 0 4px rgba(36, 107, 255, 0.12);
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: none;
+      border-radius: 14px;
+      padding: 12px 18px;
+      cursor: pointer;
+      font-weight: 700;
+      transition: transform 0.18s ease, background 0.18s ease, opacity 0.18s ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+    button:disabled { opacity: 0.62; cursor: not-allowed; transform: none; }
+
+    .primary { background: var(--brand); color: #fff; }
+    .primary:hover { background: var(--brand-deep); }
+    .secondary { background: #eef4ff; color: var(--brand-deep); }
+    .danger { background: #fff1f1; color: var(--danger); }
+
+    .login-tip,
+    .status-box {
+      margin-top: 16px;
+      border-radius: 16px;
+      padding: 14px 16px;
+      border: 1px solid #d8e8ff;
+      background: #f7fbff;
+      color: #27405c;
+      min-height: 52px;
+      line-height: 1.7;
+    }
+
+    .app-shell {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .sidebar {
+      border-radius: 28px;
+      padding: 24px;
+      position: sticky;
+      top: 20px;
+    }
+
+    .brand h2 {
+      margin: 0 0 8px;
+      font-size: 28px;
+    }
+
+    .brand p {
+      margin: 0 0 20px;
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 14px;
+    }
+
+    .nav-list {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 22px;
+    }
+
+    .nav-btn {
+      width: 100%;
+      text-align: left;
+      background: #fff;
+      color: #24374f;
+      border: 1px solid var(--line);
+    }
+
+    .nav-btn.active {
+      background: linear-gradient(135deg, #246bff, #4c91ff);
+      color: #fff;
+      border-color: transparent;
+    }
+
+    .main {
+      display: grid;
+      gap: 18px;
+    }
+
+    .hero {
+      border-radius: 28px;
+      padding: 26px;
+      background: linear-gradient(135deg, rgba(36, 107, 255, 0.96), rgba(85, 138, 255, 0.92));
+      color: #fff;
+      box-shadow: var(--shadow);
+    }
+
+    .hero h1 {
+      margin: 0 0 10px;
+      font-size: 34px;
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 760px;
+      line-height: 1.8;
+      color: rgba(255, 255, 255, 0.88);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .stat-card {
+      border-radius: 22px;
+      padding: 18px;
+    }
+
+    .stat-card span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .stat-card strong {
+      font-size: 34px;
+    }
+
+    .panel {
+      border-radius: 28px;
+      padding: 24px;
+    }
+
+    .panel h2 {
+      margin: 0 0 10px;
+      font-size: 26px;
+    }
+
+    .panel-intro {
+      color: var(--muted);
+      margin: 0 0 20px;
+      line-height: 1.7;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .card-list {
+      display: grid;
+      gap: 16px;
+    }
+
+    .item-card {
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 18px;
+      background: #fff;
+    }
+
+    .item-card h3 {
+      margin: 0 0 8px;
+      font-size: 20px;
+    }
+
+    .item-card p {
+      margin: 6px 0;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .chips,
+    .thumb-list {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .chip {
+      background: #edf4ff;
+      color: var(--brand-deep);
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .thumb-list img {
+      width: 88px;
+      height: 88px;
+      object-fit: cover;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: #eef4ff;
+    }
+
+    .split-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .table-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .table-row {
+      display: grid;
+      grid-template-columns: 220px 1fr auto;
+      gap: 12px;
+      align-items: start;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 14px;
+      background: #fff;
+    }
+
+    .table-row code {
+      display: block;
+      padding-top: 12px;
+      color: var(--brand-deep);
+      word-break: break-all;
+    }
+
+    .message-reply {
+      margin-top: 12px;
+      padding: 12px 14px;
+      background: #f4f8ff;
+      border-left: 4px solid var(--brand);
+      border-radius: 14px;
+      color: #35506c;
+    }
+
+    .toast-wrap {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      display: grid;
+      gap: 10px;
+      z-index: 20;
+    }
+
+    .toast {
+      border-radius: 18px;
+      padding: 14px 16px;
+      min-width: 260px;
+    }
+
+    .toast.success { border-left: 5px solid var(--success); }
+    .toast.error { border-left: 5px solid var(--danger); }
+    .toast.info { border-left: 5px solid var(--brand); }
+
+    @media (max-width: 1100px) {
+      .app-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: static;
+      }
+
+      .stats,
+      .grid-2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 720px) {
+      .login-shell,
+      .app-shell {
+        width: calc(100% - 20px);
+      }
+
+      .stats,
+      .grid-2,
+      .table-row {
+        grid-template-columns: 1fr;
+      }
+
+      .hero h1 {
+        font-size: 28px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <section id="loginView" class="login-shell">
+    <div class="login-card">
+      <h1>CloudHome Admin</h1>
+      <p>输入管理密码后进入后台系统。密码只提交到后端 `/api/admin/login` 进行验证，前端只保存返回的 token。</p>
+      <div class="field">
+        <label for="loginPassword">管理密码</label>
+        <input id="loginPassword" type="password" placeholder="请输入后台管理密码">
+      </div>
+      <div class="btn-row">
+        <button id="loginBtn" class="primary" type="button">进入后台</button>
+        <button id="checkMediaBtn" class="secondary" type="button">检查 OSS 配置</button>
+      </div>
+      <div id="loginTip" class="login-tip">准备就绪，登录后可管理经历、技能文档、内容块与留言回复。</div>
+    </div>
+  </section>
+
+  <section id="appView" class="app-shell hidden">
+    <aside class="sidebar">
+      <div class="brand">
+        <h2>CloudHome</h2>
+        <p>轻量 CMS 后台。保留原有 `media.html`，同时新增统一后台入口。</p>
+      </div>
+      <div class="nav-list">
+        <button class="nav-btn active" data-panel="dashboard">Dashboard</button>
+        <button class="nav-btn" data-panel="experience">经历管理</button>
+        <button class="nav-btn" data-panel="skills">技能 PDF</button>
+        <button class="nav-btn" data-panel="content">内容块</button>
+        <button class="nav-btn" data-panel="messages">留言回复</button>
+      </div>
+      <div class="btn-row">
+        <button id="refreshAllBtn" class="secondary" type="button">刷新数据</button>
+        <button id="logoutBtn" class="danger" type="button">退出登录</button>
+      </div>
+      <div id="globalStatus" class="status-box">后台已连接，随时可以切换模块进行管理。</div>
+    </aside>
+
+    <main class="main">
+      <section class="hero">
+        <h1>个人主页 + 后台内容管理系统</h1>
+        <p>支持统一登录鉴权、OSS 预签名上传、经历多图绑定、技能 PDF 管理、文本内容块编辑、留言回复与删除，以及上传防抖与重复上传拦截。</p>
+      </section>
+
+      <section id="panel-dashboard" class="panel">
+        <h2>Dashboard</h2>
+        <p class="panel-intro">这里展示后台核心数据概览，便于快速确认当前内容规模与运行状态。</p>
+        <div class="stats">
+          <div class="stat-card"><span>留言数</span><strong id="statMessages">0</strong></div>
+          <div class="stat-card"><span>经历数</span><strong id="statExperiences">0</strong></div>
+          <div class="stat-card"><span>PDF 数</span><strong id="statSkills">0</strong></div>
+          <div class="stat-card"><span>内容块</span><strong id="statContents">0</strong></div>
+          <div class="stat-card"><span>媒体库</span><strong id="statMedia">0</strong></div>
+        </div>
+      </section>
+
+      <section id="panel-experience" class="panel hidden">
+        <h2>经历管理</h2>
+        <p class="panel-intro">新增经历条目、绑定多张图片，并同步到公开的经历展示页面。</p>
+        <div class="grid-2">
+          <div>
+            <div class="field">
+              <label for="expTitle">经历标题</label>
+              <input id="expTitle" type="text" placeholder="例如：云计算项目实战">
+            </div>
+            <div class="field">
+              <label for="expTime">时间标签</label>
+              <input id="expTime" type="text" placeholder="例如：2026.07">
+            </div>
+            <div class="field">
+              <label for="expTags">标签</label>
+              <input id="expTags" type="text" placeholder="用英文逗号分隔，例如：Docker,Nginx,OSS">
+            </div>
+            <div class="field">
+              <label for="expDesc">经历描述</label>
+              <textarea id="expDesc" placeholder="描述这段经历的内容、成果和感受"></textarea>
+            </div>
+            <div class="btn-row">
+              <button id="addExperienceBtn" class="primary" type="button">新增经历</button>
+            </div>
+          </div>
+          <div>
+            <div class="field">
+              <label for="expSelect">选择经历后上传图片</label>
+              <select id="expSelect"></select>
+            </div>
+            <div class="field">
+              <label for="expImageFile">选择图片</label>
+              <input id="expImageFile" type="file" accept=".jpg,.jpeg,.png,.webp">
+            </div>
+            <div class="btn-row">
+              <button id="uploadExpImageBtn" class="primary" type="button">上传并绑定图片</button>
+            </div>
+          </div>
+        </div>
+        <div id="experienceList" class="card-list" style="margin-top:20px;"></div>
+      </section>
+
+      <section id="panel-skills" class="panel hidden">
+        <h2>技能 PDF 管理</h2>
+        <p class="panel-intro">上传技能证明、证书或项目说明 PDF，并绑定到某个技能项。</p>
+        <div class="grid-2">
+          <div>
+            <div class="field">
+              <label for="skillKey">技能标识</label>
+              <input id="skillKey" type="text" placeholder="例如：cloud-computing">
+            </div>
+            <div class="field">
+              <label for="skillTitle">文档标题</label>
+              <input id="skillTitle" type="text" placeholder="例如：云计算实验报告">
+            </div>
+            <div class="field">
+              <label for="skillDesc">说明</label>
+              <textarea id="skillDesc" placeholder="简要介绍这个 PDF 的内容"></textarea>
+            </div>
+            <div class="field">
+              <label for="skillPdfFile">选择 PDF</label>
+              <input id="skillPdfFile" type="file" accept=".pdf,application/pdf">
+            </div>
+            <div class="btn-row">
+              <button id="uploadSkillPdfBtn" class="primary" type="button">上传技能 PDF</button>
+            </div>
+          </div>
+          <div class="status-box">
+            使用流程：
+            <br>1. 前端先向后端申请 OSS 预签名地址
+            <br>2. 浏览器直接 PUT 到 OSS
+            <br>3. 回写媒体记录并绑定技能文档
+            <br>4. 公开页面可直接展示后台上传的 PDF
+          </div>
+        </div>
+        <div id="skillDocList" class="card-list" style="margin-top:20px;"></div>
+      </section>
+
+      <section id="panel-content" class="panel hidden">
+        <h2>内容块编辑</h2>
+        <p class="panel-intro">通过 `content_blocks` 统一管理页面文本内容，例如主页标题、简介、经历页引导语和留言区说明。</p>
+        <div class="grid-2">
+          <div>
+            <div class="field">
+              <label for="contentKey">内容键名</label>
+              <input id="contentKey" type="text" placeholder="例如：homepage_title">
+            </div>
+            <div class="field">
+              <label for="contentValue">内容值</label>
+              <textarea id="contentValue" placeholder="输入要更新的文本内容"></textarea>
+            </div>
+            <div class="btn-row">
+              <button id="saveContentBtn" class="primary" type="button">保存内容块</button>
+            </div>
+          </div>
+          <div class="status-box">
+            推荐先维护这些核心键：
+            <br>`homepage_title`
+            <br>`homepage_subtitle`
+            <br>`homepage_intro`
+            <br>`experience_page_title`
+            <br>`message_wall_intro`
+            <br>`skills_docs_title`
+          </div>
+        </div>
+        <div id="contentList" class="table-list" style="margin-top:20px;"></div>
+      </section>
+
+      <section id="panel-messages" class="panel hidden">
+        <h2>留言与回复</h2>
+        <p class="panel-intro">查看访客留言，以“嘉怡”身份进行回复，或删除不需要保留的留言。</p>
+        <div id="messageList" class="card-list"></div>
+      </section>
+    </main>
+  </section>
+
+  <div id="toastWrap" class="toast-wrap"></div>
+
+  <script>
+    var TOKEN_KEY = "cloudhome_admin_token";
+    var state = {
+      token: localStorage.getItem(TOKEN_KEY) || "",
+      experiences: [],
+      skillDocs: [],
+      contentBlocks: [],
+      messages: []
+    };
+
+    var els = {
+      loginView: document.getElementById("loginView"),
+      appView: document.getElementById("appView"),
+      loginPassword: document.getElementById("loginPassword"),
+      loginBtn: document.getElementById("loginBtn"),
+      checkMediaBtn: document.getElementById("checkMediaBtn"),
+      loginTip: document.getElementById("loginTip"),
+      globalStatus: document.getElementById("globalStatus"),
+      toastWrap: document.getElementById("toastWrap"),
+      expSelect: document.getElementById("expSelect"),
+      expImageFile: document.getElementById("expImageFile"),
+      experienceList: document.getElementById("experienceList"),
+      skillDocList: document.getElementById("skillDocList"),
+      contentList: document.getElementById("contentList"),
+      messageList: document.getElementById("messageList")
+    };
+
+    function setStatus(message, tone) {
+      els.globalStatus.textContent = message;
+      var colors = {
+        success: ["#e9fff2", "#c7f0d7", "#126342"],
+        error: ["#fff4f4", "#ffd0d0", "#9e2b2b"],
+        info: ["#f7fbff", "#d8e8ff", "#27405c"]
+      };
+      var picked = colors[tone] || colors.info;
+      els.globalStatus.style.background = picked[0];
+      els.globalStatus.style.borderColor = picked[1];
+      els.globalStatus.style.color = picked[2];
+    }
+
+    function showToast(message, tone) {
+      var toast = document.createElement("div");
+      toast.className = "toast " + (tone || "info");
+      toast.textContent = message;
+      els.toastWrap.appendChild(toast);
+      setTimeout(function () {
+        toast.remove();
+      }, 2800);
+    }
+
+    function escapeHtml(value) {
+      return String(value || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function getHeaders() {
+      return {
+        "Content-Type": "application/json",
+        "x-admin-token": state.token
+      };
+    }
+
+    async function parseJsonSafe(response) {
+      return response.json().catch(function () {
+        return {};
+      });
+    }
+
+    async function api(url, options) {
+      var config = Object.assign({}, options || {});
+      config.headers = Object.assign({}, getHeaders(), config.headers || {});
+      var response = await fetch(url, config);
+      var data = await parseJsonSafe(response);
+      if (!response.ok) {
+        throw new Error(data.detail || data.error || "request failed");
+      }
+      return data;
+    }
+
+    async function sha256(file) {
+      var buffer = await file.arrayBuffer();
+      var digest = await crypto.subtle.digest("SHA-256", buffer);
+      return Array.from(new Uint8Array(digest)).map(function (byte) {
+        return byte.toString(16).padStart(2, "0");
+      }).join("");
+    }
+
+    async function uploadViaOss(file, category, triggerButton) {
+      triggerButton.disabled = true;
+      var originText = triggerButton.textContent;
+      triggerButton.textContent = "上传中...";
+
+      try {
+        var fileHash = await sha256(file);
+        var initData = await api("/api/admin/media/init-upload", {
+          method: "POST",
+          body: JSON.stringify({
+            filename: file.name,
+            content_type: file.type,
+            size: file.size,
+            category: category,
+            file_hash: fileHash
+          })
+        });
+
+        var uploadResponse = await fetch(initData.upload_url, {
+          method: "PUT",
+          headers: { "Content-Type": file.type },
+          body: file
+        });
+
+        if (!uploadResponse.ok) {
+          throw new Error("上传到 OSS 失败");
+        }
+
+        return await api("/api/admin/media/complete-upload", {
+          method: "POST",
+          body: JSON.stringify({
+            filename: file.name,
+            object_key: initData.object_key,
+            url: initData.public_url,
+            content_type: file.type,
+            size: file.size,
+            category: category
+          })
+        });
+      } finally {
+        triggerButton.disabled = false;
+        triggerButton.textContent = originText;
+      }
+    }
+
+    function switchView(loggedIn) {
+      els.loginView.classList.toggle("hidden", loggedIn);
+      els.appView.classList.toggle("hidden", !loggedIn);
+    }
+
+    async function login() {
+      els.loginBtn.disabled = true;
+      els.loginTip.textContent = "正在验证密码...";
+
+      try {
+        var response = await fetch("/api/admin/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password: els.loginPassword.value.trim() })
+        });
+        var data = await parseJsonSafe(response);
+        if (!response.ok) {
+          throw new Error(data.detail || "登录失败");
+        }
+
+        state.token = data.token;
+        localStorage.setItem(TOKEN_KEY, state.token);
+        switchView(true);
+        setStatus("登录成功，后台已解锁。", "success");
+        showToast("登录成功", "success");
+        await refreshAll();
+      } catch (error) {
+        els.loginTip.textContent = error.message || "登录失败";
+        showToast(error.message || "登录失败", "error");
+      } finally {
+        els.loginBtn.disabled = false;
+      }
+    }
+
+    async function checkMediaConfig() {
+      try {
+        if (!state.token) {
+          els.loginTip.textContent = "请先登录后再检查 OSS 配置。";
+          return;
+        }
+        var data = await api("/api/admin/media/config-check");
+        els.loginTip.textContent = "OSS: " + data.oss_configured + " | Bucket: " + (data.bucket || "-") + " | Endpoint: " + (data.endpoint || "-");
+      } catch (error) {
+        els.loginTip.textContent = error.message || "检查失败";
+      }
+    }
+
+    function bindNav() {
+      document.querySelectorAll(".nav-btn").forEach(function (button) {
+        button.addEventListener("click", function () {
+          document.querySelectorAll(".nav-btn").forEach(function (item) {
+            item.classList.remove("active");
+          });
+          button.classList.add("active");
+
+          document.querySelectorAll("[id^='panel-']").forEach(function (panel) {
+            panel.classList.add("hidden");
+          });
+
+          var panel = document.getElementById("panel-" + button.dataset.panel);
+          if (panel) {
+            panel.classList.remove("hidden");
+          }
+        });
+      });
+    }
+
+    function renderDashboard(data) {
+      document.getElementById("statMessages").textContent = data.messages || 0;
+      document.getElementById("statExperiences").textContent = data.experiences || 0;
+      document.getElementById("statSkills").textContent = data.skill_documents || 0;
+      document.getElementById("statContents").textContent = data.content_blocks || 0;
+      document.getElementById("statMedia").textContent = data.media_assets || 0;
+    }
+
+    function renderExperiences() {
+      if (!state.experiences.length) {
+        els.experienceList.innerHTML = '<div class="item-card"><p>还没有后台新增经历。</p></div>';
+        els.expSelect.innerHTML = '<option value="">暂无经历可选</option>';
+        return;
+      }
+
+      els.expSelect.innerHTML = state.experiences.map(function (item) {
+        return '<option value="' + item.id + '">' + escapeHtml(item.title) + " / " + escapeHtml(item.time_label) + "</option>";
+      }).join("");
+
+      els.experienceList.innerHTML = state.experiences.map(function (item) {
+        var tags = Array.isArray(item.tags) ? item.tags : [];
+        var images = Array.isArray(item.images) ? item.images : [];
+        return ''
+          + '<article class="item-card">'
+          + '  <h3>' + escapeHtml(item.title) + '</h3>'
+          + '  <p><strong>时间：</strong>' + escapeHtml(item.time_label) + '</p>'
+          + '  <p>' + escapeHtml(item.description) + '</p>'
+          + '  <div class="chips">' + tags.map(function (tag) { return '<span class="chip">' + escapeHtml(tag) + '</span>'; }).join("") + '</div>'
+          + '  <div class="thumb-list">' + images.map(function (image) {
+              return '<img src="' + escapeHtml(image.url) + '" alt="' + escapeHtml(item.title) + '">';
+            }).join("") + '</div>'
+          + '  <div class="split-actions"><button class="danger delete-exp-btn" data-id="' + item.id + '">删除经历</button></div>'
+          + '</article>';
+      }).join("");
+    }
+
+    function renderSkillDocs() {
+      if (!state.skillDocs.length) {
+        els.skillDocList.innerHTML = '<div class="item-card"><p>还没有上传技能 PDF。</p></div>';
+        return;
+      }
+
+      els.skillDocList.innerHTML = state.skillDocs.map(function (item) {
+        return ''
+          + '<article class="item-card">'
+          + '  <h3>' + escapeHtml(item.title) + '</h3>'
+          + '  <p><strong>技能项：</strong>' + escapeHtml(item.skill_key) + '</p>'
+          + '  <p>' + escapeHtml(item.description || "") + '</p>'
+          + '  <div class="split-actions">'
+          + '    <a href="' + escapeHtml(item.url) + '" target="_blank" rel="noopener noreferrer"><button class="secondary" type="button">打开 PDF</button></a>'
+          + '    <button class="danger delete-skill-btn" data-id="' + item.id + '">删除 PDF</button>'
+          + '  </div>'
+          + '</article>';
+      }).join("");
+    }
+
+    function renderContentBlocks() {
+      if (!state.contentBlocks.length) {
+        els.contentList.innerHTML = '<div class="item-card"><p>暂无内容块。</p></div>';
+        return;
+      }
+
+      els.contentList.innerHTML = state.contentBlocks.map(function (item) {
+        return ''
+          + '<div class="table-row">'
+          + '  <code>' + escapeHtml(item.key) + '</code>'
+          + '  <textarea data-content-edit="' + escapeHtml(item.key) + '">' + escapeHtml(item.value) + '</textarea>'
+          + '  <button class="primary quick-save-content-btn" data-key="' + escapeHtml(item.key) + '">保存</button>'
+          + '</div>';
+      }).join("");
+    }
+
+    function renderMessages() {
+      if (!state.messages.length) {
+        els.messageList.innerHTML = '<div class="item-card"><p>目前还没有留言。</p></div>';
+        return;
+      }
+
+      els.messageList.innerHTML = state.messages.map(function (item) {
+        return ''
+          + '<article class="item-card">'
+          + '  <h3>' + escapeHtml(item.nickname) + '</h3>'
+          + '  <p><strong>时间：</strong>' + escapeHtml(item.created_at) + '</p>'
+          + '  <p>' + escapeHtml(item.content) + '</p>'
+          + (item.reply ? '<div class="message-reply"><strong>嘉怡回复：</strong>' + escapeHtml(item.reply) + '</div>' : '')
+          + '  <div class="field" style="margin-top:14px;">'
+          + '    <label>回复这条留言</label>'
+          + '    <textarea data-reply-input="' + item.id + '" placeholder="输入回复内容"></textarea>'
+          + '  </div>'
+          + '  <div class="split-actions">'
+          + '    <button class="primary reply-btn" data-id="' + item.id + '">提交回复</button>'
+          + '    <button class="danger delete-message-btn" data-id="' + item.id + '">删除留言</button>'
+          + '  </div>'
+          + '</article>';
+      }).join("");
+    }
+
+    async function refreshAll() {
+      try {
+        setStatus("正在刷新后台数据...", "info");
+        var results = await Promise.all([
+          api("/api/admin/dashboard"),
+          api("/api/experiences"),
+          api("/api/skills/documents"),
+          api("/api/content/get"),
+          api("/api/messages")
+        ]);
+
+        renderDashboard(results[0]);
+        state.experiences = Array.isArray(results[1]) ? results[1] : [];
+        state.skillDocs = Array.isArray(results[2]) ? results[2] : [];
+        state.contentBlocks = Array.isArray(results[3].blocks) ? results[3].blocks : [];
+        state.messages = Array.isArray(results[4]) ? results[4] : [];
+
+        renderExperiences();
+        renderSkillDocs();
+        renderContentBlocks();
+        renderMessages();
+        setStatus("数据已同步完成。", "success");
+      } catch (error) {
+        setStatus(error.message || "刷新失败", "error");
+        if (/鉴权|403|登录/.test(error.message || "")) {
+          logout();
+        }
+      }
+    }
+
+    async function addExperience() {
+      try {
+        var tags = document.getElementById("expTags").value.split(",").map(function (item) {
+          return item.trim();
+        }).filter(Boolean);
+
+        await api("/api/admin/experience/add", {
+          method: "POST",
+          body: JSON.stringify({
+            title: document.getElementById("expTitle").value.trim(),
+            time_label: document.getElementById("expTime").value.trim(),
+            description: document.getElementById("expDesc").value.trim(),
+            tags: tags
+          })
+        });
+
+        showToast("经历已新增", "success");
+        await refreshAll();
+      } catch (error) {
+        showToast(error.message || "新增经历失败", "error");
+      }
+    }
+
+    async function uploadExperienceImage() {
+      var file = els.expImageFile.files[0];
+      var experienceId = Number(els.expSelect.value || 0);
+      var button = document.getElementById("uploadExpImageBtn");
+
+      if (!experienceId) {
+        showToast("请先选择一个经历条目", "error");
+        return;
+      }
+      if (!file) {
+        showToast("请先选择图片文件", "error");
+        return;
+      }
+
+      try {
+        var media = await uploadViaOss(file, "experience", button);
+        await api("/api/admin/experience/upload-image", {
+          method: "POST",
+          body: JSON.stringify({
+            experience_id: experienceId,
+            media_id: media.id,
+            filename: media.filename,
+            object_key: media.object_key,
+            url: media.url
+          })
+        });
+
+        els.expImageFile.value = "";
+        showToast("图片上传并绑定成功", "success");
+        await refreshAll();
+      } catch (error) {
+        showToast(error.message || "图片上传失败", "error");
+      }
+    }
+
+    async function uploadSkillPdf() {
+      var file = document.getElementById("skillPdfFile").files[0];
+      var button = document.getElementById("uploadSkillPdfBtn");
+      if (!file) {
+        showToast("请先选择 PDF 文件", "error");
+        return;
+      }
+
+      try {
+        var media = await uploadViaOss(file, "document", button);
+        await api("/api/admin/skill/upload-pdf", {
+          method: "POST",
+          body: JSON.stringify({
+            skill_key: document.getElementById("skillKey").value.trim(),
+            title: document.getElementById("skillTitle").value.trim(),
+            description: document.getElementById("skillDesc").value.trim(),
+            media_id: media.id,
+            filename: media.filename,
+            object_key: media.object_key,
+            url: media.url
+          })
+        });
+
+        document.getElementById("skillPdfFile").value = "";
+        showToast("技能 PDF 上传成功", "success");
+        await refreshAll();
+      } catch (error) {
+        showToast(error.message || "上传失败", "error");
+      }
+    }
+
+    async function saveContent(key, value) {
+      await api("/api/admin/content/update", {
+        method: "POST",
+        body: JSON.stringify({
+          key: key,
+          value: value
+        })
+      });
+    }
+
+    async function saveContentFromForm() {
+      try {
+        await saveContent(
+          document.getElementById("contentKey").value.trim(),
+          document.getElementById("contentValue").value
+        );
+        showToast("内容块已保存", "success");
+        await refreshAll();
+      } catch (error) {
+        showToast(error.message || "保存失败", "error");
+      }
+    }
+
+    async function logout() {
+      state.token = "";
+      localStorage.removeItem(TOKEN_KEY);
+      switchView(false);
+      els.loginPassword.value = "";
+      els.loginTip.textContent = "已退出登录。";
+    }
+
+    document.getElementById("addExperienceBtn").addEventListener("click", addExperience);
+    document.getElementById("uploadExpImageBtn").addEventListener("click", uploadExperienceImage);
+    document.getElementById("uploadSkillPdfBtn").addEventListener("click", uploadSkillPdf);
+    document.getElementById("saveContentBtn").addEventListener("click", saveContentFromForm);
+    document.getElementById("refreshAllBtn").addEventListener("click", refreshAll);
+    document.getElementById("logoutBtn").addEventListener("click", logout);
+    els.loginBtn.addEventListener("click", login);
+    els.checkMediaBtn.addEventListener("click", checkMediaConfig);
+    els.loginPassword.addEventListener("keydown", function (event) {
+      if (event.key === "Enter") {
+        login();
+      }
+    });
+
+    els.experienceList.addEventListener("click", async function (event) {
+      var button = event.target.closest(".delete-exp-btn");
+      if (!button) return;
+      try {
+        await api("/api/admin/experience/delete", {
+          method: "DELETE",
+          body: JSON.stringify({ experience_id: Number(button.dataset.id) })
+        });
+        showToast("经历已删除", "success");
+        await refreshAll();
+      } catch (error) {
+        showToast(error.message || "删除失败", "error");
+      }
+    });
+
+    els.skillDocList.addEventListener("click", async function (event) {
+      var button = event.target.closest(".delete-skill-btn");
+      if (!button) return;
+      try {
+        await api("/api/admin/skill/delete", {
+          method: "DELETE",
+          body: JSON.stringify({ document_id: Number(button.dataset.id) })
+        });
+        showToast("PDF 已删除", "success");
+        await refreshAll();
+      } catch (error) {
+        showToast(error.message || "删除失败", "error");
+      }
+    });
+
+    els.contentList.addEventListener("click", async function (event) {
+      var button = event.target.closest(".quick-save-content-btn");
+      if (!button) return;
+      var key = button.dataset.key;
+      var input = document.querySelector('[data-content-edit="' + key + '"]');
+      try {
+        await saveContent(key, input ? input.value : "");
+        showToast("内容块已更新", "success");
+        await refreshAll();
+      } catch (error) {
+        showToast(error.message || "保存失败", "error");
+      }
+    });
+
+    els.messageList.addEventListener("click", async function (event) {
+      var replyBtn = event.target.closest(".reply-btn");
+      var deleteBtn = event.target.closest(".delete-message-btn");
+
+      if (replyBtn) {
+        var messageId = Number(replyBtn.dataset.id);
+        var replyInput = document.querySelector('[data-reply-input="' + messageId + '"]');
+        try {
+          await api("/api/messages/reply", {
+            method: "POST",
+            body: JSON.stringify({
+              message_id: messageId,
+              reply: replyInput ? replyInput.value : ""
+            })
+          });
+          showToast("回复已提交", "success");
+          await refreshAll();
+        } catch (error) {
+          showToast(error.message || "回复失败", "error");
+        }
+      }
+
+      if (deleteBtn) {
+        try {
+          await api("/api/messages/delete", {
+            method: "DELETE",
+            body: JSON.stringify({ message_id: Number(deleteBtn.dataset.id) })
+          });
+          showToast("留言已删除", "success");
+          await refreshAll();
+        } catch (error) {
+          showToast(error.message || "删除失败", "error");
+        }
+      }
+    });
+
+    bindNav();
+
+    if (state.token) {
+      switchView(true);
+      refreshAll();
+    }
+  </script>
+</body>
+</html>
