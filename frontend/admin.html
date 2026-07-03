@@ -7,39 +7,35 @@
   <style>
     :root {
       --bg: #f3f6fb;
-      --panel: rgba(255, 255, 255, 0.94);
+      --panel: rgba(255, 255, 255, 0.95);
       --line: #d8e1ee;
-      --text: #122033;
-      --muted: #607086;
+      --text: #142235;
+      --muted: #62748a;
       --brand: #246bff;
-      --brand-deep: #114ed1;
-      --danger: #d64545;
-      --success: #16945f;
-      --shadow: 0 18px 44px rgba(18, 32, 51, 0.12);
+      --brand-deep: #124fd2;
+      --danger: #d44a4a;
+      --success: #12935d;
+      --shadow: 0 18px 44px rgba(20, 34, 53, 0.12);
     }
 
     * { box-sizing: border-box; }
-
     body {
       margin: 0;
       min-height: 100vh;
-      font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
       color: var(--text);
+      font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
       background:
         radial-gradient(circle at top left, rgba(36, 107, 255, 0.14), transparent 30%),
-        radial-gradient(circle at bottom right, rgba(22, 148, 95, 0.12), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(18, 147, 93, 0.12), transparent 28%),
         linear-gradient(180deg, #f9fbff 0%, var(--bg) 100%);
     }
 
-    button, input, textarea, select {
-      font: inherit;
-    }
-
+    button, input, textarea, select { font: inherit; }
     .hidden { display: none !important; }
 
     .login-shell,
     .app-shell {
-      width: min(1280px, calc(100% - 32px));
+      width: min(1320px, calc(100% - 32px));
       margin: 24px auto;
     }
 
@@ -49,7 +45,7 @@
     .stat-card,
     .toast {
       background: var(--panel);
-      border: 1px solid rgba(216, 225, 238, 0.88);
+      border: 1px solid rgba(216, 225, 238, 0.9);
       box-shadow: var(--shadow);
       backdrop-filter: blur(10px);
     }
@@ -57,19 +53,22 @@
     .login-card {
       width: min(460px, 100%);
       margin: 12vh auto 0;
-      border-radius: 28px;
       padding: 32px;
+      border-radius: 28px;
     }
 
-    .login-card h1 {
+    .login-card h1,
+    .hero h1,
+    .panel h2 {
       margin: 0 0 10px;
-      font-size: 32px;
     }
 
-    .login-card p {
-      margin: 0 0 24px;
+    .login-card p,
+    .panel-intro,
+    .hero p {
+      margin: 0;
       color: var(--muted);
-      line-height: 1.7;
+      line-height: 1.75;
     }
 
     .field {
@@ -97,7 +96,7 @@
     }
 
     .field textarea {
-      min-height: 100px;
+      min-height: 108px;
       resize: vertical;
     }
 
@@ -108,9 +107,11 @@
       box-shadow: 0 0 0 4px rgba(36, 107, 255, 0.12);
     }
 
-    .btn-row {
+    .btn-row,
+    .split-actions,
+    .chips {
       display: flex;
-      gap: 12px;
+      gap: 10px;
       flex-wrap: wrap;
     }
 
@@ -120,73 +121,59 @@
       padding: 12px 18px;
       cursor: pointer;
       font-weight: 700;
-      transition: transform 0.18s ease, background 0.18s ease, opacity 0.18s ease;
+      transition: transform 0.18s ease, opacity 0.18s ease;
     }
 
     button:hover { transform: translateY(-1px); }
     button:disabled { opacity: 0.62; cursor: not-allowed; transform: none; }
-
     .primary { background: var(--brand); color: #fff; }
-    .primary:hover { background: var(--brand-deep); }
     .secondary { background: #eef4ff; color: var(--brand-deep); }
     .danger { background: #fff1f1; color: var(--danger); }
 
     .login-tip,
     .status-box {
       margin-top: 16px;
-      border-radius: 16px;
+      min-height: 52px;
       padding: 14px 16px;
+      border-radius: 16px;
       border: 1px solid #d8e8ff;
       background: #f7fbff;
-      color: #27405c;
-      min-height: 52px;
+      color: #28425f;
       line-height: 1.7;
     }
 
     .app-shell {
       display: grid;
-      grid-template-columns: 280px 1fr;
+      grid-template-columns: 290px 1fr;
       gap: 20px;
       align-items: start;
     }
 
     .sidebar {
-      border-radius: 28px;
-      padding: 24px;
       position: sticky;
       top: 20px;
-    }
-
-    .brand h2 {
-      margin: 0 0 8px;
-      font-size: 28px;
-    }
-
-    .brand p {
-      margin: 0 0 20px;
-      color: var(--muted);
-      line-height: 1.7;
-      font-size: 14px;
+      padding: 24px;
+      border-radius: 28px;
     }
 
     .nav-list {
       display: grid;
       gap: 10px;
-      margin-bottom: 22px;
+      margin: 20px 0 22px;
     }
 
     .nav-btn {
       width: 100%;
       text-align: left;
       background: #fff;
-      color: #24374f;
+      color: #26384f;
       border: 1px solid var(--line);
     }
 
     .nav-btn.active {
-      background: linear-gradient(135deg, #246bff, #4c91ff);
       color: #fff;
       border-color: transparent;
+      background: linear-gradient(135deg, #246bff, #4e93ff);
     }
 
     .main {
@@ -195,61 +182,40 @@
     }
 
     .hero {
-      border-radius: 28px;
       padding: 26px;
-      background: linear-gradient(135deg, rgba(36, 107, 255, 0.96), rgba(85, 138, 255, 0.92));
       color: #fff;
+      border-radius: 28px;
+      background: linear-gradient(135deg, rgba(36, 107, 255, 0.98), rgba(83, 137, 255, 0.92));
       box-shadow: var(--shadow);
     }
 
-    .hero h1 {
-      margin: 0 0 10px;
-      font-size: 34px;
-    }
-
-    .hero p {
-      margin: 0;
-      max-width: 760px;
-      line-height: 1.8;
-      color: rgba(255, 255, 255, 0.88);
-    }
+    .hero p { color: rgba(255, 255, 255, 0.9); }
 
     .stats {
       display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
+      grid-template-columns: repeat(6, minmax(0, 1fr));
       gap: 14px;
     }
 
     .stat-card {
-      border-radius: 22px;
       padding: 18px;
+      border-radius: 22px;
     }
 
     .stat-card span {
       display: block;
+      margin-bottom: 8px;
       color: var(--muted);
       font-size: 13px;
-      margin-bottom: 8px;
     }
 
     .stat-card strong {
-      font-size: 34px;
+      font-size: 32px;
     }
 
     .panel {
-      border-radius: 28px;
       padding: 24px;
-    }
-
-    .panel h2 {
-      margin: 0 0 10px;
-      font-size: 26px;
-    }
-
-    .panel-intro {
-      color: var(--muted);
-      margin: 0 0 20px;
-      line-height: 1.7;
+      border-radius: 28px;
     }
 
     .grid-2 {
@@ -258,15 +224,17 @@
       gap: 18px;
     }
 
-    .card-list {
+    .card-list,
+    .table-list {
       display: grid;
-      gap: 16px;
+      gap: 14px;
     }
 
-    .item-card {
-      border: 1px solid var(--line);
-      border-radius: 22px;
+    .item-card,
+    .table-row {
       padding: 18px;
+      border-radius: 22px;
+      border: 1px solid var(--line);
       background: #fff;
     }
 
@@ -278,18 +246,24 @@
     .item-card p {
       margin: 6px 0;
       color: var(--muted);
-      line-height: 1.7;
+      line-height: 1.75;
     }
 
-    .chips,
-    .thumb-list {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-top: 10px;
+    .table-row {
+      display: grid;
+      grid-template-columns: 200px 1fr auto;
+      gap: 12px;
+      align-items: start;
     }
 
-    .chip {
+    .table-row code {
+      display: block;
+      padding-top: 12px;
+      color: var(--brand-deep);
+      word-break: break-all;
+    }
+
+    .chips .chip {
       background: #edf4ff;
       color: var(--brand-deep);
       border-radius: 999px;
@@ -307,65 +281,35 @@
       background: #eef4ff;
     }
 
-    .split-actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 14px;
-    }
-
-    .table-list {
-      display: grid;
-      gap: 12px;
-    }
-
-    .table-row {
-      display: grid;
-      grid-template-columns: 220px 1fr auto;
-      gap: 12px;
-      align-items: start;
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      padding: 14px;
-      background: #fff;
-    }
-
-    .table-row code {
-      display: block;
-      padding-top: 12px;
-      color: var(--brand-deep);
-      word-break: break-all;
-    }
-
     .message-reply {
       margin-top: 12px;
       padding: 12px 14px;
-      background: #f4f8ff;
-      border-left: 4px solid var(--brand);
       border-radius: 14px;
-      color: #35506c;
+      border-left: 4px solid var(--brand);
+      background: #f3f8ff;
+      color: #314d6b;
     }
 
     .toast-wrap {
       position: fixed;
       right: 20px;
       bottom: 20px;
+      z-index: 30;
       display: grid;
       gap: 10px;
-      z-index: 20;
     }
 
     .toast {
-      border-radius: 18px;
-      padding: 14px 16px;
       min-width: 260px;
+      padding: 14px 16px;
+      border-radius: 18px;
     }
 
     .toast.success { border-left: 5px solid var(--success); }
     .toast.error { border-left: 5px solid var(--danger); }
     .toast.info { border-left: 5px solid var(--brand); }
 
-    @media (max-width: 1100px) {
+    @media (max-width: 1180px) {
       .app-shell {
         grid-template-columns: 1fr;
       }
@@ -380,7 +324,7 @@
       }
     }
 
-    @media (max-width: 720px) {
+    @media (max-width: 760px) {
       .login-shell,
       .app-shell {
         width: calc(100% - 20px);
@@ -391,10 +335,6 @@
       .table-row {
         grid-template-columns: 1fr;
       }
-
-      .hero h1 {
-        font-size: 28px;
-      }
     }
   </style>
 </head>
@@ -402,7 +342,7 @@
   <section id="loginView" class="login-shell">
     <div class="login-card">
       <h1>CloudHome Admin</h1>
-      <p>输入管理密码后进入后台系统。密码只提交到后端 `/api/admin/login` 进行验证，前端只保存返回的 token。</p>
+      <p>输入管理密码后进入后台系统。登录会调用后端 `POST /api/admin/login`，前端只保存返回的 token。</p>
       <div class="field">
         <label for="loginPassword">管理密码</label>
         <input id="loginPassword" type="password" placeholder="请输入后台管理密码">
@@ -411,51 +351,51 @@
         <button id="loginBtn" class="primary" type="button">进入后台</button>
         <button id="checkMediaBtn" class="secondary" type="button">检查 OSS 配置</button>
       </div>
-      <div id="loginTip" class="login-tip">准备就绪，登录后可管理经历、技能文档、内容块与留言回复。</div>
+      <div id="loginTip" class="login-tip">准备就绪，登录后可管理内容块、留言、动态经历、技能 PDF 和操作日志。</div>
     </div>
   </section>
 
   <section id="appView" class="app-shell hidden">
     <aside class="sidebar">
-      <div class="brand">
-        <h2>CloudHome</h2>
-        <p>轻量 CMS 后台。保留原有 `media.html`，同时新增统一后台入口。</p>
-      </div>
+      <h2>CloudHome</h2>
+      <p>轻量 CMS 后台。保留原有 `media.html`，新增统一管理入口与审计日志。</p>
       <div class="nav-list">
         <button class="nav-btn active" data-panel="dashboard">Dashboard</button>
         <button class="nav-btn" data-panel="experience">经历管理</button>
         <button class="nav-btn" data-panel="skills">技能 PDF</button>
         <button class="nav-btn" data-panel="content">内容块</button>
         <button class="nav-btn" data-panel="messages">留言回复</button>
+        <button class="nav-btn" data-panel="logs">操作日志</button>
       </div>
       <div class="btn-row">
         <button id="refreshAllBtn" class="secondary" type="button">刷新数据</button>
         <button id="logoutBtn" class="danger" type="button">退出登录</button>
       </div>
-      <div id="globalStatus" class="status-box">后台已连接，随时可以切换模块进行管理。</div>
+      <div id="globalStatus" class="status-box">后台已连接，可以继续管理 CloudHome 数据。</div>
     </aside>
 
     <main class="main">
       <section class="hero">
-        <h1>个人主页 + 后台内容管理系统</h1>
-        <p>支持统一登录鉴权、OSS 预签名上传、经历多图绑定、技能 PDF 管理、文本内容块编辑、留言回复与删除，以及上传防抖与重复上传拦截。</p>
+        <h1>个人主页 + 轻量后台系统</h1>
+        <p>当前后台支持 Bearer token 鉴权、OSS 预签名上传、内容块编辑、留言回复、媒体记录入库、操作审计日志和 Redis 上传防重复锁。</p>
       </section>
 
       <section id="panel-dashboard" class="panel">
         <h2>Dashboard</h2>
-        <p class="panel-intro">这里展示后台核心数据概览，便于快速确认当前内容规模与运行状态。</p>
+        <p class="panel-intro">快速查看当前系统中的核心内容数量与运行状态。</p>
         <div class="stats">
           <div class="stat-card"><span>留言数</span><strong id="statMessages">0</strong></div>
           <div class="stat-card"><span>经历数</span><strong id="statExperiences">0</strong></div>
           <div class="stat-card"><span>PDF 数</span><strong id="statSkills">0</strong></div>
           <div class="stat-card"><span>内容块</span><strong id="statContents">0</strong></div>
           <div class="stat-card"><span>媒体库</span><strong id="statMedia">0</strong></div>
+          <div class="stat-card"><span>日志数</span><strong id="statLogs">0</strong></div>
         </div>
       </section>
 
       <section id="panel-experience" class="panel hidden">
         <h2>经历管理</h2>
-        <p class="panel-intro">新增经历条目、绑定多张图片，并同步到公开的经历展示页面。</p>
+        <p class="panel-intro">新增经历条目、绑定多张图片，并同步到公开经历页。</p>
         <div class="grid-2">
           <div>
             <div class="field">
@@ -468,7 +408,7 @@
             </div>
             <div class="field">
               <label for="expTags">标签</label>
-              <input id="expTags" type="text" placeholder="用英文逗号分隔，例如：Docker,Nginx,OSS">
+              <input id="expTags" type="text" placeholder="例如：Docker,Nginx,OSS">
             </div>
             <div class="field">
               <label for="expDesc">经历描述</label>
@@ -497,7 +437,7 @@
 
       <section id="panel-skills" class="panel hidden">
         <h2>技能 PDF 管理</h2>
-        <p class="panel-intro">上传技能证明、证书或项目说明 PDF，并绑定到某个技能项。</p>
+        <p class="panel-intro">上传技能证明、证书或项目说明 PDF，并绑定到技能项。</p>
         <div class="grid-2">
           <div>
             <div class="field">
@@ -522,10 +462,10 @@
           </div>
           <div class="status-box">
             使用流程：
-            <br>1. 前端先向后端申请 OSS 预签名地址
+            <br>1. 前端向后端申请 OSS 预签名地址
             <br>2. 浏览器直接 PUT 到 OSS
-            <br>3. 回写媒体记录并绑定技能文档
-            <br>4. 公开页面可直接展示后台上传的 PDF
+            <br>3. 回写 `media_assets`
+            <br>4. 再绑定到技能文档表
           </div>
         </div>
         <div id="skillDocList" class="card-list" style="margin-top:20px;"></div>
@@ -533,12 +473,19 @@
 
       <section id="panel-content" class="panel hidden">
         <h2>内容块编辑</h2>
-        <p class="panel-intro">通过 `content_blocks` 统一管理页面文本内容，例如主页标题、简介、经历页引导语和留言区说明。</p>
+        <p class="panel-intro">重点维护主页与介绍文本，后台会保存到 `content_blocks` 表中。</p>
         <div class="grid-2">
           <div>
             <div class="field">
               <label for="contentKey">内容键名</label>
-              <input id="contentKey" type="text" placeholder="例如：homepage_title">
+              <select id="contentKey">
+                <option value="homepage_title">homepage_title</option>
+                <option value="homepage_subtitle">homepage_subtitle</option>
+                <option value="homepage_intro">homepage_intro</option>
+                <option value="about_intro">about_intro</option>
+                <option value="skills_intro">skills_intro</option>
+                <option value="experience_intro">experience_intro</option>
+              </select>
             </div>
             <div class="field">
               <label for="contentValue">内容值</label>
@@ -549,13 +496,13 @@
             </div>
           </div>
           <div class="status-box">
-            推荐先维护这些核心键：
+            当前重点接入：
             <br>`homepage_title`
             <br>`homepage_subtitle`
             <br>`homepage_intro`
-            <br>`experience_page_title`
-            <br>`message_wall_intro`
-            <br>`skills_docs_title`
+            <br>`about_intro`
+            <br>`skills_intro`
+            <br>`experience_intro`
           </div>
         </div>
         <div id="contentList" class="table-list" style="margin-top:20px;"></div>
@@ -563,8 +510,14 @@
 
       <section id="panel-messages" class="panel hidden">
         <h2>留言与回复</h2>
-        <p class="panel-intro">查看访客留言，以“嘉怡”身份进行回复，或删除不需要保留的留言。</p>
+        <p class="panel-intro">查看访客留言，以“嘉怡”身份进行回复或删除。</p>
         <div id="messageList" class="card-list"></div>
+      </section>
+
+      <section id="panel-logs" class="panel hidden">
+        <h2>操作日志</h2>
+        <p class="panel-intro">记录管理员登录、媒体上传、内容更新、回复留言和删除留言等关键操作。</p>
+        <div id="logList" class="card-list"></div>
       </section>
     </main>
   </section>
@@ -578,7 +531,8 @@
       experiences: [],
       skillDocs: [],
       contentBlocks: [],
-      messages: []
+      messages: [],
+      logs: []
     };
 
     var els = {
@@ -595,17 +549,18 @@
       experienceList: document.getElementById("experienceList"),
       skillDocList: document.getElementById("skillDocList"),
       contentList: document.getElementById("contentList"),
-      messageList: document.getElementById("messageList")
+      messageList: document.getElementById("messageList"),
+      logList: document.getElementById("logList")
     };
 
     function setStatus(message, tone) {
-      els.globalStatus.textContent = message;
       var colors = {
-        success: ["#e9fff2", "#c7f0d7", "#126342"],
-        error: ["#fff4f4", "#ffd0d0", "#9e2b2b"],
-        info: ["#f7fbff", "#d8e8ff", "#27405c"]
+        success: ["#eafdf2", "#c9efd9", "#135f42"],
+        error: ["#fff4f4", "#ffd4d4", "#9b2b2b"],
+        info: ["#f7fbff", "#d8e8ff", "#28425f"]
       };
       var picked = colors[tone] || colors.info;
+      els.globalStatus.textContent = message;
       els.globalStatus.style.background = picked[0];
       els.globalStatus.style.borderColor = picked[1];
       els.globalStatus.style.color = picked[2];
@@ -616,9 +571,7 @@
       toast.className = "toast " + (tone || "info");
       toast.textContent = message;
       els.toastWrap.appendChild(toast);
-      setTimeout(function () {
-        toast.remove();
-      }, 2800);
+      setTimeout(function () { toast.remove(); }, 2800);
     }
 
     function escapeHtml(value) {
@@ -633,14 +586,12 @@
     function getHeaders() {
       return {
         "Content-Type": "application/json",
-        "x-admin-token": state.token
+        "Authorization": "Bearer " + state.token
       };
     }
 
     async function parseJsonSafe(response) {
-      return response.json().catch(function () {
-        return {};
-      });
+      return response.json().catch(function () { return {}; });
     }
 
     async function api(url, options) {
@@ -662,11 +613,10 @@
       }).join("");
     }
 
-    async function uploadViaOss(file, category, triggerButton) {
-      triggerButton.disabled = true;
-      var originText = triggerButton.textContent;
-      triggerButton.textContent = "上传中...";
-
+    async function uploadViaOss(file, category, button) {
+      button.disabled = true;
+      var original = button.textContent;
+      button.textContent = "上传中...";
       try {
         var fileHash = await sha256(file);
         var initData = await api("/api/admin/media/init-upload", {
@@ -685,7 +635,6 @@
           headers: { "Content-Type": file.type },
           body: file
         });
-
         if (!uploadResponse.ok) {
           throw new Error("上传到 OSS 失败");
         }
@@ -702,8 +651,8 @@
           })
         });
       } finally {
-        triggerButton.disabled = false;
-        triggerButton.textContent = originText;
+        button.disabled = false;
+        button.textContent = original;
       }
     }
 
@@ -715,7 +664,6 @@
     async function login() {
       els.loginBtn.disabled = true;
       els.loginTip.textContent = "正在验证密码...";
-
       try {
         var response = await fetch("/api/admin/login", {
           method: "POST",
@@ -726,7 +674,6 @@
         if (!response.ok) {
           throw new Error(data.detail || "登录失败");
         }
-
         state.token = data.token;
         localStorage.setItem(TOKEN_KEY, state.token);
         switchView(true);
@@ -761,14 +708,12 @@
             item.classList.remove("active");
           });
           button.classList.add("active");
-
           document.querySelectorAll("[id^='panel-']").forEach(function (panel) {
             panel.classList.add("hidden");
           });
-
-          var panel = document.getElementById("panel-" + button.dataset.panel);
-          if (panel) {
-            panel.classList.remove("hidden");
+          var target = document.getElementById("panel-" + button.dataset.panel);
+          if (target) {
+            target.classList.remove("hidden");
           }
         });
       });
@@ -780,6 +725,7 @@
       document.getElementById("statSkills").textContent = data.skill_documents || 0;
       document.getElementById("statContents").textContent = data.content_blocks || 0;
       document.getElementById("statMedia").textContent = data.media_assets || 0;
+      document.getElementById("statLogs").textContent = data.audit_logs || 0;
     }
 
     function renderExperiences() {
@@ -798,14 +744,16 @@
         var images = Array.isArray(item.images) ? item.images : [];
         return ''
           + '<article class="item-card">'
-          + '  <h3>' + escapeHtml(item.title) + '</h3>'
-          + '  <p><strong>时间：</strong>' + escapeHtml(item.time_label) + '</p>'
-          + '  <p>' + escapeHtml(item.description) + '</p>'
-          + '  <div class="chips">' + tags.map(function (tag) { return '<span class="chip">' + escapeHtml(tag) + '</span>'; }).join("") + '</div>'
-          + '  <div class="thumb-list">' + images.map(function (image) {
+          + '<h3>' + escapeHtml(item.title) + '</h3>'
+          + '<p><strong>时间：</strong>' + escapeHtml(item.time_label) + '</p>'
+          + '<p>' + escapeHtml(item.description) + '</p>'
+          + '<div class="chips">' + tags.map(function (tag) {
+              return '<span class="chip">' + escapeHtml(tag) + '</span>';
+            }).join("") + '</div>'
+          + '<div class="thumb-list">' + images.map(function (image) {
               return '<img src="' + escapeHtml(image.url) + '" alt="' + escapeHtml(item.title) + '">';
             }).join("") + '</div>'
-          + '  <div class="split-actions"><button class="danger delete-exp-btn" data-id="' + item.id + '">删除经历</button></div>'
+          + '<div class="split-actions"><button class="danger delete-exp-btn" data-id="' + item.id + '">删除经历</button></div>'
           + '</article>';
       }).join("");
     }
@@ -819,13 +767,13 @@
       els.skillDocList.innerHTML = state.skillDocs.map(function (item) {
         return ''
           + '<article class="item-card">'
-          + '  <h3>' + escapeHtml(item.title) + '</h3>'
-          + '  <p><strong>技能项：</strong>' + escapeHtml(item.skill_key) + '</p>'
-          + '  <p>' + escapeHtml(item.description || "") + '</p>'
-          + '  <div class="split-actions">'
-          + '    <a href="' + escapeHtml(item.url) + '" target="_blank" rel="noopener noreferrer"><button class="secondary" type="button">打开 PDF</button></a>'
-          + '    <button class="danger delete-skill-btn" data-id="' + item.id + '">删除 PDF</button>'
-          + '  </div>'
+          + '<h3>' + escapeHtml(item.title) + '</h3>'
+          + '<p><strong>技能项：</strong>' + escapeHtml(item.skill_key) + '</p>'
+          + '<p>' + escapeHtml(item.description || "") + '</p>'
+          + '<div class="split-actions">'
+          + '<a href="' + escapeHtml(item.url) + '" target="_blank" rel="noopener noreferrer"><button class="secondary" type="button">打开 PDF</button></a>'
+          + '<button class="danger delete-skill-btn" data-id="' + item.id + '">删除 PDF</button>'
+          + '</div>'
           + '</article>';
       }).join("");
     }
@@ -839,9 +787,9 @@
       els.contentList.innerHTML = state.contentBlocks.map(function (item) {
         return ''
           + '<div class="table-row">'
-          + '  <code>' + escapeHtml(item.key) + '</code>'
-          + '  <textarea data-content-edit="' + escapeHtml(item.key) + '">' + escapeHtml(item.value) + '</textarea>'
-          + '  <button class="primary quick-save-content-btn" data-key="' + escapeHtml(item.key) + '">保存</button>'
+          + '<code>' + escapeHtml(item.key) + '</code>'
+          + '<textarea data-content-edit="' + escapeHtml(item.key) + '">' + escapeHtml(item.value) + '</textarea>'
+          + '<button class="primary quick-save-content-btn" data-key="' + escapeHtml(item.key) + '">保存</button>'
           + '</div>';
       }).join("");
     }
@@ -855,31 +803,52 @@
       els.messageList.innerHTML = state.messages.map(function (item) {
         return ''
           + '<article class="item-card">'
-          + '  <h3>' + escapeHtml(item.nickname) + '</h3>'
-          + '  <p><strong>时间：</strong>' + escapeHtml(item.created_at) + '</p>'
-          + '  <p>' + escapeHtml(item.content) + '</p>'
+          + '<h3>' + escapeHtml(item.nickname) + '</h3>'
+          + '<p><strong>时间：</strong>' + escapeHtml(item.created_at) + '</p>'
+          + '<p>' + escapeHtml(item.content) + '</p>'
           + (item.reply ? '<div class="message-reply"><strong>嘉怡回复：</strong>' + escapeHtml(item.reply) + '</div>' : '')
-          + '  <div class="field" style="margin-top:14px;">'
-          + '    <label>回复这条留言</label>'
-          + '    <textarea data-reply-input="' + item.id + '" placeholder="输入回复内容"></textarea>'
-          + '  </div>'
-          + '  <div class="split-actions">'
-          + '    <button class="primary reply-btn" data-id="' + item.id + '">提交回复</button>'
-          + '    <button class="danger delete-message-btn" data-id="' + item.id + '">删除留言</button>'
-          + '  </div>'
+          + '<div class="field" style="margin-top:14px;">'
+          + '<label>回复这条留言</label>'
+          + '<textarea data-reply-input="' + item.id + '" placeholder="输入回复内容"></textarea>'
+          + '</div>'
+          + '<div class="split-actions">'
+          + '<button class="primary reply-btn" data-id="' + item.id + '">提交回复</button>'
+          + '<button class="danger delete-message-btn" data-id="' + item.id + '">删除留言</button>'
+          + '</div>'
+          + '</article>';
+      }).join("");
+    }
+
+    function renderLogs() {
+      if (!state.logs.length) {
+        els.logList.innerHTML = '<div class="item-card"><p>暂时还没有操作日志。</p></div>';
+        return;
+      }
+
+      els.logList.innerHTML = state.logs.map(function (item) {
+        return ''
+          + '<article class="item-card">'
+          + '<h3>' + escapeHtml(item.action) + '</h3>'
+          + '<p><strong>时间：</strong>' + escapeHtml(item.created_at) + '</p>'
+          + '<p><strong>目标：</strong>' + escapeHtml(item.target_type || "-") + ' #' + escapeHtml(item.target_id || "-") + '</p>'
+          + '<p>' + escapeHtml(item.detail) + '</p>'
           + '</article>';
       }).join("");
     }
 
     async function refreshAll() {
       try {
+        if (state.token) {
+          await api("/api/admin/check");
+        }
         setStatus("正在刷新后台数据...", "info");
         var results = await Promise.all([
           api("/api/admin/dashboard"),
           api("/api/experiences"),
           api("/api/skills/documents"),
           api("/api/content/get"),
-          api("/api/messages")
+          api("/api/messages"),
+          api("/api/admin/audit/logs")
         ]);
 
         renderDashboard(results[0]);
@@ -887,15 +856,17 @@
         state.skillDocs = Array.isArray(results[2]) ? results[2] : [];
         state.contentBlocks = Array.isArray(results[3].blocks) ? results[3].blocks : [];
         state.messages = Array.isArray(results[4]) ? results[4] : [];
+        state.logs = Array.isArray(results[5]) ? results[5] : [];
 
         renderExperiences();
         renderSkillDocs();
         renderContentBlocks();
         renderMessages();
+        renderLogs();
         setStatus("数据已同步完成。", "success");
       } catch (error) {
         setStatus(error.message || "刷新失败", "error");
-        if (/鉴权|403|登录/.test(error.message || "")) {
+        if (/401|token|登录|bearer/i.test(error.message || "")) {
           logout();
         }
       }
@@ -906,7 +877,6 @@
         var tags = document.getElementById("expTags").value.split(",").map(function (item) {
           return item.trim();
         }).filter(Boolean);
-
         await api("/api/admin/experience/add", {
           method: "POST",
           body: JSON.stringify({
@@ -916,7 +886,6 @@
             tags: tags
           })
         });
-
         showToast("经历已新增", "success");
         await refreshAll();
       } catch (error) {
@@ -928,7 +897,6 @@
       var file = els.expImageFile.files[0];
       var experienceId = Number(els.expSelect.value || 0);
       var button = document.getElementById("uploadExpImageBtn");
-
       if (!experienceId) {
         showToast("请先选择一个经历条目", "error");
         return;
@@ -950,7 +918,6 @@
             url: media.url
           })
         });
-
         els.expImageFile.value = "";
         showToast("图片上传并绑定成功", "success");
         await refreshAll();
@@ -981,7 +948,6 @@
             url: media.url
           })
         });
-
         document.getElementById("skillPdfFile").value = "";
         showToast("技能 PDF 上传成功", "success");
         await refreshAll();
@@ -993,10 +959,7 @@
     async function saveContent(key, value) {
       await api("/api/admin/content/update", {
         method: "POST",
-        body: JSON.stringify({
-          key: key,
-          value: value
-        })
+        body: JSON.stringify({ key: key, value: value })
       });
     }
 
@@ -1013,7 +976,7 @@
       }
     }
 
-    async function logout() {
+    function logout() {
       state.token = "";
       localStorage.removeItem(TOKEN_KEY);
       switchView(false);

@@ -325,8 +325,8 @@
         <h2>上传资源</h2>
 
         <div class="field">
-          <label for="adminToken">管理员口令</label>
-          <input id="adminToken" type="password" placeholder="请输入 ADMIN_TOKEN">
+          <label for="adminToken">管理 Token</label>
+          <input id="adminToken" type="password" placeholder="请输入后台登录后返回的 token">
         </div>
 
         <div class="field">
@@ -383,7 +383,7 @@
     const refreshBtn = document.getElementById("refreshBtn");
     const checkConfigBtn = document.getElementById("checkConfigBtn");
 
-    const STORAGE_KEY = "media_admin_token";
+    const STORAGE_KEY = "cloudhome_admin_token";
 
     adminTokenInput.value = localStorage.getItem(STORAGE_KEY) || "";
     adminTokenInput.addEventListener("input", () => {
@@ -404,7 +404,7 @@
       }
       return {
         "Content-Type": "application/json",
-        "x-admin-token": token
+        "Authorization": "Bearer " + token
       };
     }
 
@@ -437,7 +437,7 @@
         setStatus("正在检查 OSS 配置...", "info");
         const response = await fetch("/api/admin/media/config-check", {
           headers: {
-            "x-admin-token": adminTokenInput.value.trim()
+            "Authorization": "Bearer " + adminTokenInput.value.trim()
           }
         });
         const data = await parseJsonSafe(response);
@@ -463,7 +463,7 @@
       try {
         const response = await fetch("/api/admin/media", {
           headers: {
-            "x-admin-token": adminTokenInput.value.trim()
+            "Authorization": "Bearer " + adminTokenInput.value.trim()
           }
         });
         const data = await parseJsonSafe(response);

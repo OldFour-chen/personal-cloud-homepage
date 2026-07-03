@@ -8,6 +8,8 @@ CREATE TABLE messages (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nickname TEXT NOT NULL,
     content TEXT NOT NULL,
+    visitor_email TEXT NOT NULL DEFAULT '',
+    notify_on_reply INTEGER NOT NULL DEFAULT 0,
     reply TEXT DEFAULT '',
     created_at TEXT NOT NULL
 );
@@ -59,5 +61,25 @@ CREATE TABLE skill_documents (
     filename TEXT NOT NULL,
     object_key TEXT NOT NULL,
     url TEXT NOT NULL,
+    created_at TEXT NOT NULL
+);
+
+CREATE TABLE audit_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    action TEXT NOT NULL,
+    target_type TEXT NOT NULL DEFAULT '',
+    target_id INTEGER,
+    detail TEXT NOT NULL,
+    created_at TEXT NOT NULL
+);
+
+CREATE TABLE notification_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    event_type TEXT NOT NULL,
+    status TEXT NOT NULL,
+    recipient_email TEXT NOT NULL DEFAULT '',
+    subject TEXT NOT NULL DEFAULT '',
+    detail TEXT NOT NULL DEFAULT '',
+    message_id INTEGER,
     created_at TEXT NOT NULL
 );
