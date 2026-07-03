@@ -234,11 +234,19 @@ def is_valid_email(value: str) -> bool:
     return re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", value) is not None
 
 
+def parse_int_env(name: str, default: int) -> Optional[int]:
+    raw = os.getenv(name, str(default)).strip()
+    try:
+        return int(raw)
+    except ValueError:
+        return None
+
+
 def get_mail_config() -> dict:
     return {
         "enabled": env_flag("MAIL_ENABLED", False),
         "host": os.getenv("MAIL_HOST", "smtp.qq.com").strip() or "smtp.qq.com",
-        "port": int(os.getenv("MAIL_PORT", "465").strip() or "465"),
+        "port": parse_int_env("MAIL_PORT", 465),
         "username": os.getenv("MAIL_USERNAME", "").strip(),
         "password": os.getenv("MAIL_PASSWORD", "").strip(),
         "from_email": os.getenv("MAIL_FROM", "").strip(),
@@ -249,6 +257,8 @@ def get_mail_config() -> dict:
 def mail_config_missing_fields(config: Optional[dict] = None) -> list[str]:
     config = config or get_mail_config()
     missing = []
+    if config.get("port") is None:
+        missing.append("port")
     for key in ("username", "password", "from_email", "admin_notify_email"):
         if not config.get(key):
             missing.append(key)
@@ -464,7 +474,8 @@ def ensure_content_block(conn: sqlite3.Connection, key: str, value: str):
 
 def serialize_message(row: sqlite3.Row) -> dict:
     data = dict(row)
-    data["notify_on_reply"] = bool(data.get("notify_on_reply"))
+    if "notify_on_reply" in data:
+        data["notify_on_reply"] = bool(data.get("notify_on_reply"))
     data["reply_author"] = REPLY_AUTHOR if data.get("reply") else ""
     return data
 
@@ -1145,7 +1156,25 @@ def add_like(like_key: str):
 
 
 @app.get("/api/messages")
-def get_messages():
+def get_messages(authorization: str = Header(default="", alias="Authorization")):
+    is_admin = False
+    try:
+        token = extract_bearer_token(authorization) if authorization else ""
+        is_admin = bool(token) and validate_admin_session(token)
+    except HTTPException:
+        is_admin = False
+
+    if is_admin:
+        with get_conn() as conn:
+            rows = conn.execute(
+                """
+                SELECT id, nickname, content, visitor_email, notify_on_reply, reply, created_at
+                FROM messages
+                ORDER BY id DESC
+                """
+            ).fetchall()
+        return [serialize_message(row) for row in rows]
+
     client = get_redis()
     if client:
         cached = client.get(MESSAGES_CACHE_KEY)
@@ -1155,7 +1184,7 @@ def get_messages():
     with get_conn() as conn:
         rows = conn.execute(
             """
-            SELECT id, nickname, content, visitor_email, notify_on_reply, reply, created_at
+            SELECT id, nickname, content, reply, created_at
             FROM messages
             ORDER BY id DESC
             """

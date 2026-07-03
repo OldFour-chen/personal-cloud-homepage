@@ -801,10 +801,14 @@
       }
 
       els.messageList.innerHTML = state.messages.map(function (item) {
+        var visitorEmail = item.visitor_email ? escapeHtml(item.visitor_email) : "未填写";
+        var notifyOnReply = item.notify_on_reply ? "已勾选" : "未勾选";
         return ''
           + '<article class="item-card">'
           + '<h3>' + escapeHtml(item.nickname) + '</h3>'
           + '<p><strong>时间：</strong>' + escapeHtml(item.created_at) + '</p>'
+          + '<p><strong>访客邮箱：</strong>' + visitorEmail + '</p>'
+          + '<p><strong>回复邮件通知：</strong>' + notifyOnReply + '</p>'
           + '<p>' + escapeHtml(item.content) + '</p>'
           + (item.reply ? '<div class="message-reply"><strong>嘉怡回复：</strong>' + escapeHtml(item.reply) + '</div>' : '')
           + '<div class="field" style="margin-top:14px;">'

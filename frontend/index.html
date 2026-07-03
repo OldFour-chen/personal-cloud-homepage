@@ -1266,6 +1266,11 @@
 
         <div class="message-form">
           <input id="guestName" type="text" placeholder="你的昵称，例如：同学A">
+          <input id="guestEmail" type="email" placeholder="你的邮箱（选填，用于接收嘉怡回复）">
+          <label style="display:flex;align-items:center;gap:8px;font-size:14px;color:#5f5f5f;">
+            <input id="guestNotifyOnReply" type="checkbox">
+            如果嘉怡回复我，请通过邮件通知我
+          </label>
           <textarea id="guestContent" placeholder="写下你想说的话..."></textarea>
           <button onclick="submitGuestMessage()">提交留言</button>
         </div>
@@ -1493,10 +1498,14 @@
 
     async function submitGuestMessage() {
       const nameInput = document.getElementById("guestName");
+      const emailInput = document.getElementById("guestEmail");
+      const notifyInput = document.getElementById("guestNotifyOnReply");
       const contentInput = document.getElementById("guestContent");
       const tip = document.getElementById("messageTip");
 
       const nickname = nameInput.value.trim() || "匿名访客";
+      const visitorEmail = emailInput.value.trim();
+      const notifyOnReply = !!notifyInput.checked;
       const content = contentInput.value.trim();
 
       if (!content) {
@@ -1515,7 +1524,9 @@
           body: JSON.stringify({
             nickname: nickname,
             name: nickname,
-            content: content
+            content: content,
+            visitor_email: visitorEmail,
+            notify_on_reply: notifyOnReply
           })
         });
 
@@ -1527,6 +1538,8 @@
         }
 
         nameInput.value = "";
+        emailInput.value = "";
+        notifyInput.checked = false;
         contentInput.value = "";
         tip.innerText = "留言成功～";
 
