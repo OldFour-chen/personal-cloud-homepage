@@ -309,6 +309,101 @@
     .toast.error { border-left: 5px solid var(--danger); }
     .toast.info { border-left: 5px solid var(--brand); }
 
+    .ops-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .ops-kpis {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .ops-card {
+      padding: 18px;
+      border-radius: 22px;
+      border: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .ops-card h3 {
+      margin: 0 0 12px;
+    }
+
+    .ops-meta {
+      display: grid;
+      gap: 10px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .ops-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 78px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .ops-ok {
+      color: #0d6a45;
+      background: #eafaf1;
+    }
+
+    .ops-warning {
+      color: #8a5a11;
+      background: #fff5de;
+    }
+
+    .ops-danger {
+      color: #9b2b2b;
+      background: #fff1f1;
+    }
+
+    .ops-neutral {
+      color: var(--muted);
+      background: #eef3f9;
+    }
+
+    .ops-risk-list {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .ops-risk-item {
+      padding: 12px 14px;
+      border-radius: 16px;
+      border: 1px solid #ffd3d3;
+      background: #fff5f5;
+      color: #8b2d2d;
+      line-height: 1.7;
+    }
+
+    .ops-actions {
+      margin-top: 18px;
+    }
+
+    .ops-report {
+      min-height: 320px;
+      padding: 16px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: #0f1724;
+      color: #d8e3f0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: Consolas, "Courier New", monospace;
+      line-height: 1.6;
+    }
+
     @media (max-width: 1180px) {
       .app-shell {
         grid-template-columns: 1fr;
@@ -319,7 +414,9 @@
       }
 
       .stats,
-      .grid-2 {
+      .grid-2,
+      .ops-grid,
+      .ops-kpis {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
     }
@@ -332,6 +429,8 @@
 
       .stats,
       .grid-2,
+      .ops-grid,
+      .ops-kpis,
       .table-row {
         grid-template-columns: 1fr;
       }
@@ -361,6 +460,7 @@
       <p>轻量 CMS 后台。保留原有 `media.html`，新增统一管理入口与审计日志。</p>
       <div class="nav-list">
         <button class="nav-btn active" data-panel="dashboard">Dashboard</button>
+        <button class="nav-btn" data-panel="ops">系统运维中心</button>
         <button class="nav-btn" data-panel="experience">经历管理</button>
         <button class="nav-btn" data-panel="skills">技能 PDF</button>
         <button class="nav-btn" data-panel="content">内容块</button>
@@ -390,6 +490,37 @@
           <div class="stat-card"><span>内容块</span><strong id="statContents">0</strong></div>
           <div class="stat-card"><span>媒体库</span><strong id="statMedia">0</strong></div>
           <div class="stat-card"><span>日志数</span><strong id="statLogs">0</strong></div>
+        </div>
+      </section>
+
+      <section id="panel-ops" class="panel hidden">
+        <h2>系统运维中心</h2>
+        <p class="panel-intro">查看最近一次安全巡检、Docker 容器状态、端口暴露风险和最近备份结果，并支持手动执行巡检与备份。</p>
+        <div class="ops-grid">
+          <div class="ops-card">
+            <h3>巡检总览</h3>
+            <div id="opsOverview" class="ops-meta">正在等待巡检数据...</div>
+            <div class="btn-row ops-actions">
+              <button id="refreshOpsBtn" class="secondary" type="button">刷新状态</button>
+              <button id="runSecurityBtn" class="primary" type="button">立即执行安全巡检</button>
+              <button id="runBackupBtn" class="primary" type="button">立即执行备份</button>
+            </div>
+          </div>
+          <div class="ops-card">
+            <h3>Docker 与备份</h3>
+            <div id="opsDockerList" class="ops-meta">正在等待容器数据...</div>
+            <div id="opsBackupInfo" class="ops-meta" style="margin-top:14px;">正在等待备份数据...</div>
+          </div>
+        </div>
+        <div class="ops-grid" style="margin-top:18px;">
+          <div class="ops-card">
+            <h3>风险列表</h3>
+            <div id="opsRiskList">正在等待风险数据...</div>
+          </div>
+          <div class="ops-card">
+            <h3>文本巡检报告</h3>
+            <div id="opsTextReport" class="ops-report">正在等待文本报告...</div>
+          </div>
         </div>
       </section>
 
@@ -532,7 +663,10 @@
       skillDocs: [],
       contentBlocks: [],
       messages: [],
-      logs: []
+      logs: [],
+      opsStatus: null,
+      opsReport: "",
+      backupStatus: null
     };
 
     var els = {
@@ -550,7 +684,12 @@
       skillDocList: document.getElementById("skillDocList"),
       contentList: document.getElementById("contentList"),
       messageList: document.getElementById("messageList"),
-      logList: document.getElementById("logList")
+      logList: document.getElementById("logList"),
+      opsOverview: document.getElementById("opsOverview"),
+      opsDockerList: document.getElementById("opsDockerList"),
+      opsBackupInfo: document.getElementById("opsBackupInfo"),
+      opsRiskList: document.getElementById("opsRiskList"),
+      opsTextReport: document.getElementById("opsTextReport")
     };
 
     function setStatus(message, tone) {
@@ -583,6 +722,37 @@
         .replaceAll("'", "&#039;");
     }
 
+    function statusTone(status) {
+      if (status === "danger" || status === "error" || status === "yes" || status === "failed") return "danger";
+      if (status === "warning") return "warning";
+      if (status === "ok" || status === "no" || status === "running" || status === "uploaded" || status === "local_created") return "ok";
+      return "neutral";
+    }
+
+    function statusLabel(status) {
+      var map = {
+        ok: "正常",
+        warning: "警告",
+        danger: "危险",
+        error: "异常",
+        yes: "是",
+        no: "否",
+        running: "运行中",
+        stopped: "已停止",
+        missing: "缺失",
+        failed: "失败",
+        local_created: "本地已备份",
+        uploaded: "已上传",
+        skipped: "已跳过"
+      };
+      return map[status] || (status || "未知");
+    }
+
+    function renderBadge(status) {
+      var tone = statusTone(status);
+      return '<span class="ops-badge ops-' + tone + '">' + escapeHtml(statusLabel(status)) + '</span>';
+    }
+
     function getHeaders() {
       return {
         "Content-Type": "application/json",
@@ -600,7 +770,9 @@
       var response = await fetch(url, config);
       var data = await parseJsonSafe(response);
       if (!response.ok) {
-        throw new Error(data.detail || data.error || "request failed");
+        var detail = data.detail;
+        var message = typeof detail === "object" && detail ? detail.message : detail;
+        throw new Error(message || data.error || "request failed");
       }
       return data;
     }
@@ -728,6 +900,61 @@
       document.getElementById("statLogs").textContent = data.audit_logs || 0;
     }
 
+    function renderOps() {
+      var reportWrapper = state.opsStatus || { ok: false, message: "还没有生成安全巡检报告" };
+      var report = reportWrapper.report || {};
+      var docker = report.docker || {};
+      var backupWrapper = state.backupStatus || { ok: false, message: "还没有生成备份状态记录" };
+      var backup = backupWrapper.backup || {};
+      var risks = Array.isArray(report.risks) ? report.risks : [];
+
+      if (!reportWrapper.ok) {
+        els.opsOverview.innerHTML = '<div>最近巡检：-</div><div>总体状态：' + renderBadge("warning") + '</div><div>' + escapeHtml(reportWrapper.message || "还没有巡检数据") + '</div>';
+        els.opsDockerList.innerHTML = '<div>容器状态将在首次巡检后显示。</div>';
+      } else {
+        els.opsOverview.innerHTML = ''
+          + '<div>最近巡检时间：' + escapeHtml(report.time || "-") + '</div>'
+          + '<div>总体状态：' + renderBadge(report.overall_status || "warning") + '</div>'
+          + '<div class="ops-kpis">'
+          + '<div>Nginx：' + renderBadge(report.nginx_status || "error") + '</div>'
+          + '<div>首页：' + renderBadge(report.home_status || "error") + '</div>'
+          + '<div>云计算接口：' + renderBadge(report.cloud_api_status || "error") + '</div>'
+          + '<div>缓存接口：' + renderBadge(report.cache_api_status || "error") + '</div>'
+          + '<div>Redis 公网暴露：' + renderBadge(report.redis_exposed || "unknown") + '</div>'
+          + '<div>API 公网暴露：' + renderBadge(report.api_exposed || "unknown") + '</div>'
+          + '<div>磁盘使用率：' + escapeHtml(report.disk_usage || 0) + '%</div>'
+          + '<div>SSH 失败次数：' + escapeHtml(report.failed_ssh_24h || "0") + '</div>'
+          + '</div>';
+
+        els.opsDockerList.innerHTML = ''
+          + '<div>personal-api-1：' + renderBadge(docker["personal-api-1"] || "missing") + '</div>'
+          + '<div>personal-api-2：' + renderBadge(docker["personal-api-2"] || "missing") + '</div>'
+          + '<div>personal-redis：' + renderBadge(docker["personal-redis"] || "missing") + '</div>'
+          + '<div>内存摘要：' + escapeHtml(report.memory_summary || "-") + '</div>';
+      }
+
+      if (!backupWrapper.ok) {
+        els.opsBackupInfo.innerHTML = '<div>最近备份：-</div><div>' + escapeHtml(backupWrapper.message || "还没有备份记录") + '</div>';
+      } else {
+        els.opsBackupInfo.innerHTML = ''
+          + '<div>最近备份时间：' + escapeHtml(backup.time || "-") + '</div>'
+          + '<div>备份状态：' + renderBadge(backup.status || "warning") + '</div>'
+          + '<div>OSS 上传：' + renderBadge(backup.oss_status || "skipped") + '</div>'
+          + '<div>备份文件：' + escapeHtml(backup.archive || "-") + '</div>'
+          + '<div>备份大小：' + escapeHtml(backup.size || "-") + '</div>';
+      }
+
+      if (!reportWrapper.ok || !risks.length) {
+        els.opsRiskList.innerHTML = '<div class="status-box">当前没有风险项，或还没有生成巡检报告。</div>';
+      } else {
+        els.opsRiskList.innerHTML = '<ul class="ops-risk-list">' + risks.map(function (risk) {
+          return '<li class="ops-risk-item">' + escapeHtml(risk) + '</li>';
+        }).join("") + '</ul>';
+      }
+
+      els.opsTextReport.textContent = state.opsReport || "还没有生成文本巡检报告。";
+    }
+
     function renderExperiences() {
       if (!state.experiences.length) {
         els.experienceList.innerHTML = '<div class="item-card"><p>还没有后台新增经历。</p></div>';
@@ -840,6 +1067,26 @@
       }).join("");
     }
 
+    async function refreshOps() {
+      try {
+        var results = await Promise.all([
+          api("/api/admin/security/status"),
+          api("/api/admin/security/report"),
+          api("/api/admin/backup/status")
+        ]);
+        state.opsStatus = results[0];
+        state.opsReport = results[1].ok ? (results[1].report || "") : (results[1].message || "");
+        state.backupStatus = results[2];
+        renderOps();
+      } catch (error) {
+        state.opsStatus = { ok: false, message: error.message || "运维数据加载失败" };
+        state.opsReport = error.message || "运维数据加载失败";
+        state.backupStatus = { ok: false, message: error.message || "运维数据加载失败" };
+        renderOps();
+        throw error;
+      }
+    }
+
     async function refreshAll() {
       try {
         if (state.token) {
@@ -867,6 +1114,7 @@
         renderContentBlocks();
         renderMessages();
         renderLogs();
+        await refreshOps();
         setStatus("数据已同步完成。", "success");
       } catch (error) {
         setStatus(error.message || "刷新失败", "error");
@@ -980,6 +1228,46 @@
       }
     }
 
+    async function runSecurityAudit() {
+      var button = document.getElementById("runSecurityBtn");
+      var original = button.textContent;
+      button.disabled = true;
+      button.textContent = "巡检中...";
+      try {
+        var data = await api("/api/admin/security/run", { method: "POST" });
+        showToast("安全巡检已完成", "success");
+        if (data.notify_status && data.notify_status !== "skipped" && data.notify_status !== "sent") {
+          showToast("巡检完成，但告警邮件发送未成功", "info");
+        }
+        await refreshOps();
+      } catch (error) {
+        showToast(error.message || "安全巡检执行失败", "error");
+      } finally {
+        button.disabled = false;
+        button.textContent = original;
+      }
+    }
+
+    async function runBackupNow() {
+      var button = document.getElementById("runBackupBtn");
+      var original = button.textContent;
+      button.disabled = true;
+      button.textContent = "备份中...";
+      try {
+        var data = await api("/api/admin/backup/run", { method: "POST" });
+        showToast("备份任务已完成", "success");
+        if (data.notify_status && data.notify_status !== "skipped" && data.notify_status !== "sent") {
+          showToast("备份完成，但告警邮件发送未成功", "info");
+        }
+        await refreshOps();
+      } catch (error) {
+        showToast(error.message || "备份执行失败", "error");
+      } finally {
+        button.disabled = false;
+        button.textContent = original;
+      }
+    }
+
     function logout() {
       state.token = "";
       localStorage.removeItem(TOKEN_KEY);
@@ -993,6 +1281,16 @@
     document.getElementById("uploadSkillPdfBtn").addEventListener("click", uploadSkillPdf);
     document.getElementById("saveContentBtn").addEventListener("click", saveContentFromForm);
     document.getElementById("refreshAllBtn").addEventListener("click", refreshAll);
+    document.getElementById("refreshOpsBtn").addEventListener("click", async function () {
+      try {
+        await refreshOps();
+        showToast("运维状态已刷新", "success");
+      } catch (error) {
+        showToast(error.message || "运维状态刷新失败", "error");
+      }
+    });
+    document.getElementById("runSecurityBtn").addEventListener("click", runSecurityAudit);
+    document.getElementById("runBackupBtn").addEventListener("click", runBackupNow);
     document.getElementById("logoutBtn").addEventListener("click", logout);
     els.loginBtn.addEventListener("click", login);
     els.checkMediaBtn.addEventListener("click", checkMediaConfig);

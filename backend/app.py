@@ -6,6 +6,7 @@ from pathlib import Path
 import re
 import smtplib
 import sqlite3
+import subprocess
 import threading
 import time
 from typing import Optional
@@ -73,6 +74,22 @@ ADMIN_SESSION_PREFIX = "cloudhome:admin_session:"
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", os.getenv("ADMIN_TOKEN", "jiayi123456"))
 ADMIN_SESSION_TTL = int(os.getenv("ADMIN_SESSION_TTL", "43200"))
 UPLOAD_LOCK_TTL = int(os.getenv("UPLOAD_LOCK_TTL", "8"))
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+OPS_APP_ROOT = Path(os.getenv("OPS_APP_ROOT", "")).expanduser() if os.getenv("OPS_APP_ROOT", "").strip() else None
+if OPS_APP_ROOT is None:
+    default_ops_root = Path("/opt/personal-cloud-homepage")
+    OPS_APP_ROOT = default_ops_root if default_ops_root.exists() else PROJECT_ROOT / ".runtime" / "personal-cloud-homepage"
+OPS_SECURITY_REPORT_DIR = Path(os.getenv("OPS_SECURITY_REPORT_DIR", str(OPS_APP_ROOT / "security-reports")))
+OPS_BACKUP_DIR = Path(os.getenv("OPS_BACKUP_DIR", str(OPS_APP_ROOT / "backups")))
+OPS_SCRIPTS_DIR = Path(os.getenv("OPS_SCRIPTS_DIR", str(OPS_APP_ROOT / "scripts")))
+OPS_SECURITY_REPORT_JSON = OPS_SECURITY_REPORT_DIR / "latest_report.json"
+OPS_SECURITY_REPORT_TEXT = OPS_SECURITY_REPORT_DIR / "latest_report.txt"
+OPS_BACKUP_STATUS_JSON = OPS_BACKUP_DIR / "latest_backup.json"
+OPS_SECURITY_SCRIPT = Path(os.getenv("OPS_SECURITY_SCRIPT", str(OPS_SCRIPTS_DIR / "security_audit.sh")))
+OPS_BACKUP_SCRIPT = Path(os.getenv("OPS_BACKUP_SCRIPT", str(OPS_SCRIPTS_DIR / "backup_to_oss.sh")))
+LOCAL_SECURITY_SCRIPT = PROJECT_ROOT / "scripts" / "security_audit.sh"
+LOCAL_BACKUP_SCRIPT = PROJECT_ROOT / "scripts" / "backup_to_oss.sh"
+ADMIN_DASHBOARD_URL = os.getenv("ADMIN_DASHBOARD_URL", "/admin.html").strip() or "/admin.html"
 REPLY_AUTHOR = "嘉怡"
 
 ALLOWED_MEDIA_TYPES = {
@@ -577,6 +594,159 @@ def send_and_log_notification(
     return status
 
 
+def resolve_ops_script_path(primary: Path, fallback: Path) -> Path:
+    return primary if primary.exists() else fallback
+
+
+def trim_output(value: str, limit: int = 3000) -> str:
+    text = (value or "").strip()
+    if len(text) <= limit:
+        return text
+    return text[-limit:]
+
+
+def read_json_report(path: Path) -> Optional[dict]:
+    if not path.is_file():
+        return None
+    with path.open("r", encoding="utf-8") as handle:
+        return json.load(handle)
+
+
+def read_text_report(path: Path) -> Optional[str]:
+    if not path.is_file():
+        return None
+    return path.read_text(encoding="utf-8")
+
+
+def build_ops_env() -> dict:
+    env = os.environ.copy()
+    env.setdefault("APP_ROOT", str(OPS_APP_ROOT))
+    env.setdefault("REPORT_DIR", str(OPS_SECURITY_REPORT_DIR))
+    env.setdefault("BACKUP_DIR", str(OPS_BACKUP_DIR))
+    env.setdefault("SCRIPTS_DIR", str(OPS_SCRIPTS_DIR))
+    return env
+
+
+def run_ops_script(script_path: Path, timeout_seconds: int) -> dict:
+    target = resolve_ops_script_path(
+        script_path,
+        LOCAL_SECURITY_SCRIPT if script_path == OPS_SECURITY_SCRIPT else LOCAL_BACKUP_SCRIPT,
+    )
+    if not target.is_file():
+        raise HTTPException(status_code=500, detail=f"Script not found: {target}")
+
+    command = ["bash", str(target)]
+    try:
+        result = subprocess.run(
+            command,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=timeout_seconds,
+            env=build_ops_env(),
+        )
+    except subprocess.TimeoutExpired as exc:
+        stdout_tail = trim_output(exc.stdout or "")
+        stderr_tail = trim_output(exc.stderr or "")
+        raise HTTPException(
+            status_code=504,
+            detail={
+                "message": f"Script execution timed out after {timeout_seconds} seconds",
+                "stdout_tail": stdout_tail,
+                "stderr_tail": stderr_tail,
+            },
+        ) from exc
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=500, detail="bash is not available in the current runtime") from exc
+
+    return {
+        "success": result.returncode == 0,
+        "command": " ".join(command),
+        "returncode": result.returncode,
+        "stdout_tail": trim_output(result.stdout),
+        "stderr_tail": trim_output(result.stderr),
+    }
+
+
+def to_int_or_none(value) -> Optional[int]:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def maybe_send_security_alert(report: Optional[dict]) -> str:
+    if not report:
+        return "skipped"
+
+    alerts: list[str] = []
+    if report.get("redis_exposed") == "yes":
+        alerts.append("Redis is exposed to a public network")
+    if report.get("api_exposed") == "yes":
+        alerts.append("Backend ports 8001/8002 are exposed to a public network")
+    if report.get("nginx_status") != "ok":
+        alerts.append("Nginx configuration check failed")
+    if report.get("home_status") != "ok":
+        alerts.append("Home page health check failed")
+    if report.get("cloud_api_status") != "ok":
+        alerts.append("/api/cloud/status health check failed")
+
+    docker_report = report.get("docker") or {}
+    for container_name in ("personal-api-1", "personal-api-2", "personal-redis"):
+        if docker_report.get(container_name) != "running":
+            alerts.append(f"Core container is not running: {container_name}")
+
+    disk_usage = to_int_or_none(report.get("disk_usage"))
+    if disk_usage is not None and disk_usage > 85:
+        alerts.append(f"Disk usage is above 85%: {disk_usage}%")
+
+    failed_ssh = to_int_or_none(report.get("failed_ssh_24h"))
+    if failed_ssh is not None and failed_ssh > 20:
+        alerts.append(f"SSH failed login count in the last 24h is high: {failed_ssh}")
+
+    if not alerts:
+        return "skipped"
+
+    severity = "danger" if report.get("overall_status") == "danger" else "warning"
+    subject = "[CloudHome Security Alert] Server audit detected issues"
+    body = (
+        f"Audit time: {report.get('time', now_text())}\n"
+        f"Severity: {severity}\n"
+        f"Issues:\n- " + "\n- ".join(alerts) + "\n\n"
+        "Suggested action: open the admin console and review port exposure, container status, "
+        "Nginx configuration, and backup health.\n"
+        f"Admin entry: {ADMIN_DASHBOARD_URL}\n"
+    )
+    admin_email = get_mail_config()["admin_notify_email"]
+    return send_and_log_notification("security_alert", admin_email, subject, body, None)
+
+
+def maybe_send_backup_failure_alert(backup_status: Optional[dict], error_message: str = "") -> str:
+    status = (backup_status or {}).get("status", "")
+    oss_status = (backup_status or {}).get("oss_status", "")
+    if status == "local_created" and oss_status != "failed" and not error_message:
+        return "skipped"
+
+    subject = "[CloudHome Security Alert] Backup execution failed"
+    body_parts = [
+        f"Backup time: {(backup_status or {}).get('time', now_text())}",
+        "Severity: danger",
+    ]
+    if error_message:
+        body_parts.append(f"Issue: backup script execution failed. Error: {error_message}")
+    else:
+        body_parts.append(
+            f"Issue: backup status={status or 'unknown'}, oss_status={oss_status or 'unknown'}"
+        )
+    body_parts.append(
+        "Suggested action: check shared/.env, site.db, security-reports, and OSS upload configuration."
+    )
+    body_parts.append(f"Admin entry: {ADMIN_DASHBOARD_URL}")
+    admin_email = get_mail_config()["admin_notify_email"]
+    return send_and_log_notification("backup_alert", admin_email, subject, "\n".join(body_parts), None)
+
+
 def init_db():
     conn = get_conn()
     cur = conn.cursor()
@@ -913,6 +1083,100 @@ def admin_login(payload: AdminLoginIn):
 def admin_check(authorization: str = Header(default="", alias="Authorization")):
     token = require_admin_session(authorization)
     return {"success": True, "token": token}
+
+
+@app.get("/api/admin/security/status")
+def admin_security_status(authorization: str = Header(default="", alias="Authorization")):
+    require_admin_session(authorization)
+    report = read_json_report(OPS_SECURITY_REPORT_JSON)
+    if not report:
+        return {"ok": False, "message": "还没有生成安全巡检报告"}
+    return {"ok": True, "report": report}
+
+
+@app.get("/api/admin/security/report")
+def admin_security_report(authorization: str = Header(default="", alias="Authorization")):
+    require_admin_session(authorization)
+    report_text = read_text_report(OPS_SECURITY_REPORT_TEXT)
+    if report_text is None:
+        return {"ok": False, "message": "还没有生成文本巡检报告"}
+    return {"ok": True, "report": report_text}
+
+
+@app.post("/api/admin/security/run")
+def admin_security_run(authorization: str = Header(default="", alias="Authorization")):
+    require_admin_session(authorization)
+    result = run_ops_script(OPS_SECURITY_SCRIPT, timeout_seconds=60)
+    log_audit(
+        "security_audit_run",
+        f"Ran security audit script with return code {result['returncode']}",
+        "ops_script",
+        None,
+    )
+    report = read_json_report(OPS_SECURITY_REPORT_JSON)
+    notify_status = maybe_send_security_alert(report)
+    if not result["success"]:
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "message": "安全巡检脚本执行失败",
+                "stdout_tail": result["stdout_tail"],
+                "stderr_tail": result["stderr_tail"],
+                "notify_status": notify_status,
+            },
+        )
+    return {
+        "ok": True,
+        "message": "安全巡检已完成",
+        "result": result,
+        "report": report,
+        "notify_status": notify_status,
+    }
+
+
+@app.get("/api/admin/backup/status")
+def admin_backup_status(authorization: str = Header(default="", alias="Authorization")):
+    require_admin_session(authorization)
+    backup_status = read_json_report(OPS_BACKUP_STATUS_JSON)
+    if not backup_status:
+        return {"ok": False, "message": "还没有生成备份状态记录"}
+    return {"ok": True, "backup": backup_status}
+
+
+@app.post("/api/admin/backup/run")
+def admin_backup_run(authorization: str = Header(default="", alias="Authorization")):
+    require_admin_session(authorization)
+    result = run_ops_script(OPS_BACKUP_SCRIPT, timeout_seconds=120)
+    log_audit(
+        "backup_run",
+        f"Ran backup script with return code {result['returncode']}",
+        "ops_script",
+        None,
+    )
+    backup_status = read_json_report(OPS_BACKUP_STATUS_JSON)
+    notify_status = "skipped"
+    if not result["success"]:
+        notify_status = maybe_send_backup_failure_alert(backup_status, result["stderr_tail"] or result["stdout_tail"])
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "message": "备份脚本执行失败",
+                "stdout_tail": result["stdout_tail"],
+                "stderr_tail": result["stderr_tail"],
+                "notify_status": notify_status,
+            },
+        )
+
+    if (backup_status or {}).get("oss_status") == "failed":
+        notify_status = maybe_send_backup_failure_alert(backup_status)
+
+    return {
+        "ok": True,
+        "message": "备份任务已完成",
+        "result": result,
+        "backup": backup_status,
+        "notify_status": notify_status,
+    }
 
 
 @app.get("/api/content/get")

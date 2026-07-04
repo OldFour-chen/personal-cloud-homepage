@@ -13,6 +13,7 @@ backend/__pycache__/
 backend/.env
 
 # Database files
+site.db
 *.db
 *.sqlite
 *.sqlite3
@@ -21,12 +22,16 @@ backend/site.db
 # Logs
 *.log
 logs/
+.runtime/
 
 # OS files
 .DS_Store
 Thumbs.db
 
 # Backup files
+*.tar.gz
+backups/
+security-reports/
 *.bak
 *.bak_*
 *.backup
