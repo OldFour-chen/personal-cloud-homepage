@@ -158,7 +158,9 @@ for container_name in "personal-api-1" "personal-api-2" "personal-redis"; do
   if (( first_pair == 0 )); then
     docker_json+=", "
   fi
-  docker_json+="$(json_quote "${container_name}")":$(json_quote "${DOCKER_STATUS[${container_name}]}")"
+  docker_json+="$(json_quote "${container_name}")"
+  docker_json+=":"
+  docker_json+="$(json_quote "${DOCKER_STATUS[${container_name}]}")"
   first_pair=0
 done
 docker_json+="}"
