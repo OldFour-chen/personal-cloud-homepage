@@ -47,7 +47,25 @@ jobs:
       - name: Validate Docker Compose
         if: ${{ hashFiles('backend/docker-compose.yml') != '' }}
         shell: bash
-        run: docker compose -f backend/docker-compose.yml config >/dev/null
+        run: |
+          set -euo pipefail
+          if [[ -f backend/.env.example ]]; then
+            cp backend/.env.example backend/.env
+          elif [[ ! -f backend/.env ]]; then
+            printf '%s\n' \
+              'OPENAI_API_KEY=dummy' \
+              'OPENAI_BASE_URL=https://example.com' \
+              'AI_MODEL=dummy' \
+              'ADMIN_TOKEN=dummy' \
+              'ADMIN_PASSWORD=dummy' \
+              'ADMIN_EMAIL=dummy@example.com' \
+              'SMTP_HOST=smtp.example.com' \
+              'SMTP_PORT=587' \
+              'SMTP_USER=dummy' \
+              'SMTP_PASSWORD=dummy' \
+              > backend/.env
+          fi
+          docker compose -f backend/docker-compose.yml config >/dev/null
 
       - name: Compile backend Python
         if: ${{ hashFiles('backend/**/*.py', 'backend/*.py') != '' }}
