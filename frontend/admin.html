@@ -960,11 +960,41 @@
       return '<span class="ops-badge ops-' + tone + '">' + escapeHtml(statusLabel(status)) + '</span>';
     }
 
+    function getAdminToken() {
+      var token = (state.token || "").trim();
+      if (token) return token;
+      token = (localStorage.getItem(TOKEN_KEY) || "").trim();
+      if (token) {
+        state.token = token;
+      }
+      return token;
+    }
+
     function getHeaders() {
+      var token = getAdminToken();
       return {
         "Content-Type": "application/json",
-        "Authorization": "Bearer " + state.token
+        "Authorization": token ? ("Bearer " + token) : ""
       };
+    }
+
+    function isAuthError(response, data) {
+      var detail = data && data.detail;
+      var message = typeof detail === "object" && detail ? detail.message : detail;
+      var text = String(message || data && data.error || "").toLowerCase();
+      return response.status === 401 || response.status === 403 || text.indexOf("invalid or expired admin token") >= 0;
+    }
+
+    function handleAuthFailure(message) {
+      setStatus("登录状态已失效，请重新登录。", "error");
+      if (els.loginTip) {
+        els.loginTip.textContent = message || "登录状态已失效，请重新登录。";
+      }
+      if (typeof setOpsNotice === "function") {
+        setOpsNotice(message || "登录状态已失效，请重新登录。", "danger");
+      }
+      showToast("登录状态已失效，请重新登录", "error");
+      logout(true);
     }
 
     async function parseJsonSafe(response) {
@@ -979,9 +1009,16 @@
       if (!response.ok) {
         var detail = data.detail;
         var message = typeof detail === "object" && detail ? detail.message : detail;
+        if (isAuthError(response, data)) {
+          handleAuthFailure(message || "登录状态已失效，请重新登录。");
+        }
         throw new Error(message || data.error || "request failed");
       }
       return data;
+    }
+
+    async function adminApi(url, options) {
+      return api(url, options);
     }
 
     async function sha256(file) {
@@ -1353,9 +1390,9 @@
     async function refreshOps() {
       try {
         var results = await Promise.all([
-          api("/api/admin/security/status"),
-          api("/api/admin/security/report"),
-          api("/api/admin/backup/status")
+          adminApi("/api/admin/security/status"),
+          adminApi("/api/admin/security/report"),
+          adminApi("/api/admin/backup/status")
         ]);
         state.opsStatus = results[0];
         state.opsReport = results[1].ok ? (results[1].report || "") : (results[1].message || "");
@@ -1518,7 +1555,7 @@
       button.textContent = "巡检中...";
       setOpsNotice("正在执行安全巡检，请稍候。", "info");
       try {
-        var data = await api("/api/admin/security/run", { method: "POST" });
+        var data = await adminApi("/api/admin/security/run", { method: "POST" });
         setOpsNotice(
           data.notify_status && data.notify_status !== "skipped" && data.notify_status !== "sent"
             ? "巡检已完成，但告警通知发送未成功，请稍后检查邮件配置。"
@@ -1542,7 +1579,7 @@
       button.textContent = "备份中...";
       setOpsNotice("正在执行备份，请稍候。", "info");
       try {
-        var data = await api("/api/admin/backup/run", { method: "POST" });
+        var data = await adminApi("/api/admin/backup/run", { method: "POST" });
         setOpsNotice(
           data.notify_status && data.notify_status !== "skipped" && data.notify_status !== "sent"
             ? "备份已完成，但告警通知发送未成功，请稍后检查邮件配置。"
@@ -1559,12 +1596,15 @@
       }
     }
 
-    function logout() {
+    function logout(skipToast) {
       state.token = "";
       localStorage.removeItem(TOKEN_KEY);
       switchView(false);
       els.loginPassword.value = "";
       els.loginTip.textContent = "已退出登录。";
+      if (!skipToast) {
+        showToast("已退出登录", "info");
+      }
     }
 
     document.getElementById("addExperienceBtn").addEventListener("click", addExperience);
