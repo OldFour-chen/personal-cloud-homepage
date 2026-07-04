@@ -1,4 +1,5 @@
 from datetime import datetime
+import hmac
 import hashlib
 import json
 import os
@@ -72,6 +73,8 @@ MESSAGES_CACHE_KEY = "cloudhome:messages"
 UPLOAD_LOCK_PREFIX = "cloudhome:upload_lock:"
 ADMIN_SESSION_PREFIX = "cloudhome:admin_session:"
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", os.getenv("ADMIN_TOKEN", "jiayi123456"))
+ADMIN_TOKEN_VALUE = os.getenv("ADMIN_TOKEN", "").strip()
+ADMIN_SECRET = os.getenv("ADMIN_SECRET", "").strip()
 ADMIN_SESSION_TTL = int(os.getenv("ADMIN_SESSION_TTL", "43200"))
 UPLOAD_LOCK_TTL = int(os.getenv("UPLOAD_LOCK_TTL", "8"))
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -375,27 +378,28 @@ def get_oss_bucket():
     return bucket, config
 
 
+def build_stateless_admin_token() -> str:
+    if ADMIN_TOKEN_VALUE:
+        return ADMIN_TOKEN_VALUE
+
+    secret_source = ADMIN_SECRET or ADMIN_PASSWORD
+    digest = hmac.new(
+        secret_source.encode("utf-8"),
+        b"cloudhome-admin-token",
+        hashlib.sha256,
+    ).hexdigest()
+    return f"adm_{digest}"
+
+
 def create_admin_session() -> str:
-    token = uuid.uuid4().hex
-    client = get_redis()
-    if client:
-        client.setex(f"{ADMIN_SESSION_PREFIX}{token}", ADMIN_SESSION_TTL, "1")
-    else:
-        cleanup_memory_store(memory_admin_sessions)
-        memory_admin_sessions[token] = time.time() + ADMIN_SESSION_TTL
-    return token
+    return build_stateless_admin_token()
 
 
 def validate_admin_session(token: str) -> bool:
     if not token:
         return False
-
-    client = get_redis()
-    if client:
-        return client.exists(f"{ADMIN_SESSION_PREFIX}{token}") == 1
-
-    cleanup_memory_store(memory_admin_sessions)
-    return token in memory_admin_sessions
+    expected = build_stateless_admin_token()
+    return hmac.compare_digest(token.strip(), expected)
 
 
 def extract_bearer_token(authorization: str) -> str:

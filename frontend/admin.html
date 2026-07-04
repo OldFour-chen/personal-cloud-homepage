@@ -979,10 +979,7 @@
     }
 
     function isAuthError(response, data) {
-      var detail = data && data.detail;
-      var message = typeof detail === "object" && detail ? detail.message : detail;
-      var text = String(message || data && data.error || "").toLowerCase();
-      return response.status === 401 || response.status === 403 || text.indexOf("invalid or expired admin token") >= 0;
+      return !!response && (response.status === 401 || response.status === 403);
     }
 
     function handleAuthFailure(message) {
@@ -1004,7 +1001,12 @@
     async function api(url, options) {
       var config = Object.assign({}, options || {});
       config.headers = Object.assign({}, getHeaders(), config.headers || {});
-      var response = await fetch(url, config);
+      var response;
+      try {
+        response = await fetch(url, config);
+      } catch (networkError) {
+        throw new Error(networkError && networkError.message ? networkError.message : "request failed");
+      }
       var data = await parseJsonSafe(response);
       if (!response.ok) {
         var detail = data.detail;
@@ -1438,9 +1440,6 @@
         setStatus("数据已同步完成。", "success");
       } catch (error) {
         setStatus(error.message || "刷新失败", "error");
-        if (/401|token|登录|bearer/i.test(error.message || "")) {
-          logout();
-        }
       }
     }
 
