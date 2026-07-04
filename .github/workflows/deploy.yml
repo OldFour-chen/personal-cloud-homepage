@@ -94,6 +94,8 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
             mkdir -p /opt/personal-cloud-homepage/scripts
+            mkdir -p /opt/personal-cloud-homepage/security-reports
+            mkdir -p /opt/personal-cloud-homepage/backups
 
       - name: Sync ops scripts to server
         uses: appleboy/scp-action@v0.1.7
@@ -115,5 +117,6 @@ jobs:
           port: ${{ secrets.SERVER_PORT }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            chmod +x /opt/personal-cloud-homepage/scripts/*.sh
+            chmod +x /opt/personal-cloud-homepage/scripts/security_audit.sh
+            chmod +x /opt/personal-cloud-homepage/scripts/backup_to_oss.sh
             /opt/personal-cloud-homepage/scripts/deploy.sh

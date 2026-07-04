@@ -75,20 +75,24 @@ ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", os.getenv("ADMIN_TOKEN", "jiayi1234
 ADMIN_SESSION_TTL = int(os.getenv("ADMIN_SESSION_TTL", "43200"))
 UPLOAD_LOCK_TTL = int(os.getenv("UPLOAD_LOCK_TTL", "8"))
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-OPS_APP_ROOT = Path(os.getenv("OPS_APP_ROOT", "")).expanduser() if os.getenv("OPS_APP_ROOT", "").strip() else None
-if OPS_APP_ROOT is None:
-    default_ops_root = Path("/opt/personal-cloud-homepage")
-    OPS_APP_ROOT = default_ops_root if default_ops_root.exists() else PROJECT_ROOT / ".runtime" / "personal-cloud-homepage"
-OPS_SECURITY_REPORT_DIR = Path(os.getenv("OPS_SECURITY_REPORT_DIR", str(OPS_APP_ROOT / "security-reports")))
-OPS_BACKUP_DIR = Path(os.getenv("OPS_BACKUP_DIR", str(OPS_APP_ROOT / "backups")))
-OPS_SCRIPTS_DIR = Path(os.getenv("OPS_SCRIPTS_DIR", str(OPS_APP_ROOT / "scripts")))
-OPS_SECURITY_REPORT_JSON = OPS_SECURITY_REPORT_DIR / "latest_report.json"
-OPS_SECURITY_REPORT_TEXT = OPS_SECURITY_REPORT_DIR / "latest_report.txt"
+SERVER_OPS_ROOT = Path("/opt/personal-cloud-homepage")
+LOCAL_SCRIPT_DIR = PROJECT_ROOT / "scripts"
+LOCAL_REPORT_DIR = PROJECT_ROOT / "security-reports"
+LOCAL_BACKUP_DIR = PROJECT_ROOT / "backups"
+OPS_SCRIPT_DIR = Path(
+    os.getenv("OPS_SCRIPT_DIR", os.getenv("OPS_SCRIPTS_DIR", str(SERVER_OPS_ROOT / "scripts")))
+).expanduser()
+OPS_REPORT_DIR = Path(
+    os.getenv("OPS_REPORT_DIR", os.getenv("OPS_SECURITY_REPORT_DIR", str(SERVER_OPS_ROOT / "security-reports")))
+).expanduser()
+OPS_BACKUP_DIR = Path(os.getenv("OPS_BACKUP_DIR", str(SERVER_OPS_ROOT / "backups"))).expanduser()
+OPS_SECURITY_SCRIPT = Path(os.getenv("OPS_SECURITY_SCRIPT", str(OPS_SCRIPT_DIR / "security_audit.sh"))).expanduser()
+OPS_BACKUP_SCRIPT = Path(os.getenv("OPS_BACKUP_SCRIPT", str(OPS_SCRIPT_DIR / "backup_to_oss.sh"))).expanduser()
+OPS_SECURITY_REPORT_JSON = OPS_REPORT_DIR / "latest_report.json"
+OPS_SECURITY_REPORT_TEXT = OPS_REPORT_DIR / "latest_report.txt"
 OPS_BACKUP_STATUS_JSON = OPS_BACKUP_DIR / "latest_backup.json"
-OPS_SECURITY_SCRIPT = Path(os.getenv("OPS_SECURITY_SCRIPT", str(OPS_SCRIPTS_DIR / "security_audit.sh")))
-OPS_BACKUP_SCRIPT = Path(os.getenv("OPS_BACKUP_SCRIPT", str(OPS_SCRIPTS_DIR / "backup_to_oss.sh")))
-LOCAL_SECURITY_SCRIPT = PROJECT_ROOT / "scripts" / "security_audit.sh"
-LOCAL_BACKUP_SCRIPT = PROJECT_ROOT / "scripts" / "backup_to_oss.sh"
+LOCAL_SECURITY_SCRIPT = LOCAL_SCRIPT_DIR / "security_audit.sh"
+LOCAL_BACKUP_SCRIPT = LOCAL_SCRIPT_DIR / "backup_to_oss.sh"
 ADMIN_DASHBOARD_URL = os.getenv("ADMIN_DASHBOARD_URL", "/admin.html").strip() or "/admin.html"
 REPLY_AUTHOR = "嘉怡"
 
@@ -598,6 +602,21 @@ def resolve_ops_script_path(primary: Path, fallback: Path) -> Path:
     return primary if primary.exists() else fallback
 
 
+def resolve_existing_path(candidates: list[Path]) -> Optional[Path]:
+    for candidate in candidates:
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def is_local_ops_path(path: Path) -> bool:
+    try:
+        path.resolve().relative_to(PROJECT_ROOT.resolve())
+        return True
+    except ValueError:
+        return False
+
+
 def trim_output(value: str, limit: int = 3000) -> str:
     text = (value or "").strip()
     if len(text) <= limit:
@@ -620,20 +639,40 @@ def read_text_report(path: Path) -> Optional[str]:
 
 def build_ops_env() -> dict:
     env = os.environ.copy()
-    env.setdefault("APP_ROOT", str(OPS_APP_ROOT))
-    env.setdefault("REPORT_DIR", str(OPS_SECURITY_REPORT_DIR))
+    env.setdefault("OPS_SCRIPT_DIR", str(OPS_SCRIPT_DIR))
+    env.setdefault("OPS_REPORT_DIR", str(OPS_REPORT_DIR))
+    env.setdefault("OPS_BACKUP_DIR", str(OPS_BACKUP_DIR))
+    env.setdefault("APP_ROOT", str(SERVER_OPS_ROOT))
+    env.setdefault("REPORT_DIR", str(OPS_REPORT_DIR))
     env.setdefault("BACKUP_DIR", str(OPS_BACKUP_DIR))
-    env.setdefault("SCRIPTS_DIR", str(OPS_SCRIPTS_DIR))
+    env.setdefault("SCRIPTS_DIR", str(OPS_SCRIPT_DIR))
+    return env
+
+
+def build_local_ops_env() -> dict:
+    env = os.environ.copy()
+    env.setdefault("OPS_SCRIPT_DIR", str(LOCAL_SCRIPT_DIR))
+    env.setdefault("OPS_REPORT_DIR", str(LOCAL_REPORT_DIR))
+    env.setdefault("OPS_BACKUP_DIR", str(LOCAL_BACKUP_DIR))
+    env.setdefault("APP_ROOT", str(PROJECT_ROOT))
+    env.setdefault("REPORT_DIR", str(LOCAL_REPORT_DIR))
+    env.setdefault("BACKUP_DIR", str(LOCAL_BACKUP_DIR))
+    env.setdefault("SCRIPTS_DIR", str(LOCAL_SCRIPT_DIR))
     return env
 
 
 def run_ops_script(script_path: Path, timeout_seconds: int) -> dict:
-    target = resolve_ops_script_path(
-        script_path,
-        LOCAL_SECURITY_SCRIPT if script_path == OPS_SECURITY_SCRIPT else LOCAL_BACKUP_SCRIPT,
-    )
+    fallback = LOCAL_SECURITY_SCRIPT if script_path == OPS_SECURITY_SCRIPT else LOCAL_BACKUP_SCRIPT
+    target = resolve_existing_path([script_path, fallback])
     if not target.is_file():
-        raise HTTPException(status_code=500, detail=f"Script not found: {target}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "ok": False,
+                "message": "安全巡检脚本不存在" if script_path == OPS_SECURITY_SCRIPT else "备份脚本不存在",
+                "script_path": str(script_path),
+            },
+        )
 
     command = ["bash", str(target)]
     try:
@@ -644,7 +683,7 @@ def run_ops_script(script_path: Path, timeout_seconds: int) -> dict:
             encoding="utf-8",
             errors="replace",
             timeout=timeout_seconds,
-            env=build_ops_env(),
+            env=build_local_ops_env() if is_local_ops_path(target) else build_ops_env(),
         )
     except subprocess.TimeoutExpired as exc:
         stdout_tail = trim_output(exc.stdout or "")
@@ -1088,19 +1127,21 @@ def admin_check(authorization: str = Header(default="", alias="Authorization")):
 @app.get("/api/admin/security/status")
 def admin_security_status(authorization: str = Header(default="", alias="Authorization")):
     require_admin_session(authorization)
-    report = read_json_report(OPS_SECURITY_REPORT_JSON)
+    report_path = resolve_existing_path([OPS_SECURITY_REPORT_JSON, LOCAL_REPORT_DIR / "latest_report.json"])
+    report = read_json_report(report_path) if report_path else None
     if not report:
         return {"ok": False, "message": "还没有生成安全巡检报告"}
-    return {"ok": True, "report": report}
+    return {"ok": True, "report": report, "path": str(report_path)}
 
 
 @app.get("/api/admin/security/report")
 def admin_security_report(authorization: str = Header(default="", alias="Authorization")):
     require_admin_session(authorization)
-    report_text = read_text_report(OPS_SECURITY_REPORT_TEXT)
+    report_path = resolve_existing_path([OPS_SECURITY_REPORT_TEXT, LOCAL_REPORT_DIR / "latest_report.txt"])
+    report_text = read_text_report(report_path) if report_path else None
     if report_text is None:
         return {"ok": False, "message": "还没有生成文本巡检报告"}
-    return {"ok": True, "report": report_text}
+    return {"ok": True, "report": report_text, "path": str(report_path)}
 
 
 @app.post("/api/admin/security/run")
@@ -1113,7 +1154,8 @@ def admin_security_run(authorization: str = Header(default="", alias="Authorizat
         "ops_script",
         None,
     )
-    report = read_json_report(OPS_SECURITY_REPORT_JSON)
+    report_path = resolve_existing_path([OPS_SECURITY_REPORT_JSON, LOCAL_REPORT_DIR / "latest_report.json"])
+    report = read_json_report(report_path) if report_path else None
     notify_status = maybe_send_security_alert(report)
     if not result["success"]:
         raise HTTPException(
@@ -1137,10 +1179,11 @@ def admin_security_run(authorization: str = Header(default="", alias="Authorizat
 @app.get("/api/admin/backup/status")
 def admin_backup_status(authorization: str = Header(default="", alias="Authorization")):
     require_admin_session(authorization)
-    backup_status = read_json_report(OPS_BACKUP_STATUS_JSON)
+    backup_path = resolve_existing_path([OPS_BACKUP_STATUS_JSON, LOCAL_BACKUP_DIR / "latest_backup.json"])
+    backup_status = read_json_report(backup_path) if backup_path else None
     if not backup_status:
         return {"ok": False, "message": "还没有生成备份状态记录"}
-    return {"ok": True, "backup": backup_status}
+    return {"ok": True, "backup": backup_status, "path": str(backup_path)}
 
 
 @app.post("/api/admin/backup/run")
@@ -1153,7 +1196,8 @@ def admin_backup_run(authorization: str = Header(default="", alias="Authorizatio
         "ops_script",
         None,
     )
-    backup_status = read_json_report(OPS_BACKUP_STATUS_JSON)
+    backup_path = resolve_existing_path([OPS_BACKUP_STATUS_JSON, LOCAL_BACKUP_DIR / "latest_backup.json"])
+    backup_status = read_json_report(backup_path) if backup_path else None
     notify_status = "skipped"
     if not result["success"]:
         notify_status = maybe_send_backup_failure_alert(backup_status, result["stderr_tail"] or result["stdout_tail"])

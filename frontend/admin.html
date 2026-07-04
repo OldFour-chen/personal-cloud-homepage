@@ -303,16 +303,120 @@
       min-width: 260px;
       padding: 14px 16px;
       border-radius: 18px;
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: 0 16px 32px rgba(36, 107, 255, 0.12);
     }
 
     .toast.success { border-left: 5px solid var(--success); }
     .toast.error { border-left: 5px solid var(--danger); }
     .toast.info { border-left: 5px solid var(--brand); }
 
+    .ops-section {
+      padding: 0;
+      border: none;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .ops-hero {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: flex-start;
+      padding: 28px;
+      border-radius: 28px;
+      border: 1px solid rgba(191, 219, 254, 0.92);
+      background:
+        radial-gradient(circle at top right, rgba(147, 197, 253, 0.45), transparent 36%),
+        linear-gradient(180deg, rgba(248, 251, 255, 0.98) 0%, rgba(238, 246, 255, 0.96) 100%);
+      box-shadow: 0 18px 45px rgba(37, 99, 235, 0.08);
+    }
+
+    .ops-kicker {
+      margin: 0 0 10px;
+      color: #5b87d9;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .ops-hero h2 {
+      margin: 0 0 10px;
+      font-size: 30px;
+    }
+
+    .ops-hero p {
+      margin: 0;
+      max-width: 640px;
+      color: var(--muted);
+      line-height: 1.85;
+    }
+
+    .ops-status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(191, 219, 254, 0.9);
+      background: rgba(255, 255, 255, 0.88);
+      box-shadow: 0 10px 24px rgba(59, 130, 246, 0.08);
+      color: #20446f;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
     .ops-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 18px;
+      margin-top: 18px;
+    }
+
+    .ops-card {
+      padding: 22px;
+      border-radius: 24px;
+      border: 1px solid rgba(191, 219, 254, 0.85);
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 18px 45px rgba(37, 99, 235, 0.08);
+      backdrop-filter: blur(8px);
+    }
+
+    .ops-card h3 {
+      margin: 0 0 14px;
+      font-size: 20px;
+    }
+
+    .ops-summary-card {
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(247, 251, 255, 0.96) 100%);
+    }
+
+    .ops-docker-card {
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(243, 249, 255, 0.96) 100%);
+    }
+
+    .ops-backup-card {
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(246, 252, 248, 0.96) 100%);
+    }
+
+    .ops-risk-card {
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 251, 245, 0.96) 100%);
+    }
+
+    .ops-report-card {
+      grid-column: 1 / -1;
+    }
+
+    .ops-meta {
+      display: grid;
+      gap: 12px;
+      color: var(--muted);
+      line-height: 1.75;
     }
 
     .ops-kpis {
@@ -321,22 +425,33 @@
       gap: 12px;
     }
 
-    .ops-card {
-      padding: 18px;
-      border-radius: 22px;
-      border: 1px solid var(--line);
-      background: #fff;
+    .ops-kpi {
+      padding: 14px 16px;
+      border-radius: 18px;
+      border: 1px solid rgba(216, 225, 238, 0.9);
+      background: rgba(248, 251, 255, 0.9);
     }
 
-    .ops-card h3 {
-      margin: 0 0 12px;
+    .ops-kpi strong,
+    .ops-row strong {
+      display: block;
+      margin-bottom: 6px;
+      color: #244265;
+      font-size: 13px;
     }
 
-    .ops-meta {
-      display: grid;
-      gap: 10px;
-      color: var(--muted);
-      line-height: 1.7;
+    .ops-row {
+      padding: 14px 16px;
+      border-radius: 18px;
+      border: 1px solid rgba(216, 225, 238, 0.9);
+      background: rgba(250, 252, 255, 0.92);
+    }
+
+    .ops-status-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
     }
 
     .ops-badge {
@@ -348,26 +463,53 @@
       border-radius: 999px;
       font-size: 12px;
       font-weight: 700;
+      border: 1px solid transparent;
     }
 
     .ops-ok {
-      color: #0d6a45;
-      background: #eafaf1;
+      color: #047857;
+      background: #ecfdf5;
+      border-color: #bbf7d0;
     }
 
     .ops-warning {
-      color: #8a5a11;
-      background: #fff5de;
+      color: #b45309;
+      background: #fffbeb;
+      border-color: #fde68a;
     }
 
     .ops-danger {
-      color: #9b2b2b;
-      background: #fff1f1;
+      color: #b91c1c;
+      background: #fef2f2;
+      border-color: #fecaca;
     }
 
     .ops-neutral {
       color: var(--muted);
-      background: #eef3f9;
+      background: #eff6ff;
+      border-color: #dbeafe;
+    }
+
+    .ops-notice {
+      margin-top: 16px;
+      padding: 14px 16px;
+      border-radius: 18px;
+      border: 1px solid rgba(191, 219, 254, 0.92);
+      background: rgba(255, 255, 255, 0.78);
+      color: #32527b;
+      line-height: 1.7;
+    }
+
+    .ops-notice-warning {
+      border-color: #fde68a;
+      background: #fffbeb;
+      color: #92400e;
+    }
+
+    .ops-notice-danger {
+      border-color: #fecaca;
+      background: #fef2f2;
+      color: #991b1b;
     }
 
     .ops-risk-list {
@@ -379,29 +521,42 @@
     }
 
     .ops-risk-item {
-      padding: 12px 14px;
-      border-radius: 16px;
-      border: 1px solid #ffd3d3;
-      background: #fff5f5;
-      color: #8b2d2d;
-      line-height: 1.7;
+      padding: 14px 16px;
+      border-radius: 18px;
+      border: 1px solid #fde68a;
+      background: rgba(255, 251, 235, 0.95);
+      color: #9a5b08;
+      line-height: 1.75;
+    }
+
+    .ops-risk-item-danger {
+      border-color: #fecaca;
+      background: rgba(254, 242, 242, 0.95);
+      color: #991b1b;
     }
 
     .ops-actions {
       margin-top: 18px;
+      align-items: center;
+    }
+
+    .ops-actions button {
+      min-width: 132px;
     }
 
     .ops-report {
       min-height: 320px;
-      padding: 16px;
-      border-radius: 18px;
-      border: 1px solid var(--line);
-      background: #0f1724;
-      color: #d8e3f0;
+      max-height: 420px;
+      overflow: auto;
+      padding: 18px;
+      border-radius: 20px;
+      border: 1px solid rgba(216, 225, 238, 0.92);
+      background: linear-gradient(180deg, #fbfdff 0%, #f4f8ff 100%);
+      color: #31506f;
       white-space: pre-wrap;
       word-break: break-word;
       font-family: Consolas, "Courier New", monospace;
-      line-height: 1.6;
+      line-height: 1.7;
     }
 
     @media (max-width: 1180px) {
@@ -411,6 +566,10 @@
 
       .sidebar {
         position: static;
+      }
+
+      .ops-hero {
+        flex-direction: column;
       }
 
       .stats,
@@ -493,7 +652,7 @@
         </div>
       </section>
 
-      <section id="panel-ops" class="panel hidden">
+      <section id="panel-ops" class="panel ops-section hidden">
         <h2>系统运维中心</h2>
         <p class="panel-intro">查看最近一次安全巡检、Docker 容器状态、端口暴露风险和最近备份结果，并支持手动执行巡检与备份。</p>
         <div class="ops-grid">
@@ -685,6 +844,7 @@
       contentList: document.getElementById("contentList"),
       messageList: document.getElementById("messageList"),
       logList: document.getElementById("logList"),
+      opsPanel: document.getElementById("panel-ops"),
       opsOverview: document.getElementById("opsOverview"),
       opsDockerList: document.getElementById("opsDockerList"),
       opsBackupInfo: document.getElementById("opsBackupInfo"),
@@ -711,6 +871,53 @@
       toast.textContent = message;
       els.toastWrap.appendChild(toast);
       setTimeout(function () { toast.remove(); }, 2800);
+    }
+
+    function initializeOpsPanel() {
+      if (!els.opsPanel || document.getElementById("opsStatusPill")) {
+        return;
+      }
+
+      var title = els.opsPanel.querySelector("h2");
+      var intro = els.opsPanel.querySelector(".panel-intro");
+      var hero = document.createElement("div");
+      hero.className = "ops-hero";
+      hero.innerHTML = ''
+        + '<div>'
+        + '<p class="ops-kicker">Cloud Operations</p>'
+        + '<h2>' + (title ? title.textContent : "系统运维中心") + '</h2>'
+        + '<p>' + (intro ? intro.textContent : "查看网站安全巡检、容器运行状态、端口暴露风险与自动备份结果。") + '</p>'
+        + '</div>'
+        + '<div id="opsStatusPill" class="ops-status-pill">当前状态：等待巡检</div>';
+
+      var notice = document.createElement("div");
+      notice.id = "opsNotice";
+      notice.className = "ops-notice";
+      notice.textContent = "还没有生成巡检报告，请点击“立即执行安全巡检”。";
+
+      els.opsPanel.insertBefore(hero, els.opsPanel.firstChild);
+      els.opsPanel.insertBefore(notice, hero.nextSibling);
+
+      if (title) title.remove();
+      if (intro) intro.remove();
+
+      var cards = els.opsPanel.querySelectorAll(".ops-card");
+      if (cards[0]) cards[0].classList.add("ops-summary-card");
+      if (cards[1]) cards[1].classList.add("ops-docker-card");
+      if (cards[2]) cards[2].classList.add("ops-backup-card");
+      if (cards[3]) cards[3].classList.add("ops-risk-card");
+      if (cards[4]) cards[4].classList.add("ops-report-card");
+
+      els.opsStatusPill = document.getElementById("opsStatusPill");
+      els.opsNotice = document.getElementById("opsNotice");
+    }
+
+    function setOpsNotice(message, tone) {
+      if (!els.opsNotice) return;
+      els.opsNotice.className = "ops-notice";
+      if (tone === "warning") els.opsNotice.classList.add("ops-notice-warning");
+      if (tone === "danger") els.opsNotice.classList.add("ops-notice-danger");
+      els.opsNotice.textContent = message;
     }
 
     function escapeHtml(value) {
@@ -955,6 +1162,82 @@
       els.opsTextReport.textContent = state.opsReport || "还没有生成文本巡检报告。";
     }
 
+    function renderOpsModern() {
+      var reportWrapper = state.opsStatus || { ok: false, message: "还没有生成安全巡检报告" };
+      var report = reportWrapper.report || {};
+      var docker = report.docker || {};
+      var backupWrapper = state.backupStatus || { ok: false, message: "还没有生成备份状态记录" };
+      var backup = backupWrapper.backup || {};
+      var risks = Array.isArray(report.risks) ? report.risks : [];
+      var overallStatus = report.overall_status || (reportWrapper.ok ? "ok" : "warning");
+
+      if (els.opsStatusPill) {
+        els.opsStatusPill.innerHTML = '当前状态：' + renderBadge(overallStatus);
+      }
+
+      if (!reportWrapper.ok) {
+        els.opsOverview.innerHTML = ''
+          + '<div class="ops-row"><strong>最近巡检</strong><span>还没有生成巡检报告</span></div>'
+          + '<div class="ops-row"><strong>建议操作</strong><span>点击“立即执行安全巡检”生成首份报告。</span></div>';
+        els.opsDockerList.innerHTML = '<div class="ops-row"><strong>容器状态</strong><span>首次巡检后将在这里展示。</span></div>';
+        setOpsNotice(reportWrapper.message || "还没有生成巡检报告，请点击立即执行安全巡检。", "warning");
+      } else {
+        els.opsOverview.innerHTML = ''
+          + '<div class="ops-row"><strong>最近巡检时间</strong><span>' + escapeHtml(report.time || "-") + '</span></div>'
+          + '<div class="ops-row ops-status-row"><strong>总体状态</strong>' + renderBadge(overallStatus) + '</div>'
+          + '<div class="ops-kpis">'
+          + '<div class="ops-kpi"><strong>Nginx</strong>' + renderBadge(report.nginx_status || "error") + '</div>'
+          + '<div class="ops-kpi"><strong>首页访问</strong>' + renderBadge(report.home_status || "error") + '</div>'
+          + '<div class="ops-kpi"><strong>云计算接口</strong>' + renderBadge(report.cloud_api_status || "error") + '</div>'
+          + '<div class="ops-kpi"><strong>缓存接口</strong>' + renderBadge(report.cache_api_status || "error") + '</div>'
+          + '<div class="ops-kpi"><strong>Redis 公网暴露</strong>' + renderBadge(report.redis_exposed || "unknown") + '</div>'
+          + '<div class="ops-kpi"><strong>API 公网暴露</strong>' + renderBadge(report.api_exposed || "unknown") + '</div>'
+          + '<div class="ops-kpi"><strong>磁盘使用率</strong><span>' + escapeHtml(report.disk_usage || 0) + '%</span></div>'
+          + '<div class="ops-kpi"><strong>SSH 失败次数</strong><span>' + escapeHtml(report.failed_ssh_24h || "0") + '</span></div>'
+          + '</div>';
+
+        els.opsDockerList.innerHTML = ''
+          + '<div class="ops-row ops-status-row"><strong>personal-api-1</strong>' + renderBadge(docker["personal-api-1"] || "missing") + '</div>'
+          + '<div class="ops-row ops-status-row"><strong>personal-api-2</strong>' + renderBadge(docker["personal-api-2"] || "missing") + '</div>'
+          + '<div class="ops-row ops-status-row"><strong>personal-redis</strong>' + renderBadge(docker["personal-redis"] || "missing") + '</div>'
+          + '<div class="ops-row"><strong>内存摘要</strong><span>' + escapeHtml(report.memory_summary || "-") + '</span></div>';
+
+        if (overallStatus === "danger") {
+          setOpsNotice("本次巡检发现危险项，请优先处理端口暴露、容器异常或首页不可访问问题。", "danger");
+        } else if (overallStatus === "warning") {
+          setOpsNotice("本次巡检发现警告项，请检查备份、磁盘使用率或 SSH 登录失败次数。", "warning");
+        } else {
+          setOpsNotice("当前运行状态稳定，暂未发现明显风险。", "info");
+        }
+      }
+
+      if (!backupWrapper.ok) {
+        els.opsBackupInfo.innerHTML = ''
+          + '<div class="ops-row"><strong>最近备份</strong><span>还没有生成备份记录</span></div>'
+          + '<div class="ops-row"><strong>建议操作</strong><span>点击“立即执行备份”创建首次备份。</span></div>';
+      } else {
+        els.opsBackupInfo.innerHTML = ''
+          + '<div class="ops-row"><strong>最近备份时间</strong><span>' + escapeHtml(backup.time || "-") + '</span></div>'
+          + '<div class="ops-row ops-status-row"><strong>备份状态</strong>' + renderBadge(backup.status || "warning") + '</div>'
+          + '<div class="ops-row ops-status-row"><strong>OSS 上传</strong>' + renderBadge(backup.oss_status || "skipped") + '</div>'
+          + '<div class="ops-row"><strong>备份文件</strong><span>' + escapeHtml(backup.archive || "-") + '</span></div>'
+          + '<div class="ops-row"><strong>备份大小</strong><span>' + escapeHtml(backup.size || "-") + '</span></div>';
+      }
+
+      if (!reportWrapper.ok) {
+        els.opsRiskList.innerHTML = '<div class="ops-row"><strong>风险列表</strong><span>还没有生成巡检报告，请先执行一次安全巡检。</span></div>';
+      } else if (!risks.length) {
+        els.opsRiskList.innerHTML = '<div class="ops-row"><strong>风险列表</strong><span>当前没有发现明显风险。</span></div>';
+      } else {
+        els.opsRiskList.innerHTML = '<ul class="ops-risk-list">' + risks.map(function (risk) {
+          var tone = /exposed|failed|stopped|missing|not reachable/i.test(String(risk)) ? ' ops-risk-item-danger' : '';
+          return '<li class="ops-risk-item' + tone + '">' + escapeHtml(risk) + '</li>';
+        }).join("") + '</ul>';
+      }
+
+      els.opsTextReport.textContent = state.opsReport || "还没有生成巡检报告，请点击立即执行安全巡检。";
+    }
+
     function renderExperiences() {
       if (!state.experiences.length) {
         els.experienceList.innerHTML = '<div class="item-card"><p>还没有后台新增经历。</p></div>';
@@ -1077,12 +1360,12 @@
         state.opsStatus = results[0];
         state.opsReport = results[1].ok ? (results[1].report || "") : (results[1].message || "");
         state.backupStatus = results[2];
-        renderOps();
+        renderOpsModern();
       } catch (error) {
         state.opsStatus = { ok: false, message: error.message || "运维数据加载失败" };
         state.opsReport = error.message || "运维数据加载失败";
         state.backupStatus = { ok: false, message: error.message || "运维数据加载失败" };
-        renderOps();
+        renderOpsModern();
         throw error;
       }
     }
@@ -1233,14 +1516,18 @@
       var original = button.textContent;
       button.disabled = true;
       button.textContent = "巡检中...";
+      setOpsNotice("正在执行安全巡检，请稍候。", "info");
       try {
         var data = await api("/api/admin/security/run", { method: "POST" });
-        showToast("安全巡检已完成", "success");
-        if (data.notify_status && data.notify_status !== "skipped" && data.notify_status !== "sent") {
-          showToast("巡检完成，但告警邮件发送未成功", "info");
-        }
+        setOpsNotice(
+          data.notify_status && data.notify_status !== "skipped" && data.notify_status !== "sent"
+            ? "巡检已完成，但告警通知发送未成功，请稍后检查邮件配置。"
+            : "巡检已完成，状态面板已刷新。",
+          data.notify_status && data.notify_status !== "skipped" && data.notify_status !== "sent" ? "warning" : "info"
+        );
         await refreshOps();
       } catch (error) {
+        setOpsNotice(error.message || "安全巡检执行失败", "danger");
         showToast(error.message || "安全巡检执行失败", "error");
       } finally {
         button.disabled = false;
@@ -1253,14 +1540,18 @@
       var original = button.textContent;
       button.disabled = true;
       button.textContent = "备份中...";
+      setOpsNotice("正在执行备份，请稍候。", "info");
       try {
         var data = await api("/api/admin/backup/run", { method: "POST" });
-        showToast("备份任务已完成", "success");
-        if (data.notify_status && data.notify_status !== "skipped" && data.notify_status !== "sent") {
-          showToast("备份完成，但告警邮件发送未成功", "info");
-        }
+        setOpsNotice(
+          data.notify_status && data.notify_status !== "skipped" && data.notify_status !== "sent"
+            ? "备份已完成，但告警通知发送未成功，请稍后检查邮件配置。"
+            : "备份已完成，备份与巡检状态已刷新。",
+          data.notify_status && data.notify_status !== "skipped" && data.notify_status !== "sent" ? "warning" : "info"
+        );
         await refreshOps();
       } catch (error) {
+        setOpsNotice(error.message || "备份执行失败", "danger");
         showToast(error.message || "备份执行失败", "error");
       } finally {
         button.disabled = false;
@@ -1284,8 +1575,9 @@
     document.getElementById("refreshOpsBtn").addEventListener("click", async function () {
       try {
         await refreshOps();
-        showToast("运维状态已刷新", "success");
+        setOpsNotice("运维状态已刷新。", "info");
       } catch (error) {
+        setOpsNotice(error.message || "运维状态刷新失败", "danger");
         showToast(error.message || "运维状态刷新失败", "error");
       }
     });
@@ -1380,6 +1672,7 @@
       }
     });
 
+    initializeOpsPanel();
     bindNav();
 
     if (state.token) {

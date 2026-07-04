@@ -19,6 +19,9 @@ services:
       - REDIS_PORT=6379
     volumes:
       - /opt/personal-site-api:/opt/personal-site-api
+      - /opt/personal-cloud-homepage/scripts:/opt/personal-cloud-homepage/scripts:ro
+      - /opt/personal-cloud-homepage/security-reports:/opt/personal-cloud-homepage/security-reports
+      - /opt/personal-cloud-homepage/backups:/opt/personal-cloud-homepage/backups
     depends_on:
       - redis
     restart: always
@@ -36,6 +39,9 @@ services:
       - REDIS_PORT=6379
     volumes:
       - /opt/personal-site-api:/opt/personal-site-api
+      - /opt/personal-cloud-homepage/scripts:/opt/personal-cloud-homepage/scripts:ro
+      - /opt/personal-cloud-homepage/security-reports:/opt/personal-cloud-homepage/security-reports
+      - /opt/personal-cloud-homepage/backups:/opt/personal-cloud-homepage/backups
     depends_on:
       - redis
     restart: always
