@@ -94,17 +94,29 @@ OPS_BACKUP_DIR = Path(os.getenv("OPS_BACKUP_DIR", str(SERVER_OPS_ROOT / "backups
 OPS_REQUEST_DIR = Path(os.getenv("OPS_REQUEST_DIR", str(SERVER_OPS_ROOT / "ops-requests"))).expanduser()
 OPS_SECURITY_SCRIPT = Path(os.getenv("OPS_SECURITY_SCRIPT", str(OPS_SCRIPT_DIR / "security_audit.sh"))).expanduser()
 OPS_BACKUP_SCRIPT = Path(os.getenv("OPS_BACKUP_SCRIPT", str(OPS_SCRIPT_DIR / "backup_to_oss.sh"))).expanduser()
+OPS_RESTORE_SCRIPT = Path(os.getenv("OPS_RESTORE_SCRIPT", str(OPS_SCRIPT_DIR / "restore_from_backup.sh"))).expanduser()
+OPS_SELF_HEAL_SCRIPT = Path(os.getenv("OPS_SELF_HEAL_SCRIPT", str(OPS_SCRIPT_DIR / "self_heal.sh"))).expanduser()
 OPS_SECURITY_REPORT_JSON = OPS_REPORT_DIR / "latest_report.json"
 OPS_SECURITY_REPORT_TEXT = OPS_REPORT_DIR / "latest_report.txt"
 OPS_BACKUP_STATUS_JSON = OPS_BACKUP_DIR / "latest_backup.json"
 OPS_SECURITY_REQUEST_FILE = OPS_REQUEST_DIR / "run_security.request"
 OPS_BACKUP_REQUEST_FILE = OPS_REQUEST_DIR / "run_backup.request"
+OPS_RESTORE_REQUEST_FILE = OPS_REQUEST_DIR / "run_restore.request"
+OPS_SELF_HEAL_REQUEST_FILE = OPS_REQUEST_DIR / "run_self_heal.request"
 OPS_RUN_STATUS_JSON = OPS_REQUEST_DIR / "latest_ops_run.json"
+OPS_RESTORE_STATUS_JSON = OPS_REQUEST_DIR / "latest_restore_status.json"
+OPS_SELF_HEAL_STATUS_JSON = OPS_REQUEST_DIR / "latest_self_heal_status.json"
 LOCAL_SECURITY_SCRIPT = LOCAL_SCRIPT_DIR / "security_audit.sh"
 LOCAL_BACKUP_SCRIPT = LOCAL_SCRIPT_DIR / "backup_to_oss.sh"
+LOCAL_RESTORE_SCRIPT = LOCAL_SCRIPT_DIR / "restore_from_backup.sh"
+LOCAL_SELF_HEAL_SCRIPT = LOCAL_SCRIPT_DIR / "self_heal.sh"
 LOCAL_SECURITY_REQUEST_FILE = LOCAL_REQUEST_DIR / "run_security.request"
 LOCAL_BACKUP_REQUEST_FILE = LOCAL_REQUEST_DIR / "run_backup.request"
+LOCAL_RESTORE_REQUEST_FILE = LOCAL_REQUEST_DIR / "run_restore.request"
+LOCAL_SELF_HEAL_REQUEST_FILE = LOCAL_REQUEST_DIR / "run_self_heal.request"
 LOCAL_OPS_RUN_STATUS_JSON = LOCAL_REQUEST_DIR / "latest_ops_run.json"
+LOCAL_RESTORE_STATUS_JSON = LOCAL_REQUEST_DIR / "latest_restore_status.json"
+LOCAL_SELF_HEAL_STATUS_JSON = LOCAL_REQUEST_DIR / "latest_self_heal_status.json"
 ADMIN_DASHBOARD_URL = os.getenv("ADMIN_DASHBOARD_URL", "/admin.html").strip() or "/admin.html"
 REPLY_AUTHOR = "嘉怡"
 
@@ -236,6 +248,10 @@ class MessageDeleteIn(BaseModel):
 class NotificationTestIn(BaseModel):
     subject: Optional[str] = None
     body: Optional[str] = None
+
+
+class RestoreRunIn(BaseModel):
+    filename: str
 
 
 def now_text() -> str:
@@ -684,11 +700,100 @@ def should_use_local_ops_requests() -> bool:
     return not SERVER_OPS_ROOT.exists() and PROJECT_ROOT.exists()
 
 
+OPS_TASK_CONFIG = {
+    "security_audit": {
+        "request_name": "run_security.request",
+        "label": "安全巡检",
+    },
+    "backup": {
+        "request_name": "run_backup.request",
+        "label": "备份",
+    },
+    "restore": {
+        "request_name": "run_restore.request",
+        "label": "恢复",
+    },
+    "self_heal": {
+        "request_name": "run_self_heal.request",
+        "label": "自愈",
+    },
+}
+
+
 def get_ops_request_paths(request_type: str) -> tuple[Path, Path, Path]:
-    request_name = "run_backup.request" if request_type == "backup" else "run_security.request"
+    task_config = OPS_TASK_CONFIG.get(request_type)
+    if not task_config:
+        raise HTTPException(status_code=400, detail="unsupported ops request type")
+    request_name = task_config["request_name"]
     if should_use_local_ops_requests():
         return LOCAL_REQUEST_DIR, LOCAL_REQUEST_DIR / request_name, LOCAL_OPS_RUN_STATUS_JSON
     return OPS_REQUEST_DIR, OPS_REQUEST_DIR / request_name, OPS_RUN_STATUS_JSON
+
+
+def get_ops_status_json_paths(status_name: str) -> list[Path]:
+    if status_name == "restore":
+        return [OPS_RESTORE_STATUS_JSON, LOCAL_RESTORE_STATUS_JSON]
+    if status_name == "self_heal":
+        return [OPS_SELF_HEAL_STATUS_JSON, LOCAL_SELF_HEAL_STATUS_JSON]
+    if status_name == "run":
+        return [OPS_RUN_STATUS_JSON, LOCAL_OPS_RUN_STATUS_JSON]
+    return []
+
+
+def read_named_ops_status(status_name: str) -> Optional[dict]:
+    status_path = resolve_existing_path(get_ops_status_json_paths(status_name))
+    if not status_path:
+        return None
+    return read_json_report(status_path)
+
+
+def validate_backup_filename(filename: str) -> str:
+    value = str(filename or "").strip()
+    if not value:
+        raise HTTPException(status_code=400, detail="filename is required")
+    if "/" in value or "\\" in value or ".." in value:
+        raise HTTPException(status_code=400, detail="invalid backup filename")
+    if not value.endswith(".tar.gz"):
+        raise HTTPException(status_code=400, detail="backup filename must end with .tar.gz")
+    if not re.fullmatch(r"[A-Za-z0-9._-]+\.tar\.gz", value):
+        raise HTTPException(status_code=400, detail="backup filename contains unsupported characters")
+    return value
+
+
+def list_backup_archives(limit: int = 20) -> list[dict]:
+    items: dict[str, Path] = {}
+    for base_dir in [OPS_BACKUP_DIR, LOCAL_BACKUP_DIR]:
+        try:
+            for archive in base_dir.glob("*.tar.gz"):
+                if archive.is_file():
+                    items.setdefault(archive.name, archive)
+        except OSError:
+            continue
+
+    def archive_mtime(item: Path) -> float:
+        try:
+            return item.stat().st_mtime
+        except OSError:
+            return 0.0
+
+    sorted_items = sorted(items.values(), key=archive_mtime, reverse=True)[: max(1, limit)]
+
+    result = []
+    for archive in sorted_items:
+        try:
+            stat = archive.stat()
+        except OSError:
+            continue
+        result.append(
+            {
+                "filename": archive.name,
+                "path": str(archive),
+                "size": human_readable_size(stat.st_size),
+                "size_bytes": stat.st_size,
+                "created_at": datetime.fromtimestamp(stat.st_mtime).strftime("%Y-%m-%d %H:%M:%S"),
+            }
+        )
+    return result
 
 
 def write_json_file(path: Path, payload: dict) -> None:
@@ -712,6 +817,20 @@ def safe_int(value, default: int = 0) -> int:
 
 def status_ok(value: str) -> bool:
     return str(value or "").strip().lower() in {"ok", "running", "success", "internal_only", "uploaded", "local_created"}
+
+
+def human_readable_size(size_bytes: int) -> str:
+    units = ["B", "KB", "MB", "GB", "TB"]
+    value = float(max(0, size_bytes))
+    unit_index = 0
+    while value >= 1024 and unit_index < len(units) - 1:
+        value /= 1024.0
+        unit_index += 1
+    if unit_index == 0:
+        return f"{int(value)}{units[unit_index]}"
+    if value >= 10 or unit_index == 1:
+        return f"{value:.0f}{units[unit_index]}"
+    return f"{value:.1f}{units[unit_index]}"
 
 
 def format_percent(value: float) -> str:
@@ -814,7 +933,14 @@ def build_ops_time_labels(points: int, minutes_step: int = 5) -> list[str]:
     ]
 
 
-def summarize_ops_events(report: Optional[dict], backup_status: Optional[dict], audit_rows: list[sqlite3.Row], notification_rows: list[sqlite3.Row]) -> list[str]:
+def summarize_ops_events(
+    report: Optional[dict],
+    backup_status: Optional[dict],
+    restore_status: Optional[dict],
+    self_heal_status: Optional[dict],
+    audit_rows: list[sqlite3.Row],
+    notification_rows: list[sqlite3.Row],
+) -> list[str]:
     events: list[tuple[str, str]] = []
 
     for row in audit_rows:
@@ -840,6 +966,19 @@ def summarize_ops_events(report: Optional[dict], backup_status: Optional[dict], 
         upload_status = "OSS 上传成功" if str(backup_status.get("oss_status", "")).lower() in {"uploaded", "success"} else f"OSS 状态：{backup_status.get('oss_status', 'unknown')}"
         events.append((str(backup_status["time"]), f"[{str(backup_status['time'])[11:16]}] 备份完成，{upload_status}"))
 
+    if restore_status and (restore_status.get("finished_at") or restore_status.get("requested_at")):
+        stamp = str(restore_status.get("finished_at") or restore_status.get("requested_at"))
+        time_label = stamp[11:16] if len(stamp) >= 16 else stamp
+        filename = str(restore_status.get("filename") or "未指定备份")
+        status = str(restore_status.get("status") or "unknown")
+        events.append((stamp, f"[{time_label}] 恢复任务 {status}：{filename}"))
+
+    if self_heal_status and (self_heal_status.get("finished_at") or self_heal_status.get("requested_at")):
+        stamp = str(self_heal_status.get("finished_at") or self_heal_status.get("requested_at"))
+        time_label = stamp[11:16] if len(stamp) >= 16 else stamp
+        status = str(self_heal_status.get("status") or "unknown")
+        events.append((stamp, f"[{time_label}] 自愈任务 {status}"))
+
     events.sort(key=lambda item: item[0], reverse=True)
     unique_messages = []
     seen = set()
@@ -863,6 +1002,8 @@ def build_ops_status_payload() -> dict:
     backup_status = read_json_report(backup_path) if backup_path else {}
     backup_status = backup_status or {}
     ops_run_status = read_ops_run_status() or {}
+    restore_status = read_named_ops_status("restore") or {}
+    self_heal_status = read_named_ops_status("self_heal") or {}
 
     docker = report.get("docker") or {}
     services = report.get("services") or {}
@@ -964,7 +1105,14 @@ def build_ops_status_payload() -> dict:
     visit_series = build_ops_series(max(dashboard["media"] + dashboard["contents"], 1) * 12, 8, metric_seed + 9, floor=0, ceiling=1200)
     message_series = build_ops_series(max(dashboard["messages"], 1) * 2, 8, metric_seed + 13, floor=0, ceiling=80)
 
-    events = summarize_ops_events(report, backup_status, list(audit_rows), list(notification_rows))
+    events = summarize_ops_events(
+        report,
+        backup_status,
+        restore_status,
+        self_heal_status,
+        list(audit_rows),
+        list(notification_rows),
+    )
     if not events:
         events = ["暂无运维事件记录"]
 
@@ -1041,6 +1189,24 @@ def build_ops_status_payload() -> dict:
             "api_events_total": dashboard["logs"],
             "page_resources_total": dashboard["media"] + dashboard["contents"] + dashboard["skills"] + dashboard["experiences"],
         },
+        "recovery": {
+            "last_restore_status": restore_status.get("status", "unknown"),
+            "last_restore_time": restore_status.get("finished_at")
+            or restore_status.get("requested_at")
+            or restore_status.get("started_at")
+            or "--",
+            "last_restore_file": restore_status.get("filename", "--"),
+            "last_restore_message": restore_status.get("message", ""),
+            "last_restore_detail": restore_status,
+            "last_self_heal_status": self_heal_status.get("status", "unknown"),
+            "last_self_heal_time": self_heal_status.get("finished_at")
+            or self_heal_status.get("requested_at")
+            or self_heal_status.get("started_at")
+            or "--",
+            "last_self_heal_message": self_heal_status.get("message", ""),
+            "last_self_heal_actions": self_heal_status.get("actions", []),
+            "last_self_heal_detail": self_heal_status,
+        },
         "ops_run_status": ops_run_status,
         "report": report,
         "report_text": report_text,
@@ -1068,11 +1234,12 @@ def build_ops_status_payload() -> dict:
     }
 
 
-def queue_ops_request(request_type: str) -> dict:
+def queue_ops_request(request_type: str, extra_payload: Optional[dict] = None) -> dict:
     request_dir, request_file, status_file = get_ops_request_paths(request_type)
     request_dir.mkdir(parents=True, exist_ok=True)
     requested_at = now_text()
-    task_label = "备份" if request_type == "backup" else "安全巡检"
+    task_label = OPS_TASK_CONFIG[request_type]["label"]
+    extra_payload = extra_payload or {}
 
     if request_file.exists():
         existing_status = read_json_report(status_file) if status_file.is_file() else None
@@ -1089,6 +1256,7 @@ def queue_ops_request(request_type: str) -> dict:
             "message": f"已有{task_label}任务等待执行，请稍后刷新状态",
             "requested_at": requested_at,
         }
+        status_payload.update(extra_payload)
         write_json_file(status_file, status_payload)
         return {
             "ok": True,
@@ -1102,12 +1270,14 @@ def queue_ops_request(request_type: str) -> dict:
         "requested_at": requested_at,
         "source": "admin_panel",
     }
+    request_payload.update(extra_payload)
     status_payload = {
         "type": request_type,
         "status": "pending",
         "message": f"{task_label}任务已提交，等待宿主机执行",
         "requested_at": requested_at,
     }
+    status_payload.update(extra_payload)
     write_json_file(request_file, request_payload)
     write_json_file(status_file, status_payload)
     return {
@@ -1644,6 +1814,12 @@ def admin_backup_status(authorization: str = Header(default="", alias="Authoriza
     return {"ok": True, "backup": backup_status, "path": str(backup_path)}
 
 
+@app.get("/api/admin/backup/list")
+def admin_backup_list(authorization: str = Header(default="", alias="Authorization")):
+    require_admin_session(authorization)
+    return {"ok": True, "items": list_backup_archives(20)}
+
+
 @app.post("/api/admin/backup/run")
 def admin_backup_run(authorization: str = Header(default="", alias="Authorization")):
     require_admin_session(authorization)
@@ -1651,6 +1827,40 @@ def admin_backup_run(authorization: str = Header(default="", alias="Authorizatio
     log_audit(
         "backup_run",
         f"Queued backup request at {result.get('request_path', 'ops-requests')}",
+        "ops_script",
+        None,
+    )
+    return result
+
+
+@app.post("/api/admin/restore/run")
+def admin_restore_run(
+    payload: RestoreRunIn,
+    authorization: str = Header(default="", alias="Authorization"),
+):
+    require_admin_session(authorization)
+    filename = validate_backup_filename(payload.filename)
+    available = {item["filename"]: item for item in list_backup_archives(200)}
+    if filename not in available:
+        raise HTTPException(status_code=404, detail="backup archive not found")
+
+    result = queue_ops_request("restore", {"filename": filename})
+    log_audit(
+        "restore_run",
+        f"Queued restore request for backup archive {filename}",
+        "ops_script",
+        None,
+    )
+    return result
+
+
+@app.post("/api/admin/self-heal/run")
+def admin_self_heal_run(authorization: str = Header(default="", alias="Authorization")):
+    require_admin_session(authorization)
+    result = queue_ops_request("self_heal")
+    log_audit(
+        "self_heal_run",
+        f"Queued self-heal request at {result.get('request_path', 'ops-requests')}",
         "ops_script",
         None,
     )

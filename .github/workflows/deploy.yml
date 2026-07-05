@@ -138,6 +138,8 @@ jobs:
             set -euo pipefail
             chmod +x /opt/personal-cloud-homepage/scripts/security_audit.sh
             chmod +x /opt/personal-cloud-homepage/scripts/backup_to_oss.sh
+            chmod +x /opt/personal-cloud-homepage/scripts/restore_from_backup.sh
+            chmod +x /opt/personal-cloud-homepage/scripts/self_heal.sh
             chmod +x /opt/personal-cloud-homepage/scripts/ops_runner.sh
             chmod +x /opt/personal-cloud-homepage/scripts/deploy.sh
             /opt/personal-cloud-homepage/scripts/deploy.sh
