@@ -82,6 +82,7 @@ SERVER_OPS_ROOT = Path("/opt/personal-cloud-homepage")
 LOCAL_SCRIPT_DIR = PROJECT_ROOT / "scripts"
 LOCAL_REPORT_DIR = PROJECT_ROOT / "security-reports"
 LOCAL_BACKUP_DIR = PROJECT_ROOT / "backups"
+LOCAL_REQUEST_DIR = PROJECT_ROOT / "ops-requests"
 OPS_SCRIPT_DIR = Path(
     os.getenv("OPS_SCRIPT_DIR", os.getenv("OPS_SCRIPTS_DIR", str(SERVER_OPS_ROOT / "scripts")))
 ).expanduser()
@@ -89,13 +90,18 @@ OPS_REPORT_DIR = Path(
     os.getenv("OPS_REPORT_DIR", os.getenv("OPS_SECURITY_REPORT_DIR", str(SERVER_OPS_ROOT / "security-reports")))
 ).expanduser()
 OPS_BACKUP_DIR = Path(os.getenv("OPS_BACKUP_DIR", str(SERVER_OPS_ROOT / "backups"))).expanduser()
+OPS_REQUEST_DIR = Path(os.getenv("OPS_REQUEST_DIR", str(SERVER_OPS_ROOT / "ops-requests"))).expanduser()
 OPS_SECURITY_SCRIPT = Path(os.getenv("OPS_SECURITY_SCRIPT", str(OPS_SCRIPT_DIR / "security_audit.sh"))).expanduser()
 OPS_BACKUP_SCRIPT = Path(os.getenv("OPS_BACKUP_SCRIPT", str(OPS_SCRIPT_DIR / "backup_to_oss.sh"))).expanduser()
 OPS_SECURITY_REPORT_JSON = OPS_REPORT_DIR / "latest_report.json"
 OPS_SECURITY_REPORT_TEXT = OPS_REPORT_DIR / "latest_report.txt"
 OPS_BACKUP_STATUS_JSON = OPS_BACKUP_DIR / "latest_backup.json"
+OPS_SECURITY_REQUEST_FILE = OPS_REQUEST_DIR / "run_security.request"
+OPS_RUN_STATUS_JSON = OPS_REQUEST_DIR / "latest_ops_run.json"
 LOCAL_SECURITY_SCRIPT = LOCAL_SCRIPT_DIR / "security_audit.sh"
 LOCAL_BACKUP_SCRIPT = LOCAL_SCRIPT_DIR / "backup_to_oss.sh"
+LOCAL_SECURITY_REQUEST_FILE = LOCAL_REQUEST_DIR / "run_security.request"
+LOCAL_OPS_RUN_STATUS_JSON = LOCAL_REQUEST_DIR / "latest_ops_run.json"
 ADMIN_DASHBOARD_URL = os.getenv("ADMIN_DASHBOARD_URL", "/admin.html").strip() or "/admin.html"
 REPLY_AUTHOR = "嘉怡"
 
@@ -646,9 +652,11 @@ def build_ops_env() -> dict:
     env.setdefault("OPS_SCRIPT_DIR", str(OPS_SCRIPT_DIR))
     env.setdefault("OPS_REPORT_DIR", str(OPS_REPORT_DIR))
     env.setdefault("OPS_BACKUP_DIR", str(OPS_BACKUP_DIR))
+    env.setdefault("OPS_REQUEST_DIR", str(OPS_REQUEST_DIR))
     env.setdefault("APP_ROOT", str(SERVER_OPS_ROOT))
     env.setdefault("REPORT_DIR", str(OPS_REPORT_DIR))
     env.setdefault("BACKUP_DIR", str(OPS_BACKUP_DIR))
+    env.setdefault("REQUEST_DIR", str(OPS_REQUEST_DIR))
     env.setdefault("SCRIPTS_DIR", str(OPS_SCRIPT_DIR))
     return env
 
@@ -658,11 +666,37 @@ def build_local_ops_env() -> dict:
     env.setdefault("OPS_SCRIPT_DIR", str(LOCAL_SCRIPT_DIR))
     env.setdefault("OPS_REPORT_DIR", str(LOCAL_REPORT_DIR))
     env.setdefault("OPS_BACKUP_DIR", str(LOCAL_BACKUP_DIR))
+    env.setdefault("OPS_REQUEST_DIR", str(LOCAL_REQUEST_DIR))
     env.setdefault("APP_ROOT", str(PROJECT_ROOT))
     env.setdefault("REPORT_DIR", str(LOCAL_REPORT_DIR))
     env.setdefault("BACKUP_DIR", str(LOCAL_BACKUP_DIR))
+    env.setdefault("REQUEST_DIR", str(LOCAL_REQUEST_DIR))
     env.setdefault("SCRIPTS_DIR", str(LOCAL_SCRIPT_DIR))
     return env
+
+
+def should_use_local_ops_requests() -> bool:
+    if os.name == "nt":
+        return True
+    return not SERVER_OPS_ROOT.exists() and PROJECT_ROOT.exists()
+
+
+def get_ops_request_paths() -> tuple[Path, Path, Path]:
+    if should_use_local_ops_requests():
+        return LOCAL_REQUEST_DIR, LOCAL_SECURITY_REQUEST_FILE, LOCAL_OPS_RUN_STATUS_JSON
+    return OPS_REQUEST_DIR, OPS_SECURITY_REQUEST_FILE, OPS_RUN_STATUS_JSON
+
+
+def write_json_file(path: Path, payload: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def read_ops_run_status() -> Optional[dict]:
+    status_path = resolve_existing_path([OPS_RUN_STATUS_JSON, LOCAL_OPS_RUN_STATUS_JSON])
+    if not status_path:
+        return None
+    return read_json_report(status_path)
 
 
 def run_ops_script(script_path: Path, timeout_seconds: int) -> dict:
@@ -1133,9 +1167,13 @@ def admin_security_status(authorization: str = Header(default="", alias="Authori
     require_admin_session(authorization)
     report_path = resolve_existing_path([OPS_SECURITY_REPORT_JSON, LOCAL_REPORT_DIR / "latest_report.json"])
     report = read_json_report(report_path) if report_path else None
+    ops_run_status = read_ops_run_status()
     if not report:
-        return {"ok": False, "message": "还没有生成安全巡检报告"}
-    return {"ok": True, "report": report, "path": str(report_path)}
+        message = "还没有生成安全巡检报告"
+        if ops_run_status and ops_run_status.get("message"):
+            message = ops_run_status["message"]
+        return {"ok": False, "message": message, "ops_run_status": ops_run_status}
+    return {"ok": True, "report": report, "path": str(report_path), "ops_run_status": ops_run_status}
 
 
 @app.get("/api/admin/security/report")
@@ -1151,33 +1189,67 @@ def admin_security_report(authorization: str = Header(default="", alias="Authori
 @app.post("/api/admin/security/run")
 def admin_security_run(authorization: str = Header(default="", alias="Authorization")):
     require_admin_session(authorization)
-    result = run_ops_script(OPS_SECURITY_SCRIPT, timeout_seconds=60)
+    request_dir, request_file, status_file = get_ops_request_paths()
+    request_dir.mkdir(parents=True, exist_ok=True)
+    requested_at = now_text()
+
+    if request_file.exists():
+        existing_status = read_json_report(status_file) if status_file.is_file() else None
+        if existing_status and existing_status.get("status") == "running":
+            return {
+                "ok": True,
+                "status": "running",
+                "message": existing_status.get("message") or "安全巡检正在宿主机执行，请稍后刷新状态",
+                "ops_run_status": existing_status,
+            }
+        status_payload = {
+            "type": "security_audit",
+            "status": "pending",
+            "message": "已有安全巡检任务等待执行，请稍后刷新状态",
+            "requested_at": requested_at,
+        }
+        write_json_file(status_file, status_payload)
+        return {
+            "ok": True,
+            "status": "pending",
+            "message": status_payload["message"],
+            "ops_run_status": status_payload,
+        }
+
+    request_payload = {
+        "type": "security_audit",
+        "requested_at": requested_at,
+        "source": "admin_panel",
+    }
+    status_payload = {
+        "type": "security_audit",
+        "status": "pending",
+        "message": "安全巡检任务已提交，等待宿主机执行",
+        "requested_at": requested_at,
+    }
+    write_json_file(request_file, request_payload)
+    write_json_file(status_file, status_payload)
     log_audit(
         "security_audit_run",
-        f"Ran security audit script with return code {result['returncode']}",
+        f"Queued security audit request at {request_file}",
         "ops_script",
         None,
     )
-    report_path = resolve_existing_path([OPS_SECURITY_REPORT_JSON, LOCAL_REPORT_DIR / "latest_report.json"])
-    report = read_json_report(report_path) if report_path else None
-    notify_status = maybe_send_security_alert(report)
-    if not result["success"]:
-        raise HTTPException(
-            status_code=500,
-            detail={
-                "message": "安全巡检脚本执行失败",
-                "stdout_tail": result["stdout_tail"],
-                "stderr_tail": result["stderr_tail"],
-                "notify_status": notify_status,
-            },
-        )
     return {
         "ok": True,
-        "message": "安全巡检已完成",
-        "result": result,
-        "report": report,
-        "notify_status": notify_status,
+        "status": "pending",
+        "message": "安全巡检任务已提交，稍后刷新状态",
+        "ops_run_status": status_payload,
     }
+
+
+@app.get("/api/admin/ops/run-status")
+def admin_ops_run_status(authorization: str = Header(default="", alias="Authorization")):
+    require_admin_session(authorization)
+    ops_run_status = read_ops_run_status()
+    if not ops_run_status:
+        return {"ok": False, "message": "还没有运维任务执行记录"}
+    return {"ok": True, "ops_run_status": ops_run_status}
 
 
 @app.get("/api/admin/backup/status")

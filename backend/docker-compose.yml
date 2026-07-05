@@ -17,11 +17,13 @@ services:
       - INSTANCE_NAME=api1
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - OPS_REQUEST_DIR=/opt/personal-cloud-homepage/ops-requests
     volumes:
       - /opt/personal-site-api:/opt/personal-site-api
       - /opt/personal-cloud-homepage/scripts:/opt/personal-cloud-homepage/scripts:ro
       - /opt/personal-cloud-homepage/security-reports:/opt/personal-cloud-homepage/security-reports
       - /opt/personal-cloud-homepage/backups:/opt/personal-cloud-homepage/backups
+      - /opt/personal-cloud-homepage/ops-requests:/opt/personal-cloud-homepage/ops-requests
     depends_on:
       - redis
     restart: always
@@ -37,11 +39,13 @@ services:
       - INSTANCE_NAME=api2
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - OPS_REQUEST_DIR=/opt/personal-cloud-homepage/ops-requests
     volumes:
       - /opt/personal-site-api:/opt/personal-site-api
       - /opt/personal-cloud-homepage/scripts:/opt/personal-cloud-homepage/scripts:ro
       - /opt/personal-cloud-homepage/security-reports:/opt/personal-cloud-homepage/security-reports
       - /opt/personal-cloud-homepage/backups:/opt/personal-cloud-homepage/backups
+      - /opt/personal-cloud-homepage/ops-requests:/opt/personal-cloud-homepage/ops-requests
     depends_on:
       - redis
     restart: always

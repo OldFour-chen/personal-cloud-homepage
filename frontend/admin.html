@@ -931,8 +931,8 @@
 
     function statusTone(status) {
       if (status === "danger" || status === "error" || status === "yes" || status === "failed") return "danger";
-      if (status === "warning") return "warning";
-      if (status === "ok" || status === "no" || status === "running" || status === "uploaded" || status === "local_created") return "ok";
+      if (status === "warning" || status === "pending") return "warning";
+      if (status === "ok" || status === "no" || status === "running" || status === "success" || status === "uploaded" || status === "local_created") return "ok";
       return "neutral";
     }
 
@@ -944,7 +944,9 @@
         error: "异常",
         yes: "是",
         no: "否",
+        pending: "等待执行",
         running: "运行中",
+        success: "已完成",
         stopped: "已停止",
         missing: "缺失",
         failed: "失败",
@@ -1204,6 +1206,7 @@
     function renderOpsModern() {
       var reportWrapper = state.opsStatus || { ok: false, message: "还没有生成安全巡检报告" };
       var report = reportWrapper.report || {};
+      var opsRunStatus = reportWrapper.ops_run_status || null;
       var docker = report.docker || {};
       var backupWrapper = state.backupStatus || { ok: false, message: "还没有生成备份状态记录" };
       var backup = backupWrapper.backup || {};
@@ -1218,12 +1221,28 @@
         els.opsOverview.innerHTML = ''
           + '<div class="ops-row"><strong>最近巡检</strong><span>还没有生成巡检报告</span></div>'
           + '<div class="ops-row"><strong>建议操作</strong><span>点击“立即执行安全巡检”生成首份报告。</span></div>';
+        if (opsRunStatus) {
+          els.opsOverview.innerHTML += ''
+            + '<div class="ops-row ops-status-row"><strong>任务状态</strong>' + renderBadge(opsRunStatus.status || "pending") + '</div>'
+            + '<div class="ops-row"><strong>任务说明</strong><span>' + escapeHtml(opsRunStatus.message || "-") + '</span></div>'
+            + '<div class="ops-row"><strong>提交/执行时间</strong><span>' + escapeHtml(opsRunStatus.requested_at || opsRunStatus.started_at || opsRunStatus.finished_at || "-") + '</span></div>';
+        }
         els.opsDockerList.innerHTML = '<div class="ops-row"><strong>容器状态</strong><span>首次巡检后将在这里展示。</span></div>';
-        setOpsNotice(reportWrapper.message || "还没有生成巡检报告，请点击立即执行安全巡检。", "warning");
+        if (opsRunStatus && opsRunStatus.status === "running") {
+          setOpsNotice(opsRunStatus.message || "安全巡检正在宿主机执行，请稍后刷新状态。", "info");
+        } else if (opsRunStatus && opsRunStatus.status === "pending") {
+          setOpsNotice(opsRunStatus.message || "安全巡检任务已提交，稍后刷新状态。", "warning");
+        } else if (opsRunStatus && opsRunStatus.status === "failed") {
+          setOpsNotice(opsRunStatus.message || "安全巡检执行失败，请查看服务器日志。", "danger");
+        } else {
+          setOpsNotice(reportWrapper.message || "还没有生成巡检报告，请点击立即执行安全巡检。", "warning");
+        }
       } else {
         els.opsOverview.innerHTML = ''
           + '<div class="ops-row"><strong>最近巡检时间</strong><span>' + escapeHtml(report.time || "-") + '</span></div>'
           + '<div class="ops-row ops-status-row"><strong>总体状态</strong>' + renderBadge(overallStatus) + '</div>'
+          + (opsRunStatus ? '<div class="ops-row ops-status-row"><strong>任务状态</strong>' + renderBadge(opsRunStatus.status || "success") + '</div>' : '')
+          + (opsRunStatus ? '<div class="ops-row"><strong>任务说明</strong><span>' + escapeHtml(opsRunStatus.message || "-") + '</span></div>' : '')
           + '<div class="ops-kpis">'
           + '<div class="ops-kpi"><strong>Nginx</strong>' + renderBadge(report.nginx_status || "error") + '</div>'
           + '<div class="ops-kpi"><strong>首页访问</strong>' + renderBadge(report.home_status || "error") + '</div>'
@@ -1241,7 +1260,13 @@
           + '<div class="ops-row ops-status-row"><strong>personal-redis</strong>' + renderBadge(docker["personal-redis"] || "missing") + '</div>'
           + '<div class="ops-row"><strong>内存摘要</strong><span>' + escapeHtml(report.memory_summary || "-") + '</span></div>';
 
-        if (overallStatus === "danger") {
+        if (opsRunStatus && opsRunStatus.status === "running") {
+          setOpsNotice(opsRunStatus.message || "安全巡检正在宿主机执行，请稍后刷新状态。", "info");
+        } else if (opsRunStatus && opsRunStatus.status === "pending") {
+          setOpsNotice(opsRunStatus.message || "安全巡检任务已提交，稍后刷新状态。", "warning");
+        } else if (opsRunStatus && opsRunStatus.status === "failed") {
+          setOpsNotice(opsRunStatus.message || "安全巡检执行失败，请查看服务器日志。", "danger");
+        } else if (overallStatus === "danger") {
           setOpsNotice("本次巡检发现危险项，请优先处理端口暴露、容器异常或首页不可访问问题。", "danger");
         } else if (overallStatus === "warning") {
           setOpsNotice("本次巡检发现警告项，请检查备份、磁盘使用率或 SSH 登录失败次数。", "warning");
@@ -1552,15 +1577,11 @@
       var original = button.textContent;
       button.disabled = true;
       button.textContent = "巡检中...";
-      setOpsNotice("正在执行安全巡检，请稍候。", "info");
+      setOpsNotice("正在提交安全巡检任务，请稍候。", "info");
       try {
         var data = await adminApi("/api/admin/security/run", { method: "POST" });
-        setOpsNotice(
-          data.notify_status && data.notify_status !== "skipped" && data.notify_status !== "sent"
-            ? "巡检已完成，但告警通知发送未成功，请稍后检查邮件配置。"
-            : "巡检已完成，状态面板已刷新。",
-          data.notify_status && data.notify_status !== "skipped" && data.notify_status !== "sent" ? "warning" : "info"
-        );
+        setOpsNotice(data.message || "安全巡检任务已提交，稍后刷新状态。", "info");
+        showToast(data.message || "安全巡检任务已提交，稍后刷新状态。", "success");
         await refreshOps();
       } catch (error) {
         setOpsNotice(error.message || "安全巡检执行失败", "danger");
