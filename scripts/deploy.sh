@@ -61,8 +61,9 @@ cd "${APP_DIR}"
 
 "${COMPOSE_CMD[@]}" -f "${COMPOSE_FILE}" config >/dev/null
 sudo docker build -t personal-site-api:1.0 "${APP_DIR}"
-"${COMPOSE_CMD[@]}" -f "${COMPOSE_FILE}" up -d redis
-"${COMPOSE_CMD[@]}" -f "${COMPOSE_FILE}" up -d api1 api2
+echo "Removing legacy containers from the previous deployment flow"
+sudo docker rm -f personal-api-1 personal-api-2 personal-redis || true
+"${COMPOSE_CMD[@]}" -f "${COMPOSE_FILE}" up -d redis api1 api2
 
 if command -v systemctl >/dev/null 2>&1; then
   sudo systemctl reload nginx
