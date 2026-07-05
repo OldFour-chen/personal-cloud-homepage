@@ -150,22 +150,15 @@ elif command -v systemctl >/dev/null 2>&1; then
   fi
 fi
 
-http_port_status="error"
-if [[ "${home_status}" == "ok" ]]; then
-  http_port_status="ok"
-fi
-
-api1_port_status="${DOCKER_STATUS["personal-api-1"]}"
-api2_port_status="${DOCKER_STATUS["personal-api-2"]}"
-redis_port_status="internal_only"
-if [[ "${redis_exposed}" == "yes" ]]; then
-  redis_port_status="public_exposed"
-fi
-
 redis_exposed="no"
 if printf '%s\n%s\n' "${docker_ps_output}" "${port_snapshot}" | grep -Eq '0\.0\.0\.0:6379|:::6379'; then
   redis_exposed="yes"
   add_risk "danger" "Redis is exposed on public port 6379"
+fi
+
+redis_port_status="internal_only"
+if [[ "${redis_exposed}" == "yes" ]]; then
+  redis_port_status="public_exposed"
 fi
 
 api_exposed="no"
@@ -179,6 +172,14 @@ if ! probe_url "http://127.0.0.1/"; then
   home_status="error"
   add_risk "danger" "Home page http://127.0.0.1/ is not reachable"
 fi
+
+http_port_status="error"
+if [[ "${home_status}" == "ok" ]]; then
+  http_port_status="ok"
+fi
+
+api1_port_status="${DOCKER_STATUS["personal-api-1"]}"
+api2_port_status="${DOCKER_STATUS["personal-api-2"]}"
 
 cloud_api_status="ok"
 if ! probe_url "http://127.0.0.1/api/cloud/status"; then
