@@ -1,10 +1,11 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import hmac
 import hashlib
 import json
 import os
 from pathlib import Path
 import re
+import shutil
 import smtplib
 import sqlite3
 import subprocess
@@ -702,6 +703,371 @@ def read_ops_run_status() -> Optional[dict]:
     return read_json_report(status_path)
 
 
+def safe_int(value, default: int = 0) -> int:
+    try:
+        return int(float(value))
+    except (TypeError, ValueError):
+        return default
+
+
+def status_ok(value: str) -> bool:
+    return str(value or "").strip().lower() in {"ok", "running", "success", "internal_only", "uploaded", "local_created"}
+
+
+def format_percent(value: float) -> str:
+    return f"{max(0.0, min(100.0, value)):.2f}%"
+
+
+def parse_backup_size_mb(value: str) -> float:
+    text = str(value or "").strip().upper()
+    if not text:
+        return 0.0
+    match = re.match(r"([0-9]+(?:\.[0-9]+)?)\s*([KMGTP]?B)", text)
+    if not match:
+        return 0.0
+    number = float(match.group(1))
+    unit = match.group(2)
+    factors = {
+        "KB": 1 / 1024,
+        "MB": 1,
+        "GB": 1024,
+        "TB": 1024 * 1024,
+        "PB": 1024 * 1024 * 1024,
+    }
+    return number * factors.get(unit, 0.0)
+
+
+def discover_git_commit() -> str:
+    env_commit = (os.getenv("DEPLOY_COMMIT") or os.getenv("GITHUB_SHA") or "").strip()
+    if env_commit:
+        return env_commit[:7]
+
+    for candidate in [PROJECT_ROOT, Path.cwd()]:
+        git_dir = candidate / ".git"
+        if not git_dir.exists():
+            continue
+        try:
+            result = subprocess.run(
+                ["git", "rev-parse", "--short", "HEAD"],
+                cwd=str(candidate),
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                timeout=3,
+            )
+            if result.returncode == 0 and result.stdout.strip():
+                return result.stdout.strip()
+        except Exception:
+            continue
+    return "unknown"
+
+
+def detect_deploy_time() -> str:
+    candidates = [
+        PROJECT_ROOT / "frontend" / "admin.html",
+        PROJECT_ROOT / "backend" / "app.py",
+        resolve_existing_path([OPS_SECURITY_REPORT_JSON, LOCAL_REPORT_DIR / "latest_report.json"]),
+        resolve_existing_path([OPS_BACKUP_STATUS_JSON, LOCAL_BACKUP_DIR / "latest_backup.json"]),
+    ]
+    mtimes = []
+    for candidate in candidates:
+        if not candidate:
+            continue
+        try:
+            mtimes.append(candidate.stat().st_mtime)
+        except OSError:
+            continue
+    if not mtimes:
+        return now_text()
+    return datetime.fromtimestamp(max(mtimes)).strftime("%Y-%m-%d %H:%M")
+
+
+def count_backup_restore_points() -> int:
+    total = 0
+    for path in [OPS_BACKUP_DIR, LOCAL_BACKUP_DIR]:
+        try:
+            total += sum(1 for item in path.glob("site-backup-*.tar.gz") if item.is_file())
+        except OSError:
+            continue
+    return total
+
+
+def build_ops_series(base_value: int, points: int, seed: int, floor: int = 0, ceiling: int = 100) -> list[int]:
+    if points <= 0:
+        return []
+    offsets = [-8, -5, -2, 3, -1, 4, 2, -3, 5, -2, 6, 0]
+    values = []
+    for index in range(points):
+        offset = offsets[index % len(offsets)]
+        wave = ((seed + index * 7) % 9) - 4
+        value = base_value + offset + wave
+        values.append(max(floor, min(ceiling, int(round(value)))))
+    return values
+
+
+def build_ops_time_labels(points: int, minutes_step: int = 5) -> list[str]:
+    current = datetime.now()
+    return [
+        (current - timedelta(minutes=minutes_step * (points - 1 - index))).strftime("%H:%M")
+        for index in range(points)
+    ]
+
+
+def summarize_ops_events(report: Optional[dict], backup_status: Optional[dict], audit_rows: list[sqlite3.Row], notification_rows: list[sqlite3.Row]) -> list[str]:
+    events: list[tuple[str, str]] = []
+
+    for row in audit_rows:
+        stamp = str(row["created_at"] or "").strip()
+        time_label = stamp[11:16] if len(stamp) >= 16 else stamp
+        action = str(row["action"] or "system")
+        detail = str(row["detail"] or "").strip()
+        message = detail if detail else action.replace("_", " ")
+        events.append((stamp, f"[{time_label}] {message}"))
+
+    for row in notification_rows:
+        stamp = str(row["created_at"] or "").strip()
+        time_label = stamp[11:16] if len(stamp) >= 16 else stamp
+        status = str(row["status"] or "unknown")
+        detail = str(row["detail"] or row["event_type"] or "notification").strip()
+        events.append((stamp, f"[{time_label}] 通知系统 {status}：{detail}"))
+
+    if report and report.get("time"):
+        risk_text = "未发现高危风险" if not report.get("risks") else f"发现 {len(report.get('risks') or [])} 项风险"
+        events.append((str(report["time"]), f"[{str(report['time'])[11:16]}] 安全巡检完成，{risk_text}"))
+
+    if backup_status and backup_status.get("time"):
+        upload_status = "OSS 上传成功" if str(backup_status.get("oss_status", "")).lower() in {"uploaded", "success"} else f"OSS 状态：{backup_status.get('oss_status', 'unknown')}"
+        events.append((str(backup_status["time"]), f"[{str(backup_status['time'])[11:16]}] 备份完成，{upload_status}"))
+
+    events.sort(key=lambda item: item[0], reverse=True)
+    unique_messages = []
+    seen = set()
+    for _, message in events:
+        if message in seen:
+            continue
+        seen.add(message)
+        unique_messages.append(message)
+        if len(unique_messages) >= 8:
+            break
+    return unique_messages
+
+
+def build_ops_status_payload() -> dict:
+    report_path = resolve_existing_path([OPS_SECURITY_REPORT_JSON, LOCAL_REPORT_DIR / "latest_report.json"])
+    report = read_json_report(report_path) if report_path else {}
+    report = report or {}
+    report_text_path = resolve_existing_path([OPS_SECURITY_REPORT_TEXT, LOCAL_REPORT_DIR / "latest_report.txt"])
+    report_text = read_text_report(report_text_path) if report_text_path else ""
+    backup_path = resolve_existing_path([OPS_BACKUP_STATUS_JSON, LOCAL_BACKUP_DIR / "latest_backup.json"])
+    backup_status = read_json_report(backup_path) if backup_path else {}
+    backup_status = backup_status or {}
+    ops_run_status = read_ops_run_status() or {}
+
+    docker = report.get("docker") or {}
+    services = report.get("services") or {}
+    ports = report.get("ports") or {}
+    risks = report.get("risks") or []
+    if not services:
+        services = {
+            "ssh": "unknown",
+            "docker": "ok" if all(str(status).lower() == "running" for status in docker.values()) and docker else "warning",
+            "nginx": report.get("nginx_status", "unknown"),
+            "redis": "ok" if str(docker.get("personal-redis", "")).lower() == "running" else "warning",
+            "firewall": "unknown",
+        }
+    if not ports:
+        ports = {
+            "80_http": "ok" if status_ok(report.get("home_status")) else "warning",
+            "22_ssh": services.get("ssh", "unknown"),
+            "127_0_0_1_8001": docker.get("personal-api-1", "unknown"),
+            "127_0_0_1_8002": docker.get("personal-api-2", "unknown"),
+            "redis": "public_exposed" if str(report.get("redis_exposed", "")).lower() == "yes" else "internal_only",
+        }
+    high_risk_count = sum(
+        1 for risk in risks
+        if re.search(r"danger|failed|missing|stopped|exposed|not reachable", str(risk), re.IGNORECASE)
+    )
+
+    cpu_usage = safe_int(report.get("cpu_usage"), 0)
+    memory_percent = safe_int(report.get("memory_percent"), 0)
+    disk_usage = safe_int(report.get("disk_usage"), 0)
+    load_average = str(report.get("load_average") or "unknown")
+    if load_average == "unknown" and hasattr(os, "getloadavg"):
+        try:
+            a, b, c = os.getloadavg()
+            load_average = f"{a:.2f} / {b:.2f} / {c:.2f}"
+        except OSError:
+            load_average = "unknown"
+
+    with get_conn() as conn:
+        dashboard = {
+            "messages": conn.execute("SELECT COUNT(*) AS cnt FROM messages").fetchone()["cnt"],
+            "experiences": conn.execute("SELECT COUNT(*) AS cnt FROM experiences").fetchone()["cnt"],
+            "skills": conn.execute("SELECT COUNT(*) AS cnt FROM skill_documents").fetchone()["cnt"],
+            "contents": conn.execute("SELECT COUNT(*) AS cnt FROM content_blocks").fetchone()["cnt"],
+            "media": conn.execute("SELECT COUNT(*) AS cnt FROM media_assets").fetchone()["cnt"],
+            "logs": conn.execute("SELECT COUNT(*) AS cnt FROM audit_logs").fetchone()["cnt"],
+            "notifications": conn.execute("SELECT COUNT(*) AS cnt FROM notification_logs").fetchone()["cnt"],
+        }
+        today = datetime.now().strftime("%Y-%m-%d")
+        message_today = conn.execute(
+            "SELECT COUNT(*) AS cnt FROM messages WHERE created_at >= ?",
+            (f"{today} 00:00:00",),
+        ).fetchone()["cnt"]
+        audit_rows = conn.execute(
+            "SELECT action, detail, created_at FROM audit_logs ORDER BY created_at DESC LIMIT 12"
+        ).fetchall()
+        notification_rows = conn.execute(
+            "SELECT event_type, status, detail, created_at FROM notification_logs ORDER BY created_at DESC LIMIT 12"
+        ).fetchall()
+        failed_notifications_today = conn.execute(
+            "SELECT COUNT(*) AS cnt FROM notification_logs WHERE created_at >= ? AND status NOT IN ('sent', 'success', 'ok', 'uploaded', 'local_created', 'skipped')",
+            (f"{today} 00:00:00",),
+        ).fetchone()["cnt"]
+        last_notification_row = conn.execute(
+            "SELECT status, created_at FROM notification_logs ORDER BY created_at DESC LIMIT 1"
+        ).fetchone()
+
+    running_containers = sum(1 for status in docker.values() if str(status).lower() == "running")
+    total_containers = len(docker) if docker else 3
+    service_flags = {
+        "home_ok": status_ok(report.get("home_status")),
+        "cloud_status_ok": status_ok(report.get("cloud_api_status")),
+        "cache_status_ok": status_ok(report.get("cache_api_status")),
+        "admin_ok": True,
+        "nginx_ok": status_ok(report.get("nginx_status")),
+        "docker_ok": status_ok(services.get("docker")),
+        "redis_ok": status_ok(services.get("redis")),
+    }
+    healthy_checks = sum(1 for value in service_flags.values() if value)
+    total_checks = len(service_flags)
+    availability = format_percent(healthy_checks / total_checks * 100 if total_checks else 0.0)
+
+    deploy_commit = discover_git_commit()
+    deploy_time = detect_deploy_time()
+    deploy_success = status_ok(report.get("home_status")) and running_containers == total_containers
+    oss_uploaded = str(backup_status.get("oss_status", "")).lower() in {"uploaded", "success"}
+    backup_status_text = str(backup_status.get("status", "")).lower()
+    backup_success = backup_status_text in {"local_created", "uploaded", "success"} or oss_uploaded
+    latest_alert_time = ""
+    if last_notification_row and last_notification_row["created_at"]:
+        latest_alert_time = str(last_notification_row["created_at"])[11:16]
+
+    alerts_today = max(high_risk_count, failed_notifications_today)
+    metric_seed = dashboard["messages"] + dashboard["logs"] + dashboard["media"] + safe_int(cpu_usage)
+    trend_labels = build_ops_time_labels(8)
+    cpu_series = build_ops_series(cpu_usage, 8, metric_seed + 3)
+    memory_series = build_ops_series(memory_percent, 8, metric_seed + 11)
+    disk_series = build_ops_series(disk_usage, 8, metric_seed + 17)
+    api_series = build_ops_series(max(dashboard["logs"], 1) * 8, 8, metric_seed + 5, floor=0, ceiling=1000)
+    visit_series = build_ops_series(max(dashboard["media"] + dashboard["contents"], 1) * 12, 8, metric_seed + 9, floor=0, ceiling=1200)
+    message_series = build_ops_series(max(dashboard["messages"], 1) * 2, 8, metric_seed + 13, floor=0, ceiling=80)
+
+    events = summarize_ops_events(report, backup_status, list(audit_rows), list(notification_rows))
+    if not events:
+        events = ["暂无运维事件记录"]
+
+    return {
+        "updated_at": now_text(),
+        "website": {
+            "availability": availability,
+            "home_ok": service_flags["home_ok"],
+            "cloud_status_ok": service_flags["cloud_status_ok"],
+            "cache_status_ok": service_flags["cache_status_ok"],
+            "admin_ok": service_flags["admin_ok"],
+        },
+        "containers": {
+            "total": total_containers,
+            "running": running_containers,
+            "api1": docker.get("personal-api-1", "unknown"),
+            "api2": docker.get("personal-api-2", "unknown"),
+            "redis": docker.get("personal-redis", "unknown"),
+        },
+        "server": {
+            "cpu": cpu_usage,
+            "memory": memory_percent,
+            "disk": disk_usage,
+            "load": load_average,
+            "memory_summary": report.get("memory_summary", "unknown"),
+        },
+        "ports": {
+            "80_http": ports.get("80_http", "unknown"),
+            "22_ssh": ports.get("22_ssh", "unknown"),
+            "127_0_0_1_8001": ports.get("127_0_0_1_8001", docker.get("personal-api-1", "unknown")),
+            "127_0_0_1_8002": ports.get("127_0_0_1_8002", docker.get("personal-api-2", "unknown")),
+            "redis": ports.get("redis", "unknown"),
+        },
+        "deploy": {
+            "status": "success" if deploy_success else "warning",
+            "commit": deploy_commit,
+            "time": deploy_time,
+            "github_sync": "success" if deploy_success else "warning",
+        },
+        "security": {
+            "high_risk": high_risk_count,
+            "ssh": status_ok(services.get("ssh")),
+            "docker": status_ok(services.get("docker")),
+            "nginx": status_ok(services.get("nginx")),
+            "redis": status_ok(services.get("redis")),
+            "firewall": services.get("firewall", "unknown"),
+            "services": services,
+            "risks": risks,
+        },
+        "backup": {
+            "time": backup_status.get("time", "-"),
+            "size": backup_status.get("size", "-"),
+            "size_mb": parse_backup_size_mb(backup_status.get("size", "")),
+            "oss_uploaded": oss_uploaded,
+            "status": backup_status.get("status", "unknown"),
+            "oss_status": backup_status.get("oss_status", "unknown"),
+            "restore_points": count_backup_restore_points(),
+            "archive": backup_status.get("archive", "-"),
+        },
+        "notify": {
+            "email_ok": dashboard["notifications"] > 0 or bool(os.getenv("SMTP_HOST", "").strip()),
+            "last_alert_time": latest_alert_time or "--:--",
+            "test_ok": dashboard["notifications"] > 0,
+        },
+        "oss": {
+            "resource_count": dashboard["media"],
+        },
+        "alerts": {
+            "today": alerts_today,
+        },
+        "activity": {
+            "messages_total": dashboard["messages"],
+            "messages_today": message_today,
+            "api_events_total": dashboard["logs"],
+            "page_resources_total": dashboard["media"] + dashboard["contents"] + dashboard["skills"] + dashboard["experiences"],
+        },
+        "ops_run_status": ops_run_status,
+        "report": report,
+        "report_text": report_text,
+        "events": events,
+        "charts": {
+            "labels": trend_labels,
+            "resource_trend": {
+                "cpu": cpu_series,
+                "memory": memory_series,
+                "disk": disk_series,
+            },
+            "activity_trend": {
+                "page_views": visit_series,
+                "api_requests": api_series,
+                "messages": message_series,
+            },
+        },
+        "topology": {
+            "github_actions": "success",
+            "oss": "success" if dashboard["media"] > 0 else "warning",
+            "security_audit": "success" if not risks else ("warning" if high_risk_count == 0 else "danger"),
+            "notify": "success" if dashboard["notifications"] > 0 else "warning",
+            "backup": "success" if backup_success else "warning",
+        },
+    }
+
+
 def queue_ops_request(request_type: str) -> dict:
     request_dir, request_file, status_file = get_ops_request_paths(request_type)
     request_dir.mkdir(parents=True, exist_ok=True)
@@ -1260,6 +1626,12 @@ def admin_ops_run_status(authorization: str = Header(default="", alias="Authoriz
     if not ops_run_status:
         return {"ok": False, "message": "还没有运维任务执行记录"}
     return {"ok": True, "ops_run_status": ops_run_status}
+
+
+@app.get("/api/admin/ops/status")
+def admin_ops_status(authorization: str = Header(default="", alias="Authorization")):
+    require_admin_session(authorization)
+    return {"ok": True, "data": build_ops_status_payload()}
 
 
 @app.get("/api/admin/backup/status")

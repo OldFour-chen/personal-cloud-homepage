@@ -31,6 +31,32 @@ probe_url() {
   return 127
 }
 
+calc_cpu_usage() {
+  if [[ ! -r /proc/stat ]]; then
+    echo "0"
+    return
+  fi
+
+  local cpu_line_a cpu_line_b idle_a total_a idle_b total_b idle_delta total_delta
+  read -r cpu_line_a < /proc/stat || true
+  sleep 0.2
+  read -r cpu_line_b < /proc/stat || true
+
+  total_a="$(printf '%s\n' "${cpu_line_a}" | awk '{sum=0; for(i=2;i<=NF;i++) sum+=$i; print sum}')"
+  idle_a="$(printf '%s\n' "${cpu_line_a}" | awk '{print $5+$6}')"
+  total_b="$(printf '%s\n' "${cpu_line_b}" | awk '{sum=0; for(i=2;i<=NF;i++) sum+=$i; print sum}')"
+  idle_b="$(printf '%s\n' "${cpu_line_b}" | awk '{print $5+$6}')"
+
+  idle_delta=$(( idle_b - idle_a ))
+  total_delta=$(( total_b - total_a ))
+  if (( total_delta <= 0 )); then
+    echo "0"
+    return
+  fi
+
+  awk -v idle="${idle_delta}" -v total="${total_delta}" 'BEGIN { printf "%.0f", (1 - idle / total) * 100 }'
+}
+
 add_risk() {
   local level="$1"
   local message="$2"
@@ -86,6 +112,55 @@ else
 fi
 
 port_snapshot="$(ss -ltn 2>/dev/null || netstat -ltn 2>/dev/null || true)"
+cpu_usage="$(calc_cpu_usage)"
+cpu_usage="${cpu_usage:-0}"
+memory_percent="$(free 2>/dev/null | awk 'NR==2 && $2 > 0 { printf "%.0f", ($3 / $2) * 100 }')"
+memory_percent="${memory_percent:-0}"
+load_average="$(awk '{print $1 " / " $2 " / " $3}' /proc/loadavg 2>/dev/null || true)"
+load_average="${load_average:-unknown}"
+
+ssh_status="error"
+if printf '%s\n' "${port_snapshot}" | grep -Eq '(^|[[:space:]])(0\.0\.0\.0:22|127\.0\.0\.1:22|\[::\]:22|:::22)([[:space:]]|$)'; then
+  ssh_status="ok"
+fi
+
+docker_service_status="error"
+if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
+  docker_service_status="ok"
+fi
+
+redis_service_status="error"
+if [[ "${DOCKER_STATUS["personal-redis"]}" == "running" ]]; then
+  redis_service_status="ok"
+fi
+
+firewall_status="unknown"
+if command -v ufw >/dev/null 2>&1; then
+  if ufw status 2>/dev/null | grep -qi '^status: active'; then
+    firewall_status="ok"
+  else
+    firewall_status="warning"
+  fi
+elif command -v systemctl >/dev/null 2>&1; then
+  firewalld_state="$(systemctl is-active firewalld 2>/dev/null || true)"
+  if [[ "${firewalld_state}" == "active" ]]; then
+    firewall_status="ok"
+  elif [[ -n "${firewalld_state}" ]]; then
+    firewall_status="warning"
+  fi
+fi
+
+http_port_status="error"
+if [[ "${home_status}" == "ok" ]]; then
+  http_port_status="ok"
+fi
+
+api1_port_status="${DOCKER_STATUS["personal-api-1"]}"
+api2_port_status="${DOCKER_STATUS["personal-api-2"]}"
+redis_port_status="internal_only"
+if [[ "${redis_exposed}" == "yes" ]]; then
+  redis_port_status="public_exposed"
+fi
 
 redis_exposed="no"
 if printf '%s\n%s\n' "${docker_ps_output}" "${port_snapshot}" | grep -Eq '0\.0\.0\.0:6379|:::6379'; then
@@ -165,6 +240,22 @@ for container_name in "personal-api-1" "personal-api-2" "personal-redis"; do
 done
 docker_json+="}"
 
+ports_json="{"
+ports_json+="\"80_http\":$(json_quote "${http_port_status}")"
+ports_json+=", \"22_ssh\":$(json_quote "${ssh_status}")"
+ports_json+=", \"127_0_0_1_8001\":$(json_quote "${api1_port_status}")"
+ports_json+=", \"127_0_0_1_8002\":$(json_quote "${api2_port_status}")"
+ports_json+=", \"redis\":$(json_quote "${redis_port_status}")"
+ports_json+="}"
+
+services_json="{"
+services_json+="\"ssh\":$(json_quote "${ssh_status}")"
+services_json+=", \"docker\":$(json_quote "${docker_service_status}")"
+services_json+=", \"nginx\":$(json_quote "${nginx_status}")"
+services_json+=", \"redis\":$(json_quote "${redis_service_status}")"
+services_json+=", \"firewall\":$(json_quote "${firewall_status}")"
+services_json+="}"
+
 all_risks=("${DANGER_RISKS[@]}" "${WARNING_RISKS[@]}")
 risks_json="["
 for idx in "${!all_risks[@]}"; do
@@ -186,8 +277,13 @@ cat > "${JSON_REPORT}" <<EOF
   "redis_exposed": $(json_quote "${redis_exposed}"),
   "api_exposed": $(json_quote "${api_exposed}"),
   "docker": ${docker_json},
+  "ports": ${ports_json},
+  "services": ${services_json},
+  "cpu_usage": ${cpu_usage},
   "disk_usage": ${disk_usage},
+  "memory_percent": ${memory_percent},
   "memory_summary": $(json_quote "${memory_summary}"),
+  "load_average": $(json_quote "${load_average}"),
   "failed_ssh_24h": $(json_quote "${failed_ssh_24h}"),
   "latest_backup": $(json_quote "${latest_backup}"),
   "risks": ${risks_json}
@@ -206,8 +302,11 @@ EOF
   echo "- Cache API: ${cache_api_status}"
   echo "- Redis exposed: ${redis_exposed}"
   echo "- API exposed: ${api_exposed}"
+  echo "- CPU usage: ${cpu_usage}%"
   echo "- Disk usage: ${disk_usage}%"
+  echo "- Memory usage: ${memory_percent}%"
   echo "- Memory summary: ${memory_summary}"
+  echo "- Load average: ${load_average}"
   echo "- Failed SSH logins (24h): ${failed_ssh_24h}"
   echo "- Latest backup: ${latest_backup}"
   echo
