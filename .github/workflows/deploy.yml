@@ -118,7 +118,32 @@ jobs:
           port: ${{ secrets.SERVER_PORT }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
+            set -euo pipefail
             chmod +x /opt/personal-cloud-homepage/scripts/security_audit.sh
             chmod +x /opt/personal-cloud-homepage/scripts/backup_to_oss.sh
             chmod +x /opt/personal-cloud-homepage/scripts/ops_runner.sh
             /opt/personal-cloud-homepage/scripts/deploy.sh
+
+            cd /opt/personal-site-api
+
+            if command -v docker-compose >/dev/null 2>&1; then
+              COMPOSE_CMD="sudo docker-compose"
+            else
+              COMPOSE_CMD="sudo docker compose"
+            fi
+
+            $COMPOSE_CMD build api1 api2
+            sudo docker rm -f personal-api-1 personal-api-2 || true
+            $COMPOSE_CMD up -d --no-deps api1 api2
+
+            sudo docker exec personal-api-1 ls -l /opt/personal-cloud-homepage/security-reports/latest_report.json
+            sudo docker exec personal-api-2 ls -l /opt/personal-cloud-homepage/security-reports/latest_report.json
+
+            if command -v systemctl >/dev/null 2>&1; then
+              sudo systemctl reload nginx
+            elif command -v nginx >/dev/null 2>&1; then
+              sudo nginx -s reload
+            fi
+
+            curl -fsS http://127.0.0.1/api/cloud/status >/dev/null
+            curl -fsS http://127.0.0.1/api/cache/status >/dev/null
