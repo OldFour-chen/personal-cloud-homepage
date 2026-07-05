@@ -93,10 +93,27 @@ jobs:
           port: ${{ secrets.SERVER_PORT }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
+            rm -rf /opt/personal-cloud-homepage/repo/frontend
+            rm -rf /opt/personal-cloud-homepage/repo/backend
+            rm -rf /opt/personal-cloud-homepage/repo/scripts
+            mkdir -p /opt/personal-cloud-homepage/repo
             mkdir -p /opt/personal-cloud-homepage/scripts
+            mkdir -p /opt/personal-cloud-homepage/shared
             mkdir -p /opt/personal-cloud-homepage/security-reports
             mkdir -p /opt/personal-cloud-homepage/backups
             mkdir -p /opt/personal-cloud-homepage/ops-requests
+
+      - name: Sync repository snapshot to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          port: ${{ secrets.SERVER_PORT }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          source: frontend,backend,scripts
+          target: /opt/personal-cloud-homepage/repo
+          strip_components: 0
+          overwrite: true
 
       - name: Sync ops scripts to server
         uses: appleboy/scp-action@v0.1.7
@@ -149,6 +166,49 @@ jobs:
                 print(json.dumps(data, ensure_ascii=False, indent=2))
                 sys.exit(1)
             print("Redis connected ok")
+            PY
+
+            if [[ -f /opt/personal-cloud-homepage/shared/.env ]]; then
+              set -a
+              . /opt/personal-cloud-homepage/shared/.env
+              set +a
+            elif [[ -f /opt/personal-site-api/.env ]]; then
+              set -a
+              . /opt/personal-site-api/.env
+              set +a
+            fi
+
+            python3 - <<'PY'
+            import json
+            import os
+            import sys
+            import urllib.request
+
+            token = os.environ.get("ADMIN_TOKEN")
+            if not token:
+                print("ERROR: ADMIN_TOKEN is not available for ops status verification")
+                sys.exit(1)
+
+            req = urllib.request.Request(
+                "http://127.0.0.1/api/admin/ops/status",
+                headers={"Authorization": f"Bearer {token}"},
+            )
+            data = json.loads(urllib.request.urlopen(req, timeout=8).read())
+            payload = data.get("data") or {}
+            containers = payload.get("containers") or {}
+            report = payload.get("report") or {}
+
+            if containers.get("running", 0) < 1:
+                print("ERROR: ops status did not report running containers")
+                print(json.dumps(data, ensure_ascii=False, indent=2))
+                sys.exit(1)
+
+            if not report:
+                print("ERROR: ops status returned an empty report")
+                print(json.dumps(data, ensure_ascii=False, indent=2))
+                sys.exit(1)
+
+            print("Ops status report ok")
             PY
 
             curl -fsS http://127.0.0.1/api/cache/status >/dev/null

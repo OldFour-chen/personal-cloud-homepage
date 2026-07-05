@@ -1,23 +1,37 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-APP_DIR="${APP_DIR:-/opt/personal-site-api}"
 OPS_ROOT="${OPS_ROOT:-/opt/personal-cloud-homepage}"
-COMPOSE_FILE="${COMPOSE_FILE:-${APP_DIR}/docker-compose.yml}"
+REPO_DIR="${REPO_DIR:-${OPS_ROOT}/repo}"
+SHARED_DIR="${SHARED_DIR:-${OPS_ROOT}/shared}"
+APP_DIR="${APP_DIR:-/opt/personal-site-api}"
+WEB_ROOT="${WEB_ROOT:-/var/www/html}"
+BACKUP_DIR="${BACKUP_DIR:-${OPS_ROOT}/deploy-backups}"
+
+REPO_FRONTEND_DIR="${REPO_FRONTEND_DIR:-${REPO_DIR}/frontend}"
+REPO_BACKEND_DIR="${REPO_BACKEND_DIR:-${REPO_DIR}/backend}"
+REPO_SCRIPTS_DIR="${REPO_SCRIPTS_DIR:-${REPO_DIR}/scripts}"
+
 ENV_FILE="${ENV_FILE:-${APP_DIR}/.env}"
 DB_FILE="${DB_FILE:-${APP_DIR}/site.db}"
-BACKUP_DIR="${BACKUP_DIR:-${OPS_ROOT}/deploy-backups}"
+SHARED_ENV_FILE="${SHARED_ENV_FILE:-${SHARED_DIR}/.env}"
+SHARED_DB_FILE="${SHARED_DB_FILE:-${SHARED_DIR}/site.db}"
+COMPOSE_FILE="${COMPOSE_FILE:-${APP_DIR}/docker-compose.yml}"
 
 mkdir -p "${OPS_ROOT}/scripts" \
          "${OPS_ROOT}/security-reports" \
          "${OPS_ROOT}/backups" \
          "${OPS_ROOT}/ops-requests" \
-         "${BACKUP_DIR}"
+         "${BACKUP_DIR}" \
+         "${REPO_DIR}" \
+         "${SHARED_DIR}"
 
-if [[ ! -d "${APP_DIR}" ]]; then
-  echo "ERROR: app directory not found: ${APP_DIR}" >&2
-  exit 1
-fi
+for required_dir in "${REPO_FRONTEND_DIR}" "${REPO_BACKEND_DIR}" "${REPO_SCRIPTS_DIR}"; do
+  if [[ ! -d "${required_dir}" ]]; then
+    echo "ERROR: synced repository directory not found: ${required_dir}" >&2
+    exit 1
+  fi
+done
 
 if command -v docker-compose >/dev/null 2>&1; then
   COMPOSE_CMD=(sudo docker-compose)
@@ -39,16 +53,72 @@ if [[ -f "${DB_FILE}" ]]; then
   cp -f "${DB_FILE}" "${db_backup}"
 fi
 
-if [[ -d "${APP_DIR}/.git" ]]; then
-  git -C "${APP_DIR}" fetch --all --prune
-  git -C "${APP_DIR}" pull --ff-only
+if [[ -n "${env_backup}" && ! -f "${SHARED_ENV_FILE}" ]]; then
+  cp -f "${env_backup}" "${SHARED_ENV_FILE}"
 fi
 
-if [[ -n "${env_backup}" && ! -f "${ENV_FILE}" ]]; then
+if [[ -n "${db_backup}" && ! -f "${SHARED_DB_FILE}" ]]; then
+  cp -f "${db_backup}" "${SHARED_DB_FILE}"
+fi
+
+sync_dir() {
+  local src="$1"
+  local dst="$2"
+
+  sudo mkdir -p "${dst}"
+  if command -v rsync >/dev/null 2>&1; then
+    sudo rsync -a --delete "${src}/" "${dst}/"
+  else
+    echo "WARNING: rsync not found; syncing without delete: ${src} -> ${dst}"
+    (
+      cd "${src}"
+      tar -cf - .
+    ) | (
+      cd "${dst}"
+      sudo tar -xf -
+    )
+  fi
+}
+
+sync_backend_dir() {
+  local src="$1"
+  local dst="$2"
+
+  sudo mkdir -p "${dst}"
+  if command -v rsync >/dev/null 2>&1; then
+    sudo rsync -a --delete \
+      --exclude '.env' \
+      --exclude 'site.db' \
+      --exclude 'venv/' \
+      --exclude '__pycache__/' \
+      "${src}/" "${dst}/"
+  else
+    echo "WARNING: rsync not found; syncing backend without delete: ${src} -> ${dst}"
+    (
+      cd "${src}"
+      tar --exclude='.env' --exclude='site.db' --exclude='venv' --exclude='__pycache__' -cf - .
+    ) | (
+      cd "${dst}"
+      sudo tar -xf -
+    )
+  fi
+}
+
+echo "Skip server-side git pull; code is synced by GitHub Actions"
+sync_dir "${REPO_FRONTEND_DIR}" "${WEB_ROOT}"
+sync_backend_dir "${REPO_BACKEND_DIR}" "${APP_DIR}"
+sync_dir "${REPO_SCRIPTS_DIR}" "${OPS_ROOT}/scripts"
+sudo chmod +x "${OPS_ROOT}/scripts/"*.sh
+
+if [[ -f "${SHARED_ENV_FILE}" ]]; then
+  sudo cp -f "${SHARED_ENV_FILE}" "${ENV_FILE}"
+elif [[ -n "${env_backup}" ]]; then
   cp -f "${env_backup}" "${ENV_FILE}"
 fi
 
-if [[ -n "${db_backup}" && ! -f "${DB_FILE}" ]]; then
+if [[ -f "${SHARED_DB_FILE}" ]]; then
+  sudo cp -f "${SHARED_DB_FILE}" "${DB_FILE}"
+elif [[ -n "${db_backup}" ]]; then
   cp -f "${db_backup}" "${DB_FILE}"
 fi
 
