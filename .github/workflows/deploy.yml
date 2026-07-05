@@ -122,28 +122,33 @@ jobs:
             chmod +x /opt/personal-cloud-homepage/scripts/security_audit.sh
             chmod +x /opt/personal-cloud-homepage/scripts/backup_to_oss.sh
             chmod +x /opt/personal-cloud-homepage/scripts/ops_runner.sh
+            chmod +x /opt/personal-cloud-homepage/scripts/deploy.sh
             /opt/personal-cloud-homepage/scripts/deploy.sh
 
-            cd /opt/personal-site-api
-
-            if command -v docker-compose >/dev/null 2>&1; then
-              COMPOSE_CMD="sudo docker-compose"
-            else
-              COMPOSE_CMD="sudo docker compose"
-            fi
-
-            $COMPOSE_CMD build api1 api2
-            sudo docker rm -f personal-api-1 personal-api-2 || true
-            $COMPOSE_CMD up -d --no-deps api1 api2
+      - name: Verify API mounts and Redis health
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          port: ${{ secrets.SERVER_PORT }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            set -euo pipefail
 
             sudo docker exec personal-api-1 ls -l /opt/personal-cloud-homepage/security-reports/latest_report.json
             sudo docker exec personal-api-2 ls -l /opt/personal-cloud-homepage/security-reports/latest_report.json
 
-            if command -v systemctl >/dev/null 2>&1; then
-              sudo systemctl reload nginx
-            elif command -v nginx >/dev/null 2>&1; then
-              sudo nginx -s reload
-            fi
+            python3 - <<'PY'
+            import json
+            import sys
+            import urllib.request
 
-            curl -fsS http://127.0.0.1/api/cloud/status >/dev/null
+            data = json.loads(urllib.request.urlopen("http://127.0.0.1/api/cloud/status", timeout=5).read())
+            if not data.get("runtime_status", {}).get("redis_connected"):
+                print("ERROR: Redis is not connected")
+                print(json.dumps(data, ensure_ascii=False, indent=2))
+                sys.exit(1)
+            print("Redis connected ok")
+            PY
+
             curl -fsS http://127.0.0.1/api/cache/status >/dev/null
