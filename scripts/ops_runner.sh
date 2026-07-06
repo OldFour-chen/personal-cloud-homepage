@@ -15,7 +15,7 @@ SELF_HEAL_REQUEST_FILE="${OPS_REQUEST_DIR}/run_self_heal.request"
 STATUS_FILE="${OPS_REQUEST_DIR}/latest_ops_run.json"
 RESTORE_STATUS_FILE="${OPS_REQUEST_DIR}/latest_restore_status.json"
 SELF_HEAL_STATUS_FILE="${OPS_REQUEST_DIR}/latest_self_heal_status.json"
-LOCK_FILE="${LOCK_FILE:-/tmp/personal-site-ops-runner.lock}"
+LOCK_FILE="${LOCK_FILE:-${OPS_REQUEST_DIR}/ops_runner.lock}"
 PYTHON_BIN="${PYTHON_BIN:-python3}"
 
 if ! command -v "${PYTHON_BIN}" >/dev/null 2>&1 && command -v python >/dev/null 2>&1; then
@@ -161,6 +161,7 @@ if ! command -v flock >/dev/null 2>&1; then
   exit 1
 fi
 if ! flock -n 9; then
+  echo "ops_runner is already running, skip this round"
   exit 0
 fi
 

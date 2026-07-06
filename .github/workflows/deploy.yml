@@ -157,6 +157,10 @@ jobs:
             sudo docker exec personal-api-1 ls -l /opt/personal-cloud-homepage/security-reports/latest_report.json
             sudo docker exec personal-api-2 ls -l /opt/personal-cloud-homepage/security-reports/latest_report.json
 
+            systemctl is-enabled cloudhome-ops-runner.timer
+            systemctl is-active cloudhome-ops-runner.timer
+            systemctl list-timers --all | grep cloudhome-ops-runner || true
+
             python3 - <<'PY'
             import json
             import sys

@@ -104,6 +104,50 @@ sync_backend_dir() {
   fi
 }
 
+install_ops_runner_timer() {
+  if ! command -v systemctl >/dev/null 2>&1; then
+    echo "WARNING: systemctl not found; skip CloudHome ops runner timer installation"
+    return 0
+  fi
+
+  local service_file="/etc/systemd/system/cloudhome-ops-runner.service"
+  local timer_file="/etc/systemd/system/cloudhome-ops-runner.timer"
+
+  sudo tee "${service_file}" >/dev/null <<'EOF'
+[Unit]
+Description=CloudHome Ops Runner
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+ExecStart=/bin/bash /opt/personal-cloud-homepage/scripts/ops_runner.sh
+EOF
+
+  sudo tee "${timer_file}" >/dev/null <<'EOF'
+[Unit]
+Description=Run CloudHome Ops Runner every 30 seconds
+
+[Timer]
+OnBootSec=30s
+OnUnitActiveSec=30s
+AccuracySec=5s
+Unit=cloudhome-ops-runner.service
+
+[Install]
+WantedBy=timers.target
+EOF
+
+  sudo systemctl daemon-reload
+  sudo systemctl enable --now cloudhome-ops-runner.timer
+  sudo systemctl restart cloudhome-ops-runner.timer
+  sudo systemctl is-enabled cloudhome-ops-runner.timer
+  sudo systemctl is-active cloudhome-ops-runner.timer
+  sudo systemctl list-timers --all | grep cloudhome-ops-runner || true
+}
+
 echo "Skip server-side git pull; code is synced by GitHub Actions"
 sync_dir "${REPO_FRONTEND_DIR}" "${WEB_ROOT}"
 sync_backend_dir "${REPO_BACKEND_DIR}" "${APP_DIR}"
@@ -134,6 +178,7 @@ sudo docker build -t personal-site-api:1.0 "${APP_DIR}"
 echo "Removing legacy containers from the previous deployment flow"
 sudo docker rm -f personal-api-1 personal-api-2 personal-redis || true
 "${COMPOSE_CMD[@]}" -f "${COMPOSE_FILE}" up -d redis api1 api2
+install_ops_runner_timer
 
 if command -v systemctl >/dev/null 2>&1; then
   sudo systemctl reload nginx
