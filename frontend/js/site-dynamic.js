@@ -5,7 +5,7 @@
       return {};
     });
     if (!response.ok) {
-      throw new Error(data.detail || "request failed");
+      throw new Error(data.detail || data.error || "request failed");
     }
     return data;
   }
@@ -58,7 +58,7 @@
     try {
       var data = await fetchJson("/api/experiences");
       if (!Array.isArray(data) || !data.length) {
-        container.innerHTML = '<div class="dynamic-empty">后台还没有新增经历，后续会在这里同步展示。</div>';
+        container.innerHTML = '<div class="dynamic-empty">后台暂时还没有新增经历内容。</div>';
         return;
       }
 
@@ -69,7 +69,7 @@
           ? '<div class="dynamic-experience-gallery">' + images.map(function (image) {
               return '<img src="' + escapeHtml(image.url) + '" alt="' + escapeHtml(item.title) + '">';
             }).join("") + "</div>"
-          : '<div class="dynamic-empty">该经历暂未绑定图片</div>';
+          : '<div class="dynamic-empty">该经历暂未绑定图片。</div>';
 
         return ''
           + '<article class="dynamic-experience-card">'
@@ -89,35 +89,68 @@
     }
   }
 
+  function renderMediaDocs(container, items, emptyText) {
+    if (!Array.isArray(items) || !items.length) {
+      container.innerHTML = '<div class="dynamic-empty">' + escapeHtml(emptyText) + '</div>';
+      return;
+    }
+
+    container.innerHTML = items.map(function (item) {
+      return ''
+        + '<article class="dynamic-doc-card">'
+        + '  <div class="dynamic-doc-icon">PDF</div>'
+        + '  <div class="dynamic-doc-content">'
+        + '    <div class="dynamic-doc-meta">' + escapeHtml(item.created_at || "") + '</div>'
+        + '    <h3>' + escapeHtml(item.filename || item.title || "未命名文档") + '</h3>'
+        + '    <p>' + escapeHtml(item.object_key || item.related_module || "CloudHome Media Center") + '</p>'
+        + '    <a href="' + escapeHtml(item.url) + '" target="_blank" rel="noopener noreferrer">点击阅读</a>'
+        + '  </div>'
+        + '</article>';
+    }).join("");
+  }
+
   async function loadDynamicSkillDocs() {
     var container = document.getElementById("dynamicSkillDocsList");
     if (!container) return;
 
     try {
-      var data = await fetchJson("/api/skills/documents");
-      if (!Array.isArray(data) || !data.length) {
-        container.innerHTML = '<div class="dynamic-empty">后台还没有上传新的 PDF 文档。</div>';
-        return;
-      }
-
-      container.innerHTML = data.map(function (item) {
-        return ''
-          + '<article class="dynamic-doc-card">'
-          + '  <div class="dynamic-doc-icon">PDF</div>'
-          + '  <div class="dynamic-doc-content">'
-          + '    <div class="dynamic-doc-meta">' + escapeHtml(item.skill_key) + '</div>'
-          + '    <h3>' + escapeHtml(item.title) + '</h3>'
-          + '    <p>' + escapeHtml(item.description || "技能证明文档") + '</p>'
-          + '    <a href="' + escapeHtml(item.url) + '" target="_blank" rel="noopener noreferrer">打开文档</a>'
-          + '  </div>'
-          + '</article>';
-      }).join("");
+      var data = await fetchJson("/api/media/list?type=pdf&category=skill");
+      renderMediaDocs(container, data, "后台暂时还没有上传技能 PDF。");
     } catch (error) {
       container.innerHTML = '<div class="dynamic-empty">技能文档加载失败，请稍后重试。</div>';
+    }
+  }
+
+  async function loadDynamicCompetitionDocs() {
+    var container = document.getElementById("dynamicCompetitionDocsList");
+    if (!container) return;
+
+    try {
+      var data = await fetchJson("/api/media/list?type=pdf&category=competition");
+      renderMediaDocs(container, data, "竞赛文档暂未上传。");
+    } catch (error) {
+      container.innerHTML = '<div class="dynamic-empty">竞赛文档加载失败，请稍后重试。</div>';
+    }
+  }
+
+  async function loadHomepageMedia() {
+    var photoWall = document.querySelector(".experience-photos");
+    if (!photoWall) return;
+
+    try {
+      var data = await fetchJson("/api/media/list?type=image&category=life");
+      if (!Array.isArray(data) || !data.length) return;
+      photoWall.innerHTML = data.slice(0, 4).map(function (item) {
+        return '<img src="' + escapeHtml(item.url) + '" alt="' + escapeHtml(item.filename) + '">';
+      }).join("");
+    } catch (error) {
+      console.warn("homepage media load failed", error);
     }
   }
 
   loadContentBlocks();
   loadDynamicExperiences();
   loadDynamicSkillDocs();
+  loadDynamicCompetitionDocs();
+  loadHomepageMedia();
 })();

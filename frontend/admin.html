@@ -2036,28 +2036,34 @@
       return api(url, options);
     }
 
-    async function sha256(file) {
-      var buffer = await file.arrayBuffer();
-      var digest = await crypto.subtle.digest("SHA-256", buffer);
-      return Array.from(new Uint8Array(digest)).map(function (byte) {
-        return byte.toString(16).padStart(2, "0");
-      }).join("");
-    }
+    var uploadCooldowns = {};
 
-    async function uploadViaOss(file, category, button) {
+    async function uploadViaOss(file, options, button) {
+      options = options || {};
+      var cooldownKey = [
+        file && file.name,
+        file && file.size,
+        options.type || "",
+        options.category || "",
+        options.related_module || ""
+      ].join("|");
+      if (Date.now() - (uploadCooldowns[cooldownKey] || 0) < 5000) {
+        throw new Error("??????");
+      }
+      uploadCooldowns[cooldownKey] = Date.now();
       button.disabled = true;
       var original = button.textContent;
-      button.textContent = "上传中...";
+      button.textContent = "???...";
       try {
-        var fileHash = await sha256(file);
-        var initData = await api("/api/admin/media/init-upload", {
+        var initData = await api("/api/media/init-upload", {
           method: "POST",
           body: JSON.stringify({
             filename: file.name,
             content_type: file.type,
             size: file.size,
-            category: category,
-            file_hash: fileHash
+            type: options.type || "",
+            category: options.category || "",
+            related_module: options.related_module || ""
           })
         });
 
@@ -2067,10 +2073,10 @@
           body: file
         });
         if (!uploadResponse.ok) {
-          throw new Error("上传到 OSS 失败");
+          throw new Error("??? OSS ??");
         }
 
-        return await api("/api/admin/media/complete-upload", {
+        return await api("/api/media/complete-upload", {
           method: "POST",
           body: JSON.stringify({
             filename: file.name,
@@ -2078,7 +2084,9 @@
             url: initData.public_url,
             content_type: file.type,
             size: file.size,
-            category: category
+            type: options.type || initData.type || "",
+            category: options.category || initData.category || "",
+            related_module: options.related_module || initData.related_module || ""
           })
         });
       } finally {
@@ -2665,7 +2673,11 @@
       }
 
       try {
-        var media = await uploadViaOss(file, "experience", button);
+        var media = await uploadViaOss(file, {
+          type: "image",
+          category: "life",
+          related_module: "experience"
+        }, button);
         await api("/api/admin/experience/upload-image", {
           method: "POST",
           body: JSON.stringify({
@@ -2693,7 +2705,11 @@
       }
 
       try {
-        var media = await uploadViaOss(file, "document", button);
+        var media = await uploadViaOss(file, {
+          type: "pdf",
+          category: "skill",
+          related_module: "skill"
+        }, button);
         await api("/api/admin/skill/upload-pdf", {
           method: "POST",
           body: JSON.stringify({

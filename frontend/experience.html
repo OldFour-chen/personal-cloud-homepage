@@ -679,6 +679,57 @@
   color: #64748b;
 }
 
+.dynamic-doc-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+}
+
+.dynamic-doc-card {
+  display: grid;
+  grid-template-columns: 84px 1fr;
+  gap: 16px;
+  background: #fff;
+  border-radius: 22px;
+  padding: 22px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+}
+
+.dynamic-doc-icon {
+  width: 84px;
+  height: 84px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #e9f1ff, #f8fbff);
+  color: #2563eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.dynamic-doc-content h3 {
+  margin: 0 0 8px;
+}
+
+.dynamic-doc-content p,
+.dynamic-doc-meta {
+  color: #64748b;
+}
+
+.dynamic-doc-meta {
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.dynamic-doc-content a {
+  display: inline-flex;
+  margin-top: 12px;
+  color: #2563eb;
+  font-weight: 700;
+}
+
 @media (max-width: 1000px) {
   .dynamic-experience-card {
     grid-template-columns: 1fr;
@@ -687,6 +738,11 @@
 
 @media (max-width: 560px) {
   .dynamic-experience-gallery {
+    grid-template-columns: 1fr;
+  }
+
+  .dynamic-doc-list,
+  .dynamic-doc-card {
     grid-template-columns: 1fr;
   }
 }
@@ -819,6 +875,16 @@
         </div>
       </div>
       <div class="album" data-album="competition" data-total="3"></div>
+    </div>
+  </section>
+
+  <section class="container dynamic-feed">
+    <div class="dynamic-feed-head">
+      <h2 class="section-title"><span>PDF</span> ????</h2>
+      <p>?????? Media Center ?? `type=pdf&category=competition` ??????</p>
+    </div>
+    <div id="dynamicCompetitionDocsList" class="dynamic-doc-list">
+      <div class="dynamic-empty">???????...</div>
     </div>
   </section>
 

@@ -22,6 +22,8 @@ CREATE TABLE media_assets (
     content_type TEXT,
     size INTEGER,
     category TEXT,
+    type TEXT,
+    related_module TEXT,
     created_at TEXT NOT NULL
 );
 

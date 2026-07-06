@@ -18,6 +18,7 @@ from email.message import EmailMessage
 
 from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 import redis
 
@@ -77,7 +78,7 @@ ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", os.getenv("ADMIN_TOKEN", "jiayi1234
 ADMIN_TOKEN_VALUE = os.getenv("ADMIN_TOKEN", "").strip()
 ADMIN_SECRET = os.getenv("ADMIN_SECRET", "").strip()
 ADMIN_SESSION_TTL = int(os.getenv("ADMIN_SESSION_TTL", "43200"))
-UPLOAD_LOCK_TTL = int(os.getenv("UPLOAD_LOCK_TTL", "8"))
+UPLOAD_LOCK_TTL = int(os.getenv("UPLOAD_LOCK_TTL", "5"))
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 SERVER_OPS_ROOT = Path("/opt/personal-cloud-homepage")
 LOCAL_SCRIPT_DIR = PROJECT_ROOT / "scripts"
@@ -181,7 +182,9 @@ class InitUploadIn(BaseModel):
     filename: str
     content_type: str
     size: int
+    type: Optional[str] = None
     category: Optional[str] = None
+    related_module: Optional[str] = None
     file_hash: Optional[str] = None
 
 
@@ -191,7 +194,9 @@ class CompleteUploadIn(BaseModel):
     url: Optional[str] = None
     content_type: str
     size: int
+    type: Optional[str] = None
     category: Optional[str] = None
+    related_module: Optional[str] = None
 
 
 class AdminLoginIn(BaseModel):
@@ -456,6 +461,32 @@ def validate_upload_request(filename: str, content_type: str, size: int):
         raise HTTPException(status_code=400, detail=f"file size exceeds limit for {content_type}")
 
 
+def infer_media_type(content_type: str) -> str:
+    normalized = (content_type or "").strip().lower()
+    if normalized.startswith("image/"):
+        return "image"
+    if normalized == "application/pdf":
+        return "pdf"
+    return "file"
+
+
+def normalize_media_type(media_type: Optional[str], content_type: str = "") -> str:
+    value = (media_type or "").strip().lower()
+    if not value:
+        return infer_media_type(content_type)
+    if value not in {"image", "pdf", "file"}:
+        raise HTTPException(status_code=400, detail="type must be image, pdf or file")
+    return value
+
+
+def normalize_media_category(category: Optional[str]) -> str:
+    return (category or "").strip().lower()
+
+
+def normalize_related_module(related_module: Optional[str]) -> str:
+    return (related_module or "").strip().lower()
+
+
 def build_object_key(filename: str, content_type: str) -> str:
     suffix = Path(filename).suffix.lower()
     expected_suffix = CONTENT_TYPE_EXTENSIONS.get(content_type, "")
@@ -479,11 +510,8 @@ def validate_object_key(object_key: str) -> str:
 def build_upload_fingerprint(payload: InitUploadIn) -> str:
     raw = "|".join(
         [
-            (payload.file_hash or "").strip().lower(),
             payload.filename.strip().lower(),
             str(payload.size),
-            payload.content_type.strip().lower(),
-            (payload.category or "").strip().lower(),
         ]
     )
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()
@@ -1452,6 +1480,8 @@ def init_db():
             content_type TEXT,
             size INTEGER,
             category TEXT,
+            type TEXT,
+            related_module TEXT,
             created_at TEXT NOT NULL
         )
         """
@@ -1477,6 +1507,22 @@ def init_db():
         conn.execute("ALTER TABLE messages ADD COLUMN visitor_email TEXT NOT NULL DEFAULT ''")
     if "notify_on_reply" not in message_columns:
         conn.execute("ALTER TABLE messages ADD COLUMN notify_on_reply INTEGER NOT NULL DEFAULT 0")
+    media_columns = {row["name"] for row in conn.execute("PRAGMA table_info(media_assets)").fetchall()}
+    if "type" not in media_columns:
+        conn.execute("ALTER TABLE media_assets ADD COLUMN type TEXT")
+    if "related_module" not in media_columns:
+        conn.execute("ALTER TABLE media_assets ADD COLUMN related_module TEXT")
+    conn.execute(
+        """
+        UPDATE media_assets
+        SET type = CASE
+            WHEN lower(ifnull(content_type, '')) = 'application/pdf' THEN 'pdf'
+            WHEN lower(ifnull(content_type, '')) LIKE 'image/%' THEN 'image'
+            ELSE 'file'
+        END
+        WHERE ifnull(type, '') = ''
+        """
+    )
 
     cur.execute(
         """
@@ -1595,7 +1641,7 @@ def query_experiences():
 def fetch_media_asset(conn: sqlite3.Connection, media_id: int):
     row = conn.execute(
         """
-        SELECT id, filename, object_key, url, content_type, size, category, created_at
+        SELECT id, filename, object_key, url, content_type, size, category, type, related_module, created_at
         FROM media_assets
         WHERE id = ?
         """,
@@ -1604,6 +1650,14 @@ def fetch_media_asset(conn: sqlite3.Connection, media_id: int):
     if not row:
         raise HTTPException(status_code=404, detail="Media asset not found")
     return row
+
+
+def serialize_media_asset(row: sqlite3.Row) -> dict:
+    item = dict(row)
+    item["category"] = normalize_media_category(item.get("category"))
+    item["related_module"] = normalize_related_module(item.get("related_module"))
+    item["type"] = normalize_media_type(item.get("type"), item.get("content_type") or "")
+    return item
 
 
 def delete_media_asset_impl(media_id: int):
@@ -1629,16 +1683,45 @@ def delete_media_asset_impl(media_id: int):
     return {"success": True, "id": media_id}
 
 
-def query_media_assets():
+def query_media_assets(media_type: Optional[str] = None, category: Optional[str] = None, related_module: Optional[str] = None):
+    filters = []
+    params: list[object] = []
+    normalized_type = normalize_media_type(media_type) if media_type else ""
+    normalized_category = normalize_media_category(category)
+    normalized_related_module = normalize_related_module(related_module)
+    if normalized_type:
+        filters.append(
+            """
+            lower(
+                CASE
+                    WHEN ifnull(type, '') != '' THEN type
+                    WHEN lower(ifnull(content_type, '')) = 'application/pdf' THEN 'pdf'
+                    WHEN lower(ifnull(content_type, '')) LIKE 'image/%' THEN 'image'
+                    ELSE 'file'
+                END
+            ) = ?
+            """
+        )
+        params.append(normalized_type)
+    if normalized_category:
+        filters.append("lower(ifnull(category, '')) = ?")
+        params.append(normalized_category)
+    if normalized_related_module:
+        filters.append("lower(ifnull(related_module, '')) = ?")
+        params.append(normalized_related_module)
+
+    where_clause = f"WHERE {' AND '.join(filters)}" if filters else ""
     with get_conn() as conn:
         rows = conn.execute(
-            """
-            SELECT id, filename, object_key, url, content_type, size, category, created_at
+            f"""
+            SELECT id, filename, object_key, url, content_type, size, category, type, related_module, created_at
             FROM media_assets
+            {where_clause}
             ORDER BY id DESC
-            """
+            """,
+            params,
         ).fetchall()
-    return [dict(row) for row in rows]
+    return [serialize_media_asset(row) for row in rows]
 
 
 def reply_message_impl(message_id: int, reply: str):
@@ -2017,15 +2100,28 @@ def bind_experience_image(
 
 @app.get("/api/skills/documents")
 def get_skill_documents():
-    with get_conn() as conn:
-        rows = conn.execute(
-            """
-            SELECT id, skill_key, title, description, filename, object_key, url, created_at
-            FROM skill_documents
-            ORDER BY id DESC
-            """
-        ).fetchall()
-    return [dict(row) for row in rows]
+    media_items = query_media_assets(media_type="pdf", category="skill")
+    return [
+        {
+            "id": item["id"],
+            "skill_key": item.get("related_module") or "skill",
+            "title": item["filename"],
+            "description": "",
+            "filename": item["filename"],
+            "object_key": item["object_key"],
+            "url": item["url"],
+            "created_at": item["created_at"],
+            "type": item["type"],
+            "category": item["category"],
+            "related_module": item["related_module"],
+        }
+        for item in media_items
+    ]
+
+
+@app.get("/api/competitions/documents")
+def get_competition_documents():
+    return query_media_assets(media_type="pdf", category="competition")
 
 
 @app.post("/api/admin/skill/upload-pdf")
@@ -2034,43 +2130,20 @@ def upload_skill_pdf(
     authorization: str = Header(default="", alias="Authorization"),
 ):
     require_admin_session(authorization)
-    skill_key = payload.skill_key.strip()
-    title = payload.title.strip()
-    description = payload.description.strip()
-    filename = payload.filename.strip()
-    object_key = validate_object_key(payload.object_key)
-    url = payload.url.strip()
-    if not skill_key or not title or not filename or not url:
-        raise HTTPException(status_code=400, detail="skill_key, title, filename and url are required")
-
-    created_at = now_text()
-    with lock:
-        with get_conn() as conn:
-            if payload.media_id:
-                media_row = fetch_media_asset(conn, payload.media_id)
-                if media_row["content_type"] != "application/pdf":
-                    raise HTTPException(status_code=400, detail="Selected media is not a PDF")
-            cur = conn.execute(
-                """
-                INSERT INTO skill_documents(
-                    skill_key, title, description, media_asset_id, filename, object_key, url, created_at
-                )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    skill_key,
-                    title,
-                    description,
-                    payload.media_id,
-                    filename,
-                    object_key,
-                    url,
-                    created_at,
-                ),
-            )
-            conn.commit()
-            document_id = cur.lastrowid
-    return {"success": True, "id": document_id, "skill_key": skill_key, "title": title, "url": url}
+    if not payload.media_id:
+        raise HTTPException(status_code=400, detail="media_id is required")
+    with get_conn() as conn:
+        media_row = serialize_media_asset(fetch_media_asset(conn, payload.media_id))
+    if media_row["type"] != "pdf":
+        raise HTTPException(status_code=400, detail="Selected media is not a PDF")
+    return {
+        "success": True,
+        "id": media_row["id"],
+        "skill_key": normalize_related_module(payload.skill_key) or media_row.get("related_module") or "skill",
+        "title": payload.title.strip() or media_row["filename"],
+        "url": media_row["url"],
+        "object_key": media_row["object_key"],
+    }
 
 
 @app.delete("/api/admin/skill/delete")
@@ -2079,13 +2152,9 @@ def delete_skill_document(
     authorization: str = Header(default="", alias="Authorization"),
 ):
     require_admin_session(authorization)
-    with lock:
-        with get_conn() as conn:
-            cur = conn.execute("DELETE FROM skill_documents WHERE id = ?", (payload.document_id,))
-            conn.commit()
-            if cur.rowcount == 0:
-                raise HTTPException(status_code=404, detail="Document not found")
-    return {"success": True, "document_id": payload.document_id}
+    result = delete_media_asset_impl(payload.document_id)
+    result["document_id"] = payload.document_id
+    return result
 
 
 @app.get("/api/likes")
@@ -2368,21 +2437,137 @@ def complete_media_upload(
 
 
 @app.get("/api/admin/media")
-def list_media_assets_legacy(authorization: str = Header(default="", alias="Authorization")):
+def list_media_assets_legacy(
+    type: str = "",
+    category: str = "",
+    related_module: str = "",
+    authorization: str = Header(default="", alias="Authorization"),
+):
     require_admin_session(authorization)
-    return query_media_assets()
+    return query_media_assets(type, category, related_module)
 
 
 @app.get("/api/admin/media/list")
-def list_media_assets(authorization: str = Header(default="", alias="Authorization")):
+def list_media_assets(
+    type: str = "",
+    category: str = "",
+    related_module: str = "",
+    authorization: str = Header(default="", alias="Authorization"),
+):
     require_admin_session(authorization)
-    return query_media_assets()
+    return query_media_assets(type, category, related_module)
 
 
 @app.delete("/api/admin/media/delete/{media_id}")
 def delete_media_asset(media_id: int, authorization: str = Header(default="", alias="Authorization")):
     require_admin_session(authorization)
     return delete_media_asset_impl(media_id)
+
+
+@app.post("/api/media/init-upload")
+def init_media_upload_v2(
+    payload: InitUploadIn,
+    authorization: str = Header(default="", alias="Authorization"),
+):
+    require_admin_session(authorization)
+    validate_upload_request(payload.filename, payload.content_type, payload.size)
+    fingerprint = build_upload_fingerprint(payload)
+    if not acquire_upload_lock(fingerprint):
+        return JSONResponse(status_code=429, content={"error": "请勿重复上传"})
+
+    bucket, config = get_oss_bucket()
+    object_key = build_object_key(payload.filename, payload.content_type)
+    public_url = build_public_url(config["public_base_url"], object_key)
+    try:
+        upload_url = bucket.sign_url(
+            "PUT",
+            object_key,
+            300,
+            headers={"Content-Type": payload.content_type},
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"failed to generate upload url: {exc}")
+
+    return {
+        "object_key": object_key,
+        "upload_url": upload_url,
+        "public_url": public_url,
+        "expires_in": 300,
+        "type": normalize_media_type(payload.type, payload.content_type),
+        "category": normalize_media_category(payload.category),
+        "related_module": normalize_related_module(payload.related_module),
+    }
+
+
+@app.post("/api/media/complete-upload")
+def complete_media_upload_v2(
+    payload: CompleteUploadIn,
+    authorization: str = Header(default="", alias="Authorization"),
+):
+    require_admin_session(authorization)
+    validate_upload_request(payload.filename, payload.content_type, payload.size)
+    config = get_oss_config()
+    if not is_oss_configured(config):
+        raise HTTPException(status_code=500, detail="OSS configuration is incomplete")
+
+    object_key = validate_object_key(payload.object_key)
+    url = (payload.url or "").strip() or build_public_url(config["public_base_url"], object_key)
+    created_at = now_text()
+    media_type = normalize_media_type(payload.type, payload.content_type)
+    category = normalize_media_category(payload.category)
+    related_module = normalize_related_module(payload.related_module)
+    with lock:
+        with get_conn() as conn:
+            cur = conn.execute(
+                """
+                INSERT INTO media_assets(filename, object_key, url, content_type, size, category, type, related_module, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    payload.filename.strip(),
+                    object_key,
+                    url,
+                    payload.content_type,
+                    payload.size,
+                    category,
+                    media_type,
+                    related_module,
+                    created_at,
+                ),
+            )
+            conn.commit()
+            media_id = cur.lastrowid
+
+    log_audit("media_upload", f"Uploaded media asset #{media_id}: {payload.filename.strip()}", "media_asset", media_id)
+    return {
+        "status": "ok",
+        "id": media_id,
+        "filename": payload.filename.strip(),
+        "object_key": object_key,
+        "url": url,
+        "content_type": payload.content_type,
+        "size": payload.size,
+        "type": media_type,
+        "category": category,
+        "related_module": related_module,
+        "created_at": created_at,
+    }
+
+
+@app.get("/api/media/list")
+def list_public_media_assets(type: str = "", category: str = "", related_module: str = ""):
+    return query_media_assets(type, category, related_module)
+
+
+@app.delete("/api/media/delete")
+def delete_public_media_asset(
+    id: int,
+    authorization: str = Header(default="", alias="Authorization"),
+):
+    require_admin_session(authorization)
+    result = delete_media_asset_impl(id)
+    result["document_id"] = id
+    return result
 
 
 @app.get("/api/admin/audit/logs")
@@ -2406,7 +2591,21 @@ def admin_dashboard(authorization: str = Header(default="", alias="Authorization
     with get_conn() as conn:
         message_count = conn.execute("SELECT COUNT(*) AS cnt FROM messages").fetchone()["cnt"]
         experience_count = conn.execute("SELECT COUNT(*) AS cnt FROM experiences").fetchone()["cnt"]
-        skill_count = conn.execute("SELECT COUNT(*) AS cnt FROM skill_documents").fetchone()["cnt"]
+        skill_count = conn.execute(
+            """
+            SELECT COUNT(*) AS cnt
+            FROM media_assets
+            WHERE lower(ifnull(category, '')) = 'skill'
+              AND lower(
+                CASE
+                    WHEN ifnull(type, '') != '' THEN type
+                    WHEN lower(ifnull(content_type, '')) = 'application/pdf' THEN 'pdf'
+                    WHEN lower(ifnull(content_type, '')) LIKE 'image/%' THEN 'image'
+                    ELSE 'file'
+                END
+              ) = 'pdf'
+            """
+        ).fetchone()["cnt"]
         content_count = conn.execute("SELECT COUNT(*) AS cnt FROM content_blocks").fetchone()["cnt"]
         media_count = conn.execute("SELECT COUNT(*) AS cnt FROM media_assets").fetchone()["cnt"]
         audit_count = conn.execute("SELECT COUNT(*) AS cnt FROM audit_logs").fetchone()["cnt"]
