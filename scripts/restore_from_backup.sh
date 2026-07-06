@@ -81,6 +81,45 @@ compose_stop_api() {
   fi
 }
 
+wait_for_restore_health() {
+  local cloud_status_tmp
+  local attempt
+  cloud_status_tmp="$(mktemp)"
+
+  echo "等待恢复后的 API 服务就绪..."
+
+  for attempt in $(seq 1 30); do
+    if curl -fsS http://127.0.0.1/api/cloud/status > "${cloud_status_tmp}" 2>/dev/null \
+      && curl -fsS http://127.0.0.1/api/cache/status >/dev/null 2>/dev/null; then
+      if "${PYTHON_BIN}" - "${cloud_status_tmp}" <<'PY'
+import json
+import sys
+
+path = sys.argv[1]
+with open(path, "r", encoding="utf-8") as f:
+    data = json.load(f)
+
+if data.get("runtime_status", {}).get("redis_connected") is True:
+    sys.exit(0)
+
+sys.exit(1)
+PY
+      then
+        echo "恢复后健康检查通过"
+        rm -f "${cloud_status_tmp}"
+        return 0
+      fi
+    fi
+
+    echo "恢复后服务尚未就绪，等待中... ${attempt}/30"
+    sleep 2
+  done
+
+  rm -f "${cloud_status_tmp}"
+  echo "恢复后健康检查超时"
+  return 1
+}
+
 validate_filename "${RESTORE_FILE}"
 
 ARCHIVE_PATH="${BACKUP_DIR}/${RESTORE_FILE}"
@@ -142,19 +181,9 @@ fi
 
 compose_up
 
-curl -fsS http://127.0.0.1/api/cloud/status >/dev/null || fail "恢复失败：/api/cloud/status 健康检查失败" 1
-curl -fsS http://127.0.0.1/api/cache/status >/dev/null || fail "恢复失败：/api/cache/status 健康检查失败" 1
+if ! wait_for_restore_health; then
+  fail "恢复失败：恢复后健康检查超时，API 或 Redis 未恢复" 1
+fi
 
-"${PYTHON_BIN}" - <<'PY' || fail "恢复失败：Redis 连接校验失败" 1
-import json
-import sys
-import urllib.request
-
-data = json.loads(urllib.request.urlopen("http://127.0.0.1/api/cloud/status", timeout=8).read())
-if not data.get("runtime_status", {}).get("redis_connected"):
-    print(json.dumps(data, ensure_ascii=False, indent=2))
-    sys.exit(1)
-PY
-
-write_status "success" "恢复完成" 0
+write_status "success" "恢复完成，服务健康检查通过" 0
 echo "Restore completed: ${ARCHIVE_PATH}"
