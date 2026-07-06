@@ -18,7 +18,7 @@ from email.message import EmailMessage
 
 from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from pydantic import BaseModel, Field
 import redis
 
@@ -126,6 +126,8 @@ ALLOWED_MEDIA_TYPES = {
     "image/png": 10 * 1024 * 1024,
     "image/webp": 10 * 1024 * 1024,
     "application/pdf": 20 * 1024 * 1024,
+    "video/mp4": 100 * 1024 * 1024,
+    "video/webm": 100 * 1024 * 1024,
 }
 
 CONTENT_TYPE_EXTENSIONS = {
@@ -133,7 +135,21 @@ CONTENT_TYPE_EXTENSIONS = {
     "image/png": ".png",
     "image/webp": ".webp",
     "application/pdf": ".pdf",
+    "video/mp4": ".mp4",
+    "video/webm": ".webm",
 }
+
+MEDIA_CATEGORIES = {
+    "life": "生活内容",
+    "experience": "经历展示",
+    "skill": "技能PDF",
+    "competition": "竞赛文档",
+    "report": "实验报告",
+    "project": "项目介绍",
+    "other": "其他",
+}
+
+MEDIA_MODULE_KEYS = ("skill", "competition", "report", "experience", "life", "project", "other")
 
 LIKE_ITEMS = {
     "responsible": "认真负责",
@@ -467,6 +483,8 @@ def infer_media_type(content_type: str) -> str:
         return "image"
     if normalized == "application/pdf":
         return "pdf"
+    if normalized.startswith("video/"):
+        return "video"
     return "file"
 
 
@@ -474,13 +492,16 @@ def normalize_media_type(media_type: Optional[str], content_type: str = "") -> s
     value = (media_type or "").strip().lower()
     if not value:
         return infer_media_type(content_type)
-    if value not in {"image", "pdf", "file"}:
-        raise HTTPException(status_code=400, detail="type must be image, pdf or file")
+    if value not in {"image", "pdf", "file", "video"}:
+        raise HTTPException(status_code=400, detail="type must be image, pdf, file or video")
     return value
 
 
 def normalize_media_category(category: Optional[str]) -> str:
-    return (category or "").strip().lower()
+    value = (category or "").strip().lower()
+    if value not in MEDIA_CATEGORIES:
+        raise HTTPException(status_code=400, detail="invalid category")
+    return value
 
 
 def normalize_related_module(related_module: Optional[str]) -> str:
@@ -529,6 +550,141 @@ def acquire_upload_lock(fingerprint: str) -> bool:
             return False
         memory_upload_locks[key] = time.time() + UPLOAD_LOCK_TTL
         return True
+
+
+def init_media_upload_core(payload: InitUploadIn):
+    validate_upload_request(payload.filename, payload.content_type, payload.size)
+    try:
+        media_type = normalize_media_type(payload.type, payload.content_type)
+        category = normalize_media_category(payload.category)
+    except HTTPException as exc:
+        if exc.status_code == 400 and exc.detail == "invalid category":
+            return JSONResponse(status_code=400, content={"error": "invalid category"})
+        raise
+    related_module = normalize_related_module(payload.related_module)
+    fingerprint = build_upload_fingerprint(payload)
+    if not acquire_upload_lock(fingerprint):
+        return JSONResponse(status_code=429, content={"error": "请勿重复上传"})
+
+    bucket, config = get_oss_bucket()
+    object_key = build_object_key(payload.filename, payload.content_type)
+    public_url = build_public_url(config["public_base_url"], object_key)
+    try:
+        upload_url = bucket.sign_url(
+            "PUT",
+            object_key,
+            300,
+            headers={"Content-Type": payload.content_type},
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"failed to generate upload url: {exc}")
+
+    return {
+        "object_key": object_key,
+        "upload_url": upload_url,
+        "public_url": public_url,
+        "category": category,
+        "type": media_type,
+        "expires_in": 300,
+        "related_module": related_module,
+    }
+
+
+def complete_media_upload_core(payload: CompleteUploadIn):
+    validate_upload_request(payload.filename, payload.content_type, payload.size)
+    config = get_oss_config()
+    if not is_oss_configured(config):
+        raise HTTPException(status_code=500, detail="OSS configuration is incomplete")
+
+    object_key = validate_object_key(payload.object_key)
+    url = (payload.url or "").strip() or build_public_url(config["public_base_url"], object_key)
+    created_at = now_text()
+    try:
+        media_type = normalize_media_type(payload.type, payload.content_type)
+        category = normalize_media_category(payload.category)
+    except HTTPException as exc:
+        if exc.status_code == 400 and exc.detail == "invalid category":
+            return JSONResponse(status_code=400, content={"error": "invalid category"})
+        raise
+    related_module = normalize_related_module(payload.related_module) or category
+    module_hint = related_module or category
+    with lock:
+        with get_conn() as conn:
+            duplicate_row = conn.execute(
+                """
+                SELECT id
+                FROM media_assets
+                WHERE lower(filename) = ?
+                  AND size = ?
+                  AND created_at >= ?
+                ORDER BY id DESC
+                LIMIT 1
+                """,
+                (
+                    payload.filename.strip().lower(),
+                    payload.size,
+                    (datetime.now() - timedelta(seconds=5)).strftime("%Y-%m-%d %H:%M:%S"),
+                ),
+            ).fetchone()
+            if duplicate_row:
+                return JSONResponse(status_code=429, content={"error": "请勿重复上传"})
+            cur = conn.execute(
+                """
+                INSERT INTO media_assets(filename, object_key, url, content_type, size, category, type, related_module, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    payload.filename.strip(),
+                    object_key,
+                    url,
+                    payload.content_type,
+                    payload.size,
+                    category,
+                    media_type,
+                    related_module,
+                    created_at,
+                ),
+            )
+            conn.commit()
+            media_id = cur.lastrowid
+
+    log_audit("media_upload", f"Uploaded media asset #{media_id}: {payload.filename.strip()}", "media_asset", media_id)
+    return {
+        "status": "ok",
+        "id": media_id,
+        "filename": payload.filename.strip(),
+        "object_key": object_key,
+        "url": url,
+        "content_type": payload.content_type,
+        "size": payload.size,
+        "type": media_type,
+        "category": category,
+        "related_module": related_module,
+        "module_hint": module_hint,
+        "created_at": created_at,
+    }
+
+
+def build_pdf_preview_response(media_id: int):
+    with get_conn() as conn:
+        media_row = serialize_media_asset(fetch_media_asset(conn, media_id))
+    if media_row["type"] != "pdf":
+        raise HTTPException(status_code=400, detail="Selected media is not a PDF")
+
+    bucket, _ = get_oss_bucket()
+    try:
+        preview_url = bucket.sign_url("GET", media_row["object_key"], 300)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"failed to generate preview url: {exc}")
+
+    return {
+        "id": media_row["id"],
+        "filename": media_row["filename"],
+        "category": media_row["category"],
+        "type": media_row["type"],
+        "preview_url": preview_url,
+        "expires_in": 300,
+    }
 
 
 def normalize_tags(tags: list[str]) -> list[str]:
@@ -1518,9 +1674,24 @@ def init_db():
         SET type = CASE
             WHEN lower(ifnull(content_type, '')) = 'application/pdf' THEN 'pdf'
             WHEN lower(ifnull(content_type, '')) LIKE 'image/%' THEN 'image'
+            WHEN lower(ifnull(content_type, '')) LIKE 'video/%' THEN 'video'
             ELSE 'file'
         END
         WHERE ifnull(type, '') = ''
+        """
+    )
+    conn.execute(
+        """
+        UPDATE media_assets
+        SET category = 'other'
+        WHERE lower(ifnull(category, '')) NOT IN ('life', 'experience', 'skill', 'competition', 'report', 'project', 'other')
+        """
+    )
+    conn.execute(
+        """
+        UPDATE media_assets
+        SET related_module = lower(category)
+        WHERE ifnull(related_module, '') = ''
         """
     )
 
@@ -1654,9 +1825,16 @@ def fetch_media_asset(conn: sqlite3.Connection, media_id: int):
 
 def serialize_media_asset(row: sqlite3.Row) -> dict:
     item = dict(row)
-    item["category"] = normalize_media_category(item.get("category"))
+    category = (item.get("category") or "").strip().lower()
+    item["category"] = category if category in MEDIA_CATEGORIES else "other"
+    item["category_label"] = MEDIA_CATEGORIES.get(item["category"], MEDIA_CATEGORIES["other"])
     item["related_module"] = normalize_related_module(item.get("related_module"))
     item["type"] = normalize_media_type(item.get("type"), item.get("content_type") or "")
+    item["module_hint"] = item["related_module"] or item["category"]
+    if item["type"] == "pdf":
+        item["preview_api"] = f"/api/media/preview/pdf?id={item['id']}&redirect=1"
+    else:
+        item["preview_api"] = ""
     return item
 
 
@@ -1722,6 +1900,14 @@ def query_media_assets(media_type: Optional[str] = None, category: Optional[str]
             params,
         ).fetchall()
     return [serialize_media_asset(row) for row in rows]
+
+
+def query_media_modules() -> dict[str, list[dict]]:
+    groups = {key: [] for key in MEDIA_MODULE_KEYS}
+    for item in query_media_assets():
+        category = item.get("category") or "other"
+        groups.setdefault(category, []).append(item)
+    return groups
 
 
 def reply_message_impl(message_id: int, reply: str):
@@ -2114,6 +2300,8 @@ def get_skill_documents():
             "type": item["type"],
             "category": item["category"],
             "related_module": item["related_module"],
+            "module_hint": item["module_hint"],
+            "preview_api": item["preview_api"],
         }
         for item in media_items
     ]
@@ -2361,30 +2549,7 @@ def init_media_upload(
     authorization: str = Header(default="", alias="Authorization"),
 ):
     require_admin_session(authorization)
-    validate_upload_request(payload.filename, payload.content_type, payload.size)
-    fingerprint = build_upload_fingerprint(payload)
-    if not acquire_upload_lock(fingerprint):
-        raise HTTPException(status_code=429, detail="请勿重复上传，请稍后再试")
-
-    bucket, config = get_oss_bucket()
-    object_key = build_object_key(payload.filename, payload.content_type)
-    public_url = build_public_url(config["public_base_url"], object_key)
-    try:
-        upload_url = bucket.sign_url(
-            "PUT",
-            object_key,
-            300,
-            headers={"Content-Type": payload.content_type},
-        )
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"failed to generate upload url: {exc}")
-
-    return {
-        "object_key": object_key,
-        "upload_url": upload_url,
-        "public_url": public_url,
-        "expires_in": 300,
-    }
+    return init_media_upload_core(payload)
 
 
 @app.post("/api/admin/media/complete-upload")
@@ -2393,47 +2558,7 @@ def complete_media_upload(
     authorization: str = Header(default="", alias="Authorization"),
 ):
     require_admin_session(authorization)
-    validate_upload_request(payload.filename, payload.content_type, payload.size)
-    config = get_oss_config()
-    if not is_oss_configured(config):
-        raise HTTPException(status_code=500, detail="OSS configuration is incomplete")
-
-    object_key = validate_object_key(payload.object_key)
-    url = (payload.url or "").strip() or build_public_url(config["public_base_url"], object_key)
-    created_at = now_text()
-    category = (payload.category or "").strip()
-    with lock:
-        with get_conn() as conn:
-            cur = conn.execute(
-                """
-                INSERT INTO media_assets(filename, object_key, url, content_type, size, category, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    payload.filename.strip(),
-                    object_key,
-                    url,
-                    payload.content_type,
-                    payload.size,
-                    category,
-                    created_at,
-                ),
-            )
-            conn.commit()
-            media_id = cur.lastrowid
-
-    log_audit("media_upload", f"Uploaded media asset #{media_id}: {payload.filename.strip()}", "media_asset", media_id)
-    return {
-        "status": "ok",
-        "id": media_id,
-        "filename": payload.filename.strip(),
-        "object_key": object_key,
-        "url": url,
-        "content_type": payload.content_type,
-        "size": payload.size,
-        "category": category,
-        "created_at": created_at,
-    }
+    return complete_media_upload_core(payload)
 
 
 @app.get("/api/admin/media")
@@ -2470,33 +2595,7 @@ def init_media_upload_v2(
     authorization: str = Header(default="", alias="Authorization"),
 ):
     require_admin_session(authorization)
-    validate_upload_request(payload.filename, payload.content_type, payload.size)
-    fingerprint = build_upload_fingerprint(payload)
-    if not acquire_upload_lock(fingerprint):
-        return JSONResponse(status_code=429, content={"error": "请勿重复上传"})
-
-    bucket, config = get_oss_bucket()
-    object_key = build_object_key(payload.filename, payload.content_type)
-    public_url = build_public_url(config["public_base_url"], object_key)
-    try:
-        upload_url = bucket.sign_url(
-            "PUT",
-            object_key,
-            300,
-            headers={"Content-Type": payload.content_type},
-        )
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"failed to generate upload url: {exc}")
-
-    return {
-        "object_key": object_key,
-        "upload_url": upload_url,
-        "public_url": public_url,
-        "expires_in": 300,
-        "type": normalize_media_type(payload.type, payload.content_type),
-        "category": normalize_media_category(payload.category),
-        "related_module": normalize_related_module(payload.related_module),
-    }
+    return init_media_upload_core(payload)
 
 
 @app.post("/api/media/complete-upload")
@@ -2505,58 +2604,25 @@ def complete_media_upload_v2(
     authorization: str = Header(default="", alias="Authorization"),
 ):
     require_admin_session(authorization)
-    validate_upload_request(payload.filename, payload.content_type, payload.size)
-    config = get_oss_config()
-    if not is_oss_configured(config):
-        raise HTTPException(status_code=500, detail="OSS configuration is incomplete")
-
-    object_key = validate_object_key(payload.object_key)
-    url = (payload.url or "").strip() or build_public_url(config["public_base_url"], object_key)
-    created_at = now_text()
-    media_type = normalize_media_type(payload.type, payload.content_type)
-    category = normalize_media_category(payload.category)
-    related_module = normalize_related_module(payload.related_module)
-    with lock:
-        with get_conn() as conn:
-            cur = conn.execute(
-                """
-                INSERT INTO media_assets(filename, object_key, url, content_type, size, category, type, related_module, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    payload.filename.strip(),
-                    object_key,
-                    url,
-                    payload.content_type,
-                    payload.size,
-                    category,
-                    media_type,
-                    related_module,
-                    created_at,
-                ),
-            )
-            conn.commit()
-            media_id = cur.lastrowid
-
-    log_audit("media_upload", f"Uploaded media asset #{media_id}: {payload.filename.strip()}", "media_asset", media_id)
-    return {
-        "status": "ok",
-        "id": media_id,
-        "filename": payload.filename.strip(),
-        "object_key": object_key,
-        "url": url,
-        "content_type": payload.content_type,
-        "size": payload.size,
-        "type": media_type,
-        "category": category,
-        "related_module": related_module,
-        "created_at": created_at,
-    }
+    return complete_media_upload_core(payload)
 
 
 @app.get("/api/media/list")
 def list_public_media_assets(type: str = "", category: str = "", related_module: str = ""):
     return query_media_assets(type, category, related_module)
+
+
+@app.get("/api/media/modules")
+def list_public_media_modules():
+    return query_media_modules()
+
+
+@app.get("/api/media/preview/pdf")
+def preview_pdf_asset(id: int, redirect: bool = False):
+    result = build_pdf_preview_response(id)
+    if redirect:
+        return RedirectResponse(result["preview_url"])
+    return result
 
 
 @app.delete("/api/media/delete")

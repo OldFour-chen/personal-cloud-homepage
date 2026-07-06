@@ -1,4 +1,6 @@
 (function () {
+  var modulesCache = null;
+
   async function fetchJson(url) {
     var response = await fetch(url);
     var data = await response.json().catch(function () {
@@ -51,6 +53,13 @@
     }
   }
 
+  async function loadModules() {
+    if (!modulesCache) {
+      modulesCache = await fetchJson("/api/media/modules");
+    }
+    return modulesCache;
+  }
+
   async function loadDynamicExperiences() {
     var container = document.getElementById("dynamicExperienceList");
     if (!container) return;
@@ -96,40 +105,29 @@
     }
 
     container.innerHTML = items.map(function (item) {
+      var previewApi = item.preview_api || ("/api/media/preview/pdf?id=" + encodeURIComponent(item.id) + "&redirect=1");
       return ''
         + '<article class="dynamic-doc-card">'
         + '  <div class="dynamic-doc-icon">PDF</div>'
         + '  <div class="dynamic-doc-content">'
-        + '    <div class="dynamic-doc-meta">' + escapeHtml(item.created_at || "") + '</div>'
-        + '    <h3>' + escapeHtml(item.filename || item.title || "未命名文档") + '</h3>'
-        + '    <p>' + escapeHtml(item.object_key || item.related_module || "CloudHome Media Center") + '</p>'
-        + '    <a href="' + escapeHtml(item.url) + '" target="_blank" rel="noopener noreferrer">点击阅读</a>'
+        + '    <div class="dynamic-doc-meta">' + escapeHtml(item.category_label || item.category || "") + ' · ' + escapeHtml(item.created_at || "") + '</div>'
+        + '    <h3>' + escapeHtml(item.filename || "未命名文档") + '</h3>'
+        + '    <p>' + escapeHtml(item.module_hint || item.related_module || "CloudHome Media Center") + '</p>'
+        + '    <a href="' + escapeHtml(previewApi) + '" target="_blank" rel="noopener noreferrer">点击阅读</a>'
         + '  </div>'
         + '</article>';
     }).join("");
   }
 
-  async function loadDynamicSkillDocs() {
-    var container = document.getElementById("dynamicSkillDocsList");
+  async function loadDynamicModuleDocs(containerId, category, emptyText) {
+    var container = document.getElementById(containerId);
     if (!container) return;
 
     try {
-      var data = await fetchJson("/api/media/list?type=pdf&category=skill");
-      renderMediaDocs(container, data, "后台暂时还没有上传技能 PDF。");
+      var modules = await loadModules();
+      renderMediaDocs(container, modules[category] || [], emptyText);
     } catch (error) {
-      container.innerHTML = '<div class="dynamic-empty">技能文档加载失败，请稍后重试。</div>';
-    }
-  }
-
-  async function loadDynamicCompetitionDocs() {
-    var container = document.getElementById("dynamicCompetitionDocsList");
-    if (!container) return;
-
-    try {
-      var data = await fetchJson("/api/media/list?type=pdf&category=competition");
-      renderMediaDocs(container, data, "竞赛文档暂未上传。");
-    } catch (error) {
-      container.innerHTML = '<div class="dynamic-empty">竞赛文档加载失败，请稍后重试。</div>';
+      container.innerHTML = '<div class="dynamic-empty">文档加载失败，请稍后重试。</div>';
     }
   }
 
@@ -138,9 +136,12 @@
     if (!photoWall) return;
 
     try {
-      var data = await fetchJson("/api/media/list?type=image&category=life");
-      if (!Array.isArray(data) || !data.length) return;
-      photoWall.innerHTML = data.slice(0, 4).map(function (item) {
+      var modules = await loadModules();
+      var items = Array.isArray(modules.life) ? modules.life.filter(function (item) {
+        return item.type === "image";
+      }) : [];
+      if (!items.length) return;
+      photoWall.innerHTML = items.slice(0, 4).map(function (item) {
         return '<img src="' + escapeHtml(item.url) + '" alt="' + escapeHtml(item.filename) + '">';
       }).join("");
     } catch (error) {
@@ -150,7 +151,9 @@
 
   loadContentBlocks();
   loadDynamicExperiences();
-  loadDynamicSkillDocs();
-  loadDynamicCompetitionDocs();
+  loadDynamicModuleDocs("dynamicSkillDocsList", "skill", "后台暂时还没有上传技能 PDF。");
+  loadDynamicModuleDocs("dynamicCompetitionDocsList", "competition", "竞赛文档暂未上传。");
+  loadDynamicModuleDocs("dynamicReportDocsList", "report", "实验报告暂未上传。");
+  loadDynamicModuleDocs("dynamicProjectDocsList", "project", "项目介绍暂未上传。");
   loadHomepageMedia();
 })();

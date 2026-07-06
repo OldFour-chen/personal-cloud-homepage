@@ -14,7 +14,15 @@
       --brand: #1677ff;
       --brand-deep: #0f5fd6;
       --danger: #dc2626;
+      --success: #0f9d58;
       --shadow: 0 18px 42px rgba(16, 35, 63, 0.1);
+      --tag-life: #0f766e;
+      --tag-experience: #1d4ed8;
+      --tag-skill: #7c3aed;
+      --tag-competition: #d97706;
+      --tag-report: #b91c1c;
+      --tag-project: #2563eb;
+      --tag-other: #475569;
     }
 
     * { box-sizing: border-box; }
@@ -31,8 +39,8 @@
     }
 
     .shell {
-      width: min(1240px, calc(100% - 32px));
-      margin: 28px auto;
+      width: min(1320px, calc(100% - 28px));
+      margin: 24px auto;
     }
 
     .hero, .panel, .modal-card {
@@ -43,49 +51,143 @@
       backdrop-filter: blur(10px);
     }
 
-    .hero, .panel { padding: 24px; }
-    .hero { margin-bottom: 20px; }
-    .hero h1 { margin: 0 0 10px; font-size: 34px; }
-    .hero p { margin: 0; line-height: 1.7; color: var(--muted); }
+    .hero {
+      padding: 26px;
+      margin-bottom: 18px;
+    }
+
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: 34px;
+    }
+
+    .hero p {
+      margin: 0;
+      line-height: 1.7;
+      color: var(--muted);
+    }
 
     .layout {
       display: grid;
-      grid-template-columns: 360px 1fr;
-      gap: 20px;
+      grid-template-columns: 260px 1fr;
+      gap: 18px;
     }
 
-    .field { display: grid; gap: 8px; margin-bottom: 14px; }
-    .field label { font-size: 14px; font-weight: 700; color: var(--muted); }
+    .panel {
+      padding: 22px;
+    }
 
-    .field input, .field select {
+    .side-nav {
+      display: grid;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .side-link {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #fff;
+      color: var(--text);
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .side-link.active {
+      border-color: rgba(22, 119, 255, 0.35);
+      background: #eef5ff;
+      color: var(--brand-deep);
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .metric {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 14px;
+    }
+
+    .metric strong {
+      display: block;
+      font-size: 24px;
+      margin-bottom: 6px;
+    }
+
+    .metric span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .toolbar-title h2 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    .toolbar-title p {
+      margin: 8px 0 0;
+      color: var(--muted);
+    }
+
+    .toolbar-actions,
+    .filters,
+    .actions,
+    .inline-actions,
+    .chips {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .field {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .field label {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .field input,
+    .field select {
       width: 100%;
       border: 1px solid var(--line);
       border-radius: 14px;
-      padding: 12px 14px;
+      padding: 11px 13px;
       font-size: 14px;
       color: var(--text);
       background: #fff;
       outline: none;
     }
 
-    .field input:focus, .field select:focus {
-      border-color: rgba(22, 119, 255, 0.7);
+    .field input:focus,
+    .field select:focus {
+      border-color: rgba(22, 119, 255, 0.72);
       box-shadow: 0 0 0 4px rgba(22, 119, 255, 0.12);
     }
 
-    .actions, .toolbar {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-
-    .toolbar {
-      justify-content: space-between;
-      margin-bottom: 18px;
-    }
-
-    button, .link-btn {
+    button,
+    .link-btn {
       border: none;
       border-radius: 14px;
       padding: 11px 16px;
@@ -96,24 +198,34 @@
       transition: transform 0.2s ease, background 0.2s ease;
     }
 
-    button:hover, .link-btn:hover { transform: translateY(-1px); }
-    .primary { background: var(--brand); color: #fff; }
+    button:hover,
+    .link-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .primary {
+      background: var(--brand);
+      color: #fff;
+    }
+
     .primary:hover { background: var(--brand-deep); }
     .secondary { background: #edf4ff; color: var(--brand-deep); }
     .danger { background: #fff1f2; color: var(--danger); }
+    .success { background: #ebfff3; color: var(--success); }
 
-    .status, .hint {
-      margin-top: 14px;
+    .status,
+    .hint {
+      margin-top: 12px;
       border-radius: 16px;
       padding: 14px 16px;
-      font-size: 14px;
       line-height: 1.7;
+      font-size: 14px;
     }
 
     .status {
-      background: #f7fbff;
       border: 1px solid #d9e9ff;
-      min-height: 56px;
+      background: #f7fbff;
+      min-height: 58px;
     }
 
     .hint {
@@ -122,18 +234,8 @@
       color: var(--muted);
     }
 
-    .filters {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .filters select {
-      min-width: 140px;
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 10px 12px;
-      background: #fff;
+    .upload-card {
+      margin-bottom: 18px;
     }
 
     .asset-list {
@@ -143,8 +245,8 @@
 
     .asset-card {
       display: grid;
-      grid-template-columns: 180px 1fr;
-      gap: 18px;
+      grid-template-columns: 170px 1fr;
+      gap: 16px;
       padding: 18px;
       border: 1px solid var(--line);
       border-radius: 20px;
@@ -152,8 +254,8 @@
     }
 
     .thumb {
-      width: 180px;
-      height: 124px;
+      width: 170px;
+      height: 118px;
       border-radius: 16px;
       background: linear-gradient(135deg, #eef5ff, #f8fbff);
       border: 1px solid #e5edf7;
@@ -162,8 +264,9 @@
       justify-content: center;
       overflow: hidden;
       color: var(--muted);
-      text-align: center;
       padding: 12px;
+      text-align: center;
+      font-weight: 700;
     }
 
     .thumb img {
@@ -178,23 +281,6 @@
       word-break: break-all;
     }
 
-    .chips, .inline-actions {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .chips { margin-bottom: 10px; }
-
-    .chip {
-      background: #edf4ff;
-      color: var(--brand-deep);
-      border-radius: 999px;
-      padding: 4px 10px;
-      font-size: 12px;
-      font-weight: 700;
-    }
-
     .meta p {
       margin: 6px 0;
       color: var(--muted);
@@ -202,9 +288,29 @@
       word-break: break-all;
     }
 
+    .chip {
+      padding: 4px 10px;
+      border-radius: 999px;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .chip.type {
+      background: #2563eb;
+    }
+
+    .chip.life { background: var(--tag-life); }
+    .chip.experience { background: var(--tag-experience); }
+    .chip.skill { background: var(--tag-skill); }
+    .chip.competition { background: var(--tag-competition); }
+    .chip.report { background: var(--tag-report); }
+    .chip.project { background: var(--tag-project); }
+    .chip.other { background: var(--tag-other); }
+
     .empty {
       padding: 32px;
-      border-radius: 18px;
+      border-radius: 20px;
       border: 1px dashed var(--line);
       text-align: center;
       color: var(--muted);
@@ -217,18 +323,18 @@
       display: none;
       align-items: center;
       justify-content: center;
-      padding: 24px;
+      padding: 22px;
       background: rgba(15, 23, 42, 0.55);
     }
 
-    .modal.open { display: flex; }
-    .modal-card { max-width: min(1100px, 100%); max-height: 92vh; padding: 18px; }
-    .modal-card img, .modal-card iframe {
-      max-width: 100%;
-      max-height: calc(92vh - 80px);
-      border: 0;
-      border-radius: 14px;
-      background: #fff;
+    .modal.open {
+      display: flex;
+    }
+
+    .modal-card {
+      max-width: min(1100px, 100%);
+      max-height: 92vh;
+      padding: 18px;
     }
 
     .modal-top {
@@ -236,18 +342,42 @@
       justify-content: space-between;
       align-items: center;
       gap: 12px;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
 
-    @media (max-width: 960px) {
-      .layout { grid-template-columns: 1fr; }
+    .modal-card img,
+    .modal-card iframe {
+      max-width: 100%;
+      width: min(960px, 100%);
+      height: min(78vh, 760px);
+      border: 0;
+      border-radius: 16px;
+      background: #fff;
     }
 
-    @media (max-width: 700px) {
-      .shell { width: calc(100% - 20px); margin: 20px auto; }
-      .asset-card { grid-template-columns: 1fr; }
-      .thumb { width: 100%; height: 200px; }
-      .toolbar { align-items: flex-start; flex-direction: column; }
+    @media (max-width: 980px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .metrics {
+        grid-template-columns: 1fr;
+      }
+
+      .toolbar {
+        flex-direction: column;
+      }
+
+      .asset-card {
+        grid-template-columns: 1fr;
+      }
+
+      .thumb {
+        width: 100%;
+        height: 200px;
+      }
     }
   </style>
 </head>
@@ -255,84 +385,81 @@
   <div class="shell">
     <section class="hero">
       <h1>CloudHome Media Center</h1>
-      <p>统一管理 CloudHome CMS v2 的图片、PDF 和通用文件。所有资源通过 OSS 上传，最终统一落到 `media_assets`。</p>
+      <p>统一管理技能 PDF、竞赛文档、实验报告、项目介绍、经历图片与生活图片。上传仍然走 `init-upload → PUT OSS → complete-upload`，但分类、模块和预览能力已经统一收口。</p>
     </section>
 
     <div class="layout">
       <section class="panel">
-        <h2>上传资源</h2>
-
-        <div class="field">
-          <label for="adminToken">管理 Token</label>
-          <input id="adminToken" type="password" placeholder="请输入后台登录后返回的 token">
-        </div>
-
-        <div class="field">
-          <label for="mediaType">资源类型</label>
-          <select id="mediaType">
-            <option value="image">image</option>
-            <option value="pdf">pdf</option>
-            <option value="file">file</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label for="mediaCategory">资源分类</label>
-          <select id="mediaCategory">
-            <option value="life">life</option>
-            <option value="skill">skill</option>
-            <option value="competition">competition</option>
-            <option value="project">project</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label for="relatedModule">关联模块</label>
-          <select id="relatedModule">
-            <option value="experience">experience</option>
-            <option value="skill">skill</option>
-            <option value="competition">competition</option>
-            <option value="home">home</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <label for="mediaFile">选择文件</label>
-          <input id="mediaFile" type="file" accept=".jpg,.jpeg,.png,.webp,.pdf">
-        </div>
-
-        <div class="actions">
-          <button id="uploadBtn" class="primary" type="button">开始上传</button>
-          <a class="link-btn secondary" href="admin.html">返回后台</a>
-        </div>
-
-        <div id="statusBox" class="status">请选择文件并填写上传信息。</div>
-        <div class="hint">5 秒内同名且同大小文件会被后端拒绝；按钮也会做前端防抖。图片支持预览，PDF 支持点击阅读。</div>
+        <h2 style="margin:0;">模块导航</h2>
+        <div class="side-nav" id="sideNav"></div>
+        <div class="hint">固定分类：life / experience / skill / competition / report / project / other</div>
       </section>
 
       <section class="panel">
-        <div class="toolbar">
-          <div>
-            <h2>媒体列表</h2>
-            <p style="margin:8px 0 0;color:var(--muted);">按 type / category 筛选，支持删除、预览与复制 OSS URL。</p>
+        <div class="metrics">
+          <div class="metric"><strong id="metricTotal">0</strong><span>全部资源</span></div>
+          <div class="metric"><strong id="metricCurrent">0</strong><span>当前模块</span></div>
+          <div class="metric"><strong id="metricRecent">0</strong><span>最近上传（7天）</span></div>
+        </div>
+
+        <section class="upload-card">
+          <div class="toolbar">
+            <div class="toolbar-title">
+              <h2>上传入口</h2>
+              <p>上传完成后会明确提示落到哪个模块，并支持立即查看。</p>
+            </div>
+            <div class="toolbar-actions">
+              <a class="link-btn secondary" href="admin.html">返回后台</a>
+            </div>
           </div>
+
+          <div class="field">
+            <label for="adminToken">管理 Token</label>
+            <input id="adminToken" type="password" placeholder="请输入后台登录返回的 token">
+          </div>
+
           <div class="filters">
-            <select id="filterType">
-              <option value="">全部类型</option>
-              <option value="image">image</option>
-              <option value="pdf">pdf</option>
-              <option value="file">file</option>
-            </select>
-            <select id="filterCategory">
-              <option value="">全部分类</option>
-              <option value="life">life</option>
-              <option value="skill">skill</option>
-              <option value="competition">competition</option>
-              <option value="project">project</option>
-            </select>
-            <button id="refreshBtn" class="secondary" type="button">刷新列表</button>
+            <div class="field" style="min-width:160px;flex:1;">
+              <label for="mediaType">类型</label>
+              <select id="mediaType">
+                <option value="image">image</option>
+                <option value="pdf">pdf</option>
+                <option value="file">file</option>
+                <option value="video">video</option>
+              </select>
+            </div>
+            <div class="field" style="min-width:160px;flex:1;">
+              <label for="mediaCategory">分类</label>
+              <select id="mediaCategory"></select>
+            </div>
+            <div class="field" style="min-width:180px;flex:1;">
+              <label for="relatedModule">模块提示</label>
+              <select id="relatedModule"></select>
+            </div>
+            <div class="field" style="min-width:220px;flex:2;">
+              <label for="mediaFile">文件</label>
+              <input id="mediaFile" type="file" accept=".jpg,.jpeg,.png,.webp,.pdf,.mp4,.webm">
+            </div>
+          </div>
+
+          <div class="actions">
+            <button id="uploadBtn" class="primary" type="button">开始上传</button>
+            <button id="refreshBtn" class="secondary" type="button">刷新模块</button>
+          </div>
+
+          <div id="statusBox" class="status">请选择一个分类并上传文件。</div>
+        </section>
+
+        <div class="toolbar">
+          <div class="toolbar-title">
+            <h2 id="moduleTitle">媒体列表</h2>
+            <p id="moduleSubtitle">统一媒体中心会按模块聚合展示资源。</p>
+          </div>
+          <div class="toolbar-actions">
+            <input id="searchInput" type="text" placeholder="搜索文件名 / object key" style="border:1px solid var(--line);border-radius:14px;padding:11px 13px;min-width:240px;">
           </div>
         </div>
+
         <div id="assetList" class="asset-list">
           <div class="empty">正在加载媒体列表...</div>
         </div>
@@ -352,7 +479,31 @@
 
   <script>
     var STORAGE_KEY = "cloudhome_admin_token";
-    var LAST_UPLOAD_AT = 0;
+    var CATEGORY_OPTIONS = [
+      ["life", "生活内容"],
+      ["experience", "经历展示"],
+      ["skill", "技能 PDF"],
+      ["competition", "竞赛文档"],
+      ["report", "实验报告"],
+      ["project", "项目介绍"],
+      ["other", "其他"]
+    ];
+    var MODULE_OPTIONS = [
+      ["life", "life"],
+      ["experience", "experience"],
+      ["skill", "skill"],
+      ["competition", "competition"],
+      ["report", "report"],
+      ["project", "project"],
+      ["other", "other"]
+    ];
+
+    var state = {
+      modules: {},
+      activeCategory: "skill",
+      search: "",
+      lastUploadAt: 0
+    };
 
     var adminTokenInput = document.getElementById("adminToken");
     var mediaTypeInput = document.getElementById("mediaType");
@@ -361,10 +512,12 @@
     var mediaFileInput = document.getElementById("mediaFile");
     var uploadBtn = document.getElementById("uploadBtn");
     var refreshBtn = document.getElementById("refreshBtn");
-    var filterTypeInput = document.getElementById("filterType");
-    var filterCategoryInput = document.getElementById("filterCategory");
+    var searchInput = document.getElementById("searchInput");
+    var sideNav = document.getElementById("sideNav");
     var assetList = document.getElementById("assetList");
     var statusBox = document.getElementById("statusBox");
+    var moduleTitle = document.getElementById("moduleTitle");
+    var moduleSubtitle = document.getElementById("moduleSubtitle");
     var previewModal = document.getElementById("previewModal");
     var previewTitle = document.getElementById("previewTitle");
     var previewBody = document.getElementById("previewBody");
@@ -397,6 +550,13 @@
       return (size / (1024 * 1024)).toFixed(2) + " MB";
     }
 
+    function formatCategoryLabel(category) {
+      var match = CATEGORY_OPTIONS.find(function (item) {
+        return item[0] === category;
+      });
+      return match ? match[1] : category;
+    }
+
     async function parseJsonSafe(response) {
       try {
         return await response.json();
@@ -414,17 +574,105 @@
       };
     }
 
+    function fillSelectOptions(select, options) {
+      select.innerHTML = options.map(function (item) {
+        return '<option value="' + escapeHtml(item[0]) + '">' + escapeHtml(item[0] + " · " + item[1]) + '</option>';
+      }).join("");
+    }
+
+    function renderSideNav() {
+      sideNav.innerHTML = CATEGORY_OPTIONS.map(function (item) {
+        var active = item[0] === state.activeCategory ? " active" : "";
+        var count = Array.isArray(state.modules[item[0]]) ? state.modules[item[0]].length : 0;
+        return '<button class="side-link' + active + '" type="button" data-category="' + escapeHtml(item[0]) + '"><span>' + escapeHtml(item[1]) + '</span><span>' + count + '</span></button>';
+      }).join("");
+    }
+
+    function updateMetrics(currentItems) {
+      var allItems = Object.keys(state.modules).reduce(function (result, key) {
+        return result.concat(Array.isArray(state.modules[key]) ? state.modules[key] : []);
+      }, []);
+      var now = Date.now();
+      var recent = allItems.filter(function (item) {
+        var stamp = Date.parse(String(item.created_at || "").replace(" ", "T"));
+        return Number.isFinite(stamp) && (now - stamp) <= 7 * 24 * 60 * 60 * 1000;
+      });
+      document.getElementById("metricTotal").textContent = String(allItems.length);
+      document.getElementById("metricCurrent").textContent = String(currentItems.length);
+      document.getElementById("metricRecent").textContent = String(recent.length);
+    }
+
+    async function loadModules() {
+      var response = await fetch("/api/media/modules");
+      var data = await parseJsonSafe(response);
+      if (!response.ok) {
+        throw new Error(data.detail || data.error || "获取模块列表失败");
+      }
+      state.modules = data || {};
+      renderSideNav();
+      renderCurrentModule();
+    }
+
+    function getCurrentItems() {
+      var items = Array.isArray(state.modules[state.activeCategory]) ? state.modules[state.activeCategory].slice() : [];
+      var keyword = state.search.trim().toLowerCase();
+      if (!keyword) return items;
+      return items.filter(function (item) {
+        return String(item.filename || "").toLowerCase().includes(keyword)
+          || String(item.object_key || "").toLowerCase().includes(keyword);
+      });
+    }
+
+    function renderCurrentModule() {
+      var items = getCurrentItems();
+      moduleTitle.textContent = formatCategoryLabel(state.activeCategory);
+      moduleSubtitle.textContent = "当前模块共 " + items.length + " 个文件，PDF 通过预签名链接预览。";
+      updateMetrics(items);
+
+      if (!items.length) {
+        assetList.innerHTML = '<div class="empty">当前模块下暂无匹配文件。</div>';
+        return;
+      }
+
+      assetList.innerHTML = items.map(function (item) {
+        var isImage = item.type === "image";
+        var isPdf = item.type === "pdf";
+        var copyValue = isPdf ? (item.preview_api || ("/api/media/preview/pdf?id=" + item.id)) : (item.url || "");
+        return ''
+          + '<article class="asset-card">'
+          + '  <div class="thumb">' + (isImage ? '<img src="' + escapeHtml(item.url) + '" alt="' + escapeHtml(item.filename) + '">' : (isPdf ? 'PDF 预览' : escapeHtml((item.type || "file").toUpperCase()))) + '</div>'
+          + '  <div class="meta">'
+          + '    <h3>' + escapeHtml(item.filename) + '</h3>'
+          + '    <div class="chips">'
+          + '      <span class="chip type">' + escapeHtml(item.type || "-") + '</span>'
+          + '      <span class="chip ' + escapeHtml(item.category || "other") + '">' + escapeHtml(item.category || "-") + '</span>'
+          + '      <span class="chip ' + escapeHtml(item.category || "other") + '">' + escapeHtml(item.module_hint || item.related_module || "-") + '</span>'
+          + '    </div>'
+          + '    <p>创建时间：' + escapeHtml(item.created_at || "-") + '</p>'
+          + '    <p>Object Key：' + escapeHtml(item.object_key || "-") + '</p>'
+          + '    <p>文件大小：' + escapeHtml(formatSize(Number(item.size || 0))) + '</p>'
+          + '    <div class="inline-actions">'
+          + '      <button class="secondary preview-btn" type="button" data-id="' + escapeHtml(item.id) + '" data-type="' + escapeHtml(item.type || "") + '" data-url="' + escapeHtml(item.url || "") + '" data-name="' + escapeHtml(item.filename || "") + '">预览</button>'
+          + '      <button class="secondary open-btn" type="button" data-id="' + escapeHtml(item.id) + '" data-type="' + escapeHtml(item.type || "") + '" data-url="' + escapeHtml(item.url || "") + '">Open</button>'
+          + '      <button class="secondary copy-btn" type="button" data-copy="' + escapeHtml(copyValue) + '">Copy URL</button>'
+          + '      <button class="danger delete-btn" type="button" data-id="' + escapeHtml(item.id) + '">Delete</button>'
+          + '    </div>'
+          + '  </div>'
+          + '</article>';
+      }).join("");
+    }
+
     async function uploadSelectedFile() {
       var file = mediaFileInput.files[0];
       if (!file) {
         setStatus("请先选择文件。", "error");
         return;
       }
-      if (Date.now() - LAST_UPLOAD_AT < 5000) {
+      if (Date.now() - state.lastUploadAt < 5000) {
         setStatus("5 秒内请勿重复点击上传。", "error");
         return;
       }
-      LAST_UPLOAD_AT = Date.now();
+      state.lastUploadAt = Date.now();
 
       uploadBtn.disabled = true;
       var originalText = uploadBtn.textContent;
@@ -439,7 +687,6 @@
           related_module: relatedModuleInput.value
         };
 
-        setStatus("正在申请上传地址...", "info");
         var initResponse = await fetch("/api/media/init-upload", {
           method: "POST",
           headers: getHeaders(),
@@ -450,7 +697,6 @@
           throw new Error(initData.error || initData.detail || "初始化上传失败");
         }
 
-        setStatus("正在上传到 OSS...", "info");
         var uploadResponse = await fetch(initData.upload_url, {
           method: "PUT",
           headers: { "Content-Type": payload.content_type },
@@ -460,7 +706,6 @@
           throw new Error("上传到 OSS 失败");
         }
 
-        setStatus("正在写入媒体记录...", "info");
         var completeResponse = await fetch("/api/media/complete-upload", {
           method: "POST",
           headers: getHeaders(),
@@ -477,12 +722,22 @@
         });
         var completeData = await parseJsonSafe(completeResponse);
         if (!completeResponse.ok) {
-          throw new Error(completeData.detail || "媒体记录写入失败");
+          throw new Error(completeData.error || completeData.detail || "写入媒体记录失败");
         }
 
         mediaFileInput.value = "";
-        setStatus("上传完成，媒体中心已同步。", "success");
-        await loadAssets();
+        setStatus(
+          "上传成功：已进入 "
+          + completeData.module_hint
+          + " 模块，分类为 "
+          + completeData.category
+          + "，类型为 "
+          + completeData.type
+          + "。可点击“立即查看”在当前模块确认。",
+          "success"
+        );
+        state.activeCategory = completeData.category || state.activeCategory;
+        await loadModules();
       } catch (error) {
         setStatus(error.message || "上传失败", "error");
       } finally {
@@ -491,66 +746,59 @@
       }
     }
 
-    async function loadAssets() {
-      try {
-        var params = new URLSearchParams();
-        if (filterTypeInput.value) params.set("type", filterTypeInput.value);
-        if (filterCategoryInput.value) params.set("category", filterCategoryInput.value);
-        var response = await fetch("/api/media/list?" + params.toString());
-        var data = await parseJsonSafe(response);
-        if (!response.ok) {
-          throw new Error(data.detail || "获取媒体列表失败");
-        }
-        renderAssets(Array.isArray(data) ? data : []);
-      } catch (error) {
-        assetList.innerHTML = '<div class="empty">' + escapeHtml(error.message || "获取媒体列表失败") + "</div>";
+    async function getPdfPreviewUrl(id) {
+      var response = await fetch("/api/media/preview/pdf?id=" + encodeURIComponent(id));
+      var data = await parseJsonSafe(response);
+      if (!response.ok) {
+        throw new Error(data.detail || data.error || "获取 PDF 预览地址失败");
       }
+      return data.preview_url;
     }
 
-    function renderAssets(items) {
-      if (!items.length) {
-        assetList.innerHTML = '<div class="empty">当前筛选条件下暂无媒体资源。</div>';
+    async function openAsset(id, type, fallbackUrl, previewOnly) {
+      if (type === "pdf") {
+        var previewUrl = await getPdfPreviewUrl(id);
+        if (previewOnly) {
+          previewBody.innerHTML = '<iframe src="' + escapeHtml(previewUrl) + '"></iframe>';
+          previewModal.classList.add("open");
+          return;
+        }
+        window.open(previewUrl, "_blank", "noopener,noreferrer");
         return;
       }
-      assetList.innerHTML = items.map(function (item) {
-        var isImage = item.type === "image";
-        var isPdf = item.type === "pdf";
-        var preview = isImage
-          ? '<img src="' + escapeHtml(item.url) + '" alt="' + escapeHtml(item.filename) + '">'
-          : (isPdf ? "<div>PDF 预览</div>" : "<div>FILE</div>");
-        return ''
-          + '<article class="asset-card">'
-          + '  <div class="thumb">' + preview + '</div>'
-          + '  <div class="meta">'
-          + '    <h3>' + escapeHtml(item.filename) + '</h3>'
-          + '    <div class="chips">'
-          + '      <span class="chip">' + escapeHtml(item.type || "-") + '</span>'
-          + '      <span class="chip">' + escapeHtml(item.category || "-") + '</span>'
-          + '      <span class="chip">' + escapeHtml(item.related_module || "-") + '</span>'
-          + '      <span class="chip">' + escapeHtml(formatSize(Number(item.size || 0))) + '</span>'
-          + '    </div>'
-          + '    <p>创建时间：' + escapeHtml(item.created_at || "-") + '</p>'
-          + '    <p>Object Key：' + escapeHtml(item.object_key || "-") + '</p>'
-          + '    <p>OSS URL：' + escapeHtml(item.url || "-") + '</p>'
-          + '    <div class="inline-actions">'
-          + '      <button class="secondary preview-btn" type="button" data-type="' + escapeHtml(item.type) + '" data-url="' + escapeHtml(item.url) + '" data-name="' + escapeHtml(item.filename) + '">预览</button>'
-          + '      <a class="link-btn secondary" href="' + escapeHtml(item.url) + '" target="_blank" rel="noopener noreferrer">' + (isPdf ? "点击阅读" : "打开资源") + '</a>'
-          + '      <button class="secondary copy-btn" type="button" data-url="' + escapeHtml(item.url) + '">复制 URL</button>'
-          + '      <button class="danger delete-btn" type="button" data-id="' + escapeHtml(item.id) + '">删除</button>'
-          + '    </div>'
-          + '  </div>'
-          + '</article>';
-      }).join("");
+      if (previewOnly && type === "image") {
+        previewBody.innerHTML = '<img src="' + escapeHtml(fallbackUrl) + '" alt="preview">';
+        previewModal.classList.add("open");
+        return;
+      }
+      if (!previewOnly && fallbackUrl) {
+        window.open(fallbackUrl, "_blank", "noopener,noreferrer");
+        return;
+      }
+      previewBody.innerHTML = '<p>该文件类型暂不支持站内预览。</p>';
+      previewModal.classList.add("open");
     }
 
-    function openPreview(name, type, url) {
-      previewTitle.textContent = name || "预览";
-      previewBody.innerHTML = type === "image"
-        ? '<img src="' + escapeHtml(url) + '" alt="' + escapeHtml(name) + '">'
-        : type === "pdf"
-          ? '<iframe src="' + escapeHtml(url) + '"></iframe>'
-          : '<p>该文件类型暂不支持站内预览，请使用“打开资源”。</p>';
-      previewModal.classList.add("open");
+    async function copyValue(value) {
+      try {
+        await navigator.clipboard.writeText(value);
+        setStatus("已复制：`" + value + "`", "success");
+      } catch (error) {
+        setStatus("复制失败，请手动复制。", "error");
+      }
+    }
+
+    async function deleteAsset(id) {
+      var response = await fetch("/api/media/delete?id=" + encodeURIComponent(id), {
+        method: "DELETE",
+        headers: getHeaders()
+      });
+      var data = await parseJsonSafe(response);
+      if (!response.ok) {
+        throw new Error(data.detail || data.error || "删除失败");
+      }
+      setStatus("媒体资源已删除。", "success");
+      await loadModules();
     }
 
     function closePreview() {
@@ -558,58 +806,72 @@
       previewBody.innerHTML = "";
     }
 
-    async function copyUrl(url) {
-      try {
-        await navigator.clipboard.writeText(url);
-        setStatus("URL 已复制。", "success");
-      } catch (error) {
-        setStatus("复制失败，请手动复制。", "error");
-      }
-    }
+    fillSelectOptions(mediaCategoryInput, CATEGORY_OPTIONS);
+    fillSelectOptions(relatedModuleInput, MODULE_OPTIONS);
 
-    async function deleteAsset(id) {
-      try {
-        var response = await fetch("/api/media/delete?id=" + encodeURIComponent(id), {
-          method: "DELETE",
-          headers: getHeaders()
-        });
-        var data = await parseJsonSafe(response);
-        if (!response.ok) {
-          throw new Error(data.detail || "删除失败");
-        }
-        setStatus("媒体资源已删除。", "success");
-        await loadAssets();
-      } catch (error) {
-        setStatus(error.message || "删除失败", "error");
-      }
-    }
+    sideNav.addEventListener("click", function (event) {
+      var button = event.target.closest(".side-link");
+      if (!button) return;
+      state.activeCategory = button.dataset.category || "skill";
+      renderSideNav();
+      renderCurrentModule();
+    });
+
+    searchInput.addEventListener("input", function () {
+      state.search = searchInput.value || "";
+      renderCurrentModule();
+    });
 
     uploadBtn.addEventListener("click", uploadSelectedFile);
-    refreshBtn.addEventListener("click", loadAssets);
-    filterTypeInput.addEventListener("change", loadAssets);
-    filterCategoryInput.addEventListener("change", loadAssets);
+    refreshBtn.addEventListener("click", loadModules);
     document.getElementById("closePreviewBtn").addEventListener("click", closePreview);
     previewModal.addEventListener("click", function (event) {
-      if (event.target === previewModal) closePreview();
-    });
-    assetList.addEventListener("click", function (event) {
-      var previewBtn = event.target.closest(".preview-btn");
-      if (previewBtn) {
-        openPreview(previewBtn.dataset.name || "", previewBtn.dataset.type || "", previewBtn.dataset.url || "");
-        return;
-      }
-      var copyBtn = event.target.closest(".copy-btn");
-      if (copyBtn) {
-        copyUrl(copyBtn.dataset.url || "");
-        return;
-      }
-      var deleteBtn = event.target.closest(".delete-btn");
-      if (deleteBtn && confirm("确认删除这个媒体资源吗？")) {
-        deleteAsset(deleteBtn.dataset.id || "");
+      if (event.target === previewModal) {
+        closePreview();
       }
     });
 
-    loadAssets();
+    assetList.addEventListener("click", async function (event) {
+      var previewBtn = event.target.closest(".preview-btn");
+      if (previewBtn) {
+        previewTitle.textContent = previewBtn.dataset.name || "预览";
+        try {
+          await openAsset(previewBtn.dataset.id || "", previewBtn.dataset.type || "", previewBtn.dataset.url || "", true);
+        } catch (error) {
+          setStatus(error.message || "预览失败", "error");
+        }
+        return;
+      }
+
+      var openBtn = event.target.closest(".open-btn");
+      if (openBtn) {
+        try {
+          await openAsset(openBtn.dataset.id || "", openBtn.dataset.type || "", openBtn.dataset.url || "", false);
+        } catch (error) {
+          setStatus(error.message || "打开资源失败", "error");
+        }
+        return;
+      }
+
+      var copyBtn = event.target.closest(".copy-btn");
+      if (copyBtn) {
+        copyValue(copyBtn.dataset.copy || "");
+        return;
+      }
+
+      var deleteBtn = event.target.closest(".delete-btn");
+      if (deleteBtn && confirm("确认删除这个媒体资源吗？")) {
+        try {
+          await deleteAsset(deleteBtn.dataset.id || "");
+        } catch (error) {
+          setStatus(error.message || "删除失败", "error");
+        }
+      }
+    });
+
+    loadModules().catch(function (error) {
+      assetList.innerHTML = '<div class="empty">' + escapeHtml(error.message || "加载媒体中心失败") + '</div>';
+    });
   </script>
 </body>
 </html>
