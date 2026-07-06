@@ -1578,36 +1578,45 @@
       </section>
 
       <section id="panel-skills" class="panel hidden">
-        <h2>技能 PDF 管理</h2>
-        <p class="panel-intro">上传技能证明、证书或项目说明 PDF，并绑定到技能项。</p>
+        <h2>PDF 文档管理</h2>
+        <p class="panel-intro">统一上传技能 PDF、竞赛文档、实验报告和项目介绍，全部写入媒体中心。</p>
         <div class="grid-2">
           <div>
             <div class="field">
-              <label for="skillKey">技能标识</label>
-              <input id="skillKey" type="text" placeholder="例如：cloud-computing">
+              <label for="skillCategory">上传分类</label>
+              <select id="skillCategory">
+                <option value="skill">skill</option>
+                <option value="competition">competition</option>
+                <option value="report">report</option>
+                <option value="project">project</option>
+              </select>
             </div>
             <div class="field">
-              <label for="skillTitle">文档标题</label>
-              <input id="skillTitle" type="text" placeholder="例如：云计算实验报告">
+              <label for="skillKey">模块标识</label>
+              <input id="skillKey" type="text" placeholder="例如 competition / report / project / skill">
+            </div>
+            <div class="field">
+              <label for="skillTitle">显示标题</label>
+              <input id="skillTitle" type="text" placeholder="可选，用于备注当前上传内容">
             </div>
             <div class="field">
               <label for="skillDesc">说明</label>
-              <textarea id="skillDesc" placeholder="简要介绍这个 PDF 的内容"></textarea>
+              <textarea id="skillDesc" placeholder="可选，填写文档用途或说明"></textarea>
             </div>
             <div class="field">
               <label for="skillPdfFile">选择 PDF</label>
               <input id="skillPdfFile" type="file" accept=".pdf,application/pdf">
             </div>
             <div class="btn-row">
-              <button id="uploadSkillPdfBtn" class="primary" type="button">上传技能 PDF</button>
+              <button id="uploadSkillPdfBtn" class="primary" type="button">上传 PDF 到媒体中心</button>
             </div>
           </div>
           <div class="status-box">
-            使用流程：
-            <br>1. 前端向后端申请 OSS 预签名地址
-            <br>2. 浏览器直接 PUT 到 OSS
-            <br>3. 回写 `media_assets`
-            <br>4. 再绑定到技能文档表
+            上传说明：
+            <br>1. 先选择正确分类，例如 `competition`
+            <br>2. 系统会先初始化 OSS 上传信息
+            <br>3. 前端使用预签名 PUT 上传到 OSS
+            <br>4. 完成后统一写入 `media_assets` 并在后台列表显示
           </div>
         </div>
         <div id="skillDocList" class="card-list" style="margin-top:20px;"></div>
@@ -2118,6 +2127,8 @@
         switchView(true);
         setStatus("登录成功，后台已解锁。", "success");
         showToast("登录成功", "success");
+        */
+        showToast("PDF 已删除", "success");
         await refreshAll();
       } catch (error) {
         els.loginTip.textContent = error.message || "登录失败";
@@ -2497,18 +2508,22 @@
 
     function renderSkillDocs() {
       if (!state.skillDocs.length) {
-        els.skillDocList.innerHTML = '<div class="item-card"><p>还没有上传技能 PDF。</p></div>';
+        els.skillDocList.innerHTML = '<div class="item-card"><p>暂无 PDF 文档。</p></div>';
         return;
       }
 
       els.skillDocList.innerHTML = state.skillDocs.map(function (item) {
+        var previewUrl = item.preview_api || item.url || "#";
+        var category = item.category || "other";
+        var moduleHint = item.module_hint || item.related_module || category;
         return ''
           + '<article class="item-card">'
-          + '<h3>' + escapeHtml(item.title) + '</h3>'
-          + '<p><strong>技能项：</strong>' + escapeHtml(item.skill_key) + '</p>'
-          + '<p>' + escapeHtml(item.description || "") + '</p>'
+          + '<h3>' + escapeHtml(item.filename || item.title || "未命名 PDF") + '</h3>'
+          + '<p><strong>分类：</strong>' + escapeHtml(category) + '</p>'
+          + '<p><strong>模块：</strong>' + escapeHtml(moduleHint) + '</p>'
+          + '<p><strong>对象键：</strong>' + escapeHtml(item.object_key || "") + '</p>'
           + '<div class="split-actions">'
-          + '<a href="' + escapeHtml(item.url) + '" target="_blank" rel="noopener noreferrer"><button class="secondary" type="button">打开 PDF</button></a>'
+          + '<a href="' + escapeHtml(previewUrl) + '" target="_blank" rel="noopener noreferrer"><button class="secondary" type="button">打开 PDF</button></a>'
           + '<button class="danger delete-skill-btn" data-id="' + item.id + '">删除 PDF</button>'
           + '</div>'
           + '</article>';
@@ -2613,7 +2628,7 @@
         var results = await Promise.all([
           api("/api/admin/dashboard"),
           api("/api/experiences"),
-          api("/api/skills/documents"),
+          api("/api/admin/media/list?type=pdf"),
           api("/api/content/get"),
           api("/api/messages"),
           api("/api/admin/audit/logs")
@@ -2699,31 +2714,21 @@
     async function uploadSkillPdf() {
       var file = document.getElementById("skillPdfFile").files[0];
       var button = document.getElementById("uploadSkillPdfBtn");
+      var category = document.getElementById("skillCategory").value;
+      var moduleKey = document.getElementById("skillKey").value.trim() || category;
       if (!file) {
-        showToast("请先选择 PDF 文件", "error");
+        showToast("请选择 PDF 文件", "error");
         return;
       }
 
       try {
-        var media = await uploadViaOss(file, {
+        await uploadViaOss(file, {
           type: "pdf",
-          category: "skill",
-          related_module: "skill"
+          category: category,
+          related_module: moduleKey
         }, button);
-        await api("/api/admin/skill/upload-pdf", {
-          method: "POST",
-          body: JSON.stringify({
-            skill_key: document.getElementById("skillKey").value.trim(),
-            title: document.getElementById("skillTitle").value.trim(),
-            description: document.getElementById("skillDesc").value.trim(),
-            media_id: media.id,
-            filename: media.filename,
-            object_key: media.object_key,
-            url: media.url
-          })
-        });
         document.getElementById("skillPdfFile").value = "";
-        showToast("技能 PDF 上传成功", "success");
+        showToast("PDF 已上传到 " + category + " 模块", "success");
         await refreshAll();
       } catch (error) {
         showToast(error.message || "上传失败", "error");
@@ -2889,18 +2894,50 @@
       }
     });
 
+    /*
     els.skillDocList.addEventListener("click", async function (event) {
       var button = event.target.closest(".delete-skill-btn");
       if (!button) return;
       try {
-        await api("/api/admin/skill/delete", {
-          method: "DELETE",
-          body: JSON.stringify({ document_id: Number(button.dataset.id) })
+        await api("/api/media/delete?id=" + encodeURIComponent(button.dataset.id), {
+          method: "DELETE"
+        });
+        /*
+        showToast("PDF 已删除", "success");
+        await refreshAll();
+      } catch (error) {
+        showToast(error.message || "删除失败", "error");
+      }
+    });
+    */
+
+    /*
+    els.skillDocList.addEventListener("click", async function (event) {
+      var button = event.target.closest(".delete-skill-btn");
+      if (!button) return;
+      try {
+        await api("/api/media/delete?id=" + encodeURIComponent(button.dataset.id), {
+          method: "DELETE"
         });
         showToast("PDF 已删除", "success");
         await refreshAll();
       } catch (error) {
         showToast(error.message || "删除失败", "error");
+      }
+    });
+    */
+
+    els.skillDocList.addEventListener("click", async function (event) {
+      var button = event.target.closest(".delete-skill-btn");
+      if (!button) return;
+      try {
+        await api("/api/media/delete?id=" + encodeURIComponent(button.dataset.id), {
+          method: "DELETE"
+        });
+        showToast("PDF deleted", "success");
+        await refreshAll();
+      } catch (error) {
+        showToast(error.message || "Delete failed", "error");
       }
     });
 
