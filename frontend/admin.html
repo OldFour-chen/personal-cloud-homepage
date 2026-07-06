@@ -568,7 +568,7 @@
 
     .ops-board {
       display: grid;
-      grid-template-columns: 320px minmax(0, 1fr) 320px;
+      grid-template-columns: 320px minmax(0, 1fr);
       gap: 16px;
       align-items: start;
     }
@@ -577,6 +577,11 @@
       min-width: 0;
       display: grid;
       gap: 16px;
+    }
+
+    .ops-column-right {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-content: start;
     }
 
     .ops-card {
@@ -809,6 +814,10 @@
       min-height: 0;
     }
 
+    .ops-column-center > .ops-topology-card {
+      margin-bottom: 16px;
+    }
+
     .ops-topology {
       position: relative;
       min-height: 430px;
@@ -940,6 +949,10 @@
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 16px;
+    }
+
+    .dashboard-bottom {
+      margin-top: 18px;
     }
 
     .ops-chart-box {
@@ -1143,7 +1156,7 @@
 
     @media (max-width: 1680px) {
       .ops-board {
-        grid-template-columns: 300px minmax(0, 1fr) 300px;
+        grid-template-columns: 300px minmax(0, 1fr);
       }
 
       .ops-recovery-grid {
@@ -1160,12 +1173,7 @@
         grid-template-columns: minmax(300px, 0.92fr) minmax(0, 1.2fr);
       }
 
-      .ops-column-center {
-        grid-column: 2;
-      }
-
       .ops-column-right {
-        grid-column: 1 / -1;
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
@@ -1214,11 +1222,6 @@
       .ops-bottom-panels,
       .ops-column-right {
         grid-template-columns: 1fr;
-      }
-
-      .ops-column-center,
-      .ops-column-right {
-        grid-column: auto;
       }
 
       .ops-topology-grid {
@@ -1335,6 +1338,37 @@
           <div class="stat-card"><span>媒体库</span><strong id="statMedia">0</strong></div>
           <div class="stat-card"><span>日志数</span><strong id="statLogs">0</strong></div>
         </div>
+        <div class="ops-bottom-panels dashboard-bottom">
+          <div class="ops-card">
+            <div class="ops-card-head">
+              <div>
+                <h3>运行趋势</h3>
+                <p>CPU、内存、磁盘的最近趋势快照。</p>
+              </div>
+            </div>
+            <div id="opsTrendChart" class="ops-chart-box">数据暂时不可用</div>
+          </div>
+
+          <div class="ops-card">
+            <div class="ops-card-head">
+              <div>
+                <h3>访问与留言</h3>
+                <p>基于当前项目资源与交互记录生成的平台活跃度视图。</p>
+              </div>
+            </div>
+            <div id="opsActivityChart" class="ops-chart-box">数据暂时不可用</div>
+          </div>
+
+          <div class="ops-card">
+            <div class="ops-card-head">
+              <div>
+                <h3>运维事件日志</h3>
+                <p>最近部署、备份、巡检与通知事件。</p>
+              </div>
+            </div>
+            <div id="opsEventsList" class="ops-events-list">数据暂时不可用</div>
+          </div>
+        </div>
       </section>
 
       <!-- OPS_CENTER_START -->
@@ -1425,47 +1459,47 @@
                 </div>
                 <div id="opsTopology" class="ops-topology">正在构建系统拓扑...</div>
               </div>
-            </div>
 
-            <div class="ops-column ops-column-right">
-              <div class="ops-card">
-                <div class="ops-card-head">
-                  <div>
-                    <h3>安全巡检</h3>
-                    <p>关键服务、风险结果与当前巡检任务。</p>
+              <div class="ops-column ops-column-right">
+                <div class="ops-card">
+                  <div class="ops-card-head">
+                    <div>
+                      <h3>安全巡检</h3>
+                      <p>关键服务、风险结果与当前巡检任务。</p>
+                    </div>
                   </div>
+                  <div id="opsSecurityPanel" class="ops-stack-list"></div>
                 </div>
-                <div id="opsSecurityPanel" class="ops-stack-list"></div>
-              </div>
 
-              <div class="ops-card">
-                <div class="ops-card-head">
-                  <div>
-                    <h3>备份与恢复</h3>
-                    <p>最近备份、OSS 上传与恢复点概览。</p>
+                <div class="ops-card">
+                  <div class="ops-card-head">
+                    <div>
+                      <h3>备份与恢复</h3>
+                      <p>最近备份、OSS 上传与恢复点概览。</p>
+                    </div>
                   </div>
+                  <div id="opsBackupPanel" class="ops-stack-list"></div>
                 </div>
-                <div id="opsBackupPanel" class="ops-stack-list"></div>
-              </div>
 
-              <div class="ops-card">
-                <div class="ops-card-head">
-                  <div>
-                    <h3>通知中心</h3>
-                    <p>邮件通知、告警投递与测试状态。</p>
+                <div class="ops-card">
+                  <div class="ops-card-head">
+                    <div>
+                      <h3>通知中心</h3>
+                      <p>邮件通知、告警投递与测试状态。</p>
+                    </div>
                   </div>
+                  <div id="opsNotifyPanel" class="ops-stack-list"></div>
                 </div>
-                <div id="opsNotifyPanel" class="ops-stack-list"></div>
-              </div>
 
-              <div class="ops-card">
-                <div class="ops-card-head">
-                  <div>
-                    <h3>部署状态</h3>
-                    <p>当前版本、同步状态与最近部署时间。</p>
+                <div class="ops-card">
+                  <div class="ops-card-head">
+                    <div>
+                      <h3>部署状态</h3>
+                      <p>当前版本、同步状态与最近部署时间。</p>
+                    </div>
                   </div>
+                  <div id="opsDeployPanel" class="ops-stack-list"></div>
                 </div>
-                <div id="opsDeployPanel" class="ops-stack-list"></div>
               </div>
             </div>
           </div>
@@ -1497,37 +1531,6 @@
             </div>
           </div>
 
-          <div class="ops-bottom-panels">
-            <div class="ops-card">
-              <div class="ops-card-head">
-                <div>
-                  <h3>运行趋势</h3>
-                  <p>CPU、内存、磁盘的最近趋势快照。</p>
-                </div>
-              </div>
-              <div id="opsTrendChart" class="ops-chart-box">数据暂时不可用</div>
-            </div>
-
-            <div class="ops-card">
-              <div class="ops-card-head">
-                <div>
-                  <h3>访问与留言</h3>
-                  <p>基于当前项目资源与交互记录生成的平台活跃度视图。</p>
-                </div>
-              </div>
-              <div id="opsActivityChart" class="ops-chart-box">数据暂时不可用</div>
-            </div>
-
-            <div class="ops-card">
-              <div class="ops-card-head">
-                <div>
-                  <h3>运维事件日志</h3>
-                  <p>最近部署、备份、巡检与通知事件。</p>
-                </div>
-              </div>
-              <div id="opsEventsList" class="ops-events-list">数据暂时不可用</div>
-            </div>
-          </div>
         </div>
       </section>
       <!-- OPS_CENTER_END -->
