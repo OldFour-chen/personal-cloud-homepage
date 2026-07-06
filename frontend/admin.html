@@ -196,25 +196,7 @@
     }
 
     .hero {
-      padding: 22px 26px;
-      color: var(--text);
-      border-radius: 28px;
-      border: 1px solid rgba(216, 225, 238, 0.9);
-      background:
-        radial-gradient(circle at top right, rgba(147, 197, 253, 0.24), transparent 22%),
-        linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(239, 246, 255, 0.88));
-      box-shadow: 0 14px 30px rgba(20, 34, 53, 0.08);
-    }
-
-    .hero h1 {
-      font-size: 30px;
-      color: #132238;
-      margin-bottom: 8px;
-    }
-
-    .hero p {
-      max-width: 960px;
-      color: var(--muted);
+      display: none;
     }
 
     .stats {
@@ -350,9 +332,9 @@
     .ops-screen {
       position: relative;
       display: grid;
-      gap: 18px;
-      padding: 22px;
-      border-radius: 30px;
+      gap: 16px;
+      padding: 18px;
+      border-radius: 28px;
       overflow: hidden;
       border: 1px solid rgba(147, 197, 253, 0.36);
       background:
@@ -383,11 +365,11 @@
 
     .ops-hero {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(340px, 0.8fr);
+      grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.9fr);
       align-items: stretch;
-      gap: 18px;
-      padding: 20px 22px;
-      border-radius: 24px;
+      gap: 16px;
+      padding: 18px 20px;
+      border-radius: 22px;
       border: 1px solid rgba(148, 163, 184, 0.18);
       background:
         linear-gradient(135deg, rgba(255, 255, 255, 0.84), rgba(240, 249, 255, 0.78)),
@@ -416,7 +398,7 @@
 
     .ops-hero h2 {
       margin: 0 0 8px;
-      font-size: 34px;
+      font-size: 30px;
       letter-spacing: -0.04em;
       color: #0f172a;
       overflow-wrap: anywhere;
@@ -469,8 +451,8 @@
 
     .ops-top-stats {
       display: grid;
-      grid-template-columns: repeat(6, minmax(160px, 1fr));
-      gap: 16px;
+      grid-template-columns: repeat(6, minmax(150px, 1fr));
+      gap: 14px;
     }
 
     .ops-stat-card,
@@ -487,11 +469,11 @@
     .ops-stat-card {
       position: relative;
       display: grid;
-      grid-template-columns: 72px minmax(0, 1fr);
+      grid-template-columns: 64px minmax(0, 1fr);
       align-items: center;
-      gap: 16px;
-      padding: 18px 18px 20px;
-      border-radius: 26px;
+      gap: 14px;
+      padding: 16px 16px 18px;
+      border-radius: 22px;
       transition: transform 0.2s ease, box-shadow 0.2s ease;
       overflow: hidden;
     }
@@ -518,24 +500,24 @@
     }
 
     .ops-stat-card strong {
-      font-size: 34px;
+      font-size: 30px;
       color: #2563eb;
       letter-spacing: -0.03em;
       overflow-wrap: anywhere;
     }
 
     .ops-stat-icon {
-      width: 72px;
-      height: 72px;
+      width: 64px;
+      height: 64px;
       display: grid;
       place-items: center;
-      border-radius: 24px;
+      border-radius: 20px;
       border: 1px solid rgba(147, 197, 253, 0.35);
       background:
         radial-gradient(circle at 30% 20%, rgba(255,255,255,0.95), rgba(219, 234, 254, 0.72)),
         linear-gradient(180deg, rgba(239, 246, 255, 0.9), rgba(219, 234, 254, 0.8));
       color: #2563eb;
-      font-size: 30px;
+      font-size: 26px;
       box-shadow:
         inset 0 1px 0 rgba(255,255,255,0.82),
         0 10px 20px rgba(37, 99, 235, 0.08);
@@ -586,20 +568,20 @@
 
     .ops-board {
       display: grid;
-      grid-template-columns: minmax(300px, 0.95fr) minmax(0, 1.45fr) minmax(300px, 0.95fr);
-      gap: 18px;
+      grid-template-columns: 320px minmax(0, 1fr) 320px;
+      gap: 16px;
       align-items: start;
     }
 
     .ops-column {
       min-width: 0;
       display: grid;
-      gap: 18px;
+      gap: 16px;
     }
 
     .ops-card {
-      padding: 20px;
-      border-radius: 30px;
+      padding: 18px;
+      border-radius: 24px;
       transition: transform 0.2s ease, box-shadow 0.2s ease;
       min-width: 0;
       overflow: hidden;
@@ -607,7 +589,7 @@
 
     .ops-card h3 {
       margin: 0;
-      font-size: 22px;
+      font-size: 18px;
       color: #0f172a;
       overflow-wrap: anywhere;
     }
@@ -616,9 +598,9 @@
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      gap: 16px;
-      margin-bottom: 16px;
-      padding-bottom: 14px;
+      gap: 14px;
+      margin-bottom: 14px;
+      padding-bottom: 12px;
       border-bottom: 1px solid rgba(191, 219, 254, 0.42);
     }
 
@@ -633,15 +615,16 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-width: 112px;
-      padding: 10px 14px;
+      min-width: 98px;
+      padding: 8px 12px;
       border-radius: 999px;
       border: 1px solid rgba(96, 165, 250, 0.24);
       background: linear-gradient(180deg, rgba(239, 246, 255, 0.94), rgba(219, 234, 254, 0.82));
       color: #2563eb;
       font-size: 13px;
       font-weight: 700;
-      white-space: nowrap;
+      white-space: normal;
+      text-align: center;
     }
 
     .ops-stack-list,
@@ -651,12 +634,12 @@
     }
 
     .ops-row {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: start;
       gap: 12px;
-      padding: 13px 15px;
-      border-radius: 18px;
+      padding: 12px 14px;
+      border-radius: 16px;
       border: 1px solid rgba(191, 219, 254, 0.36);
       background:
         linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(248, 252, 255, 0.72));
@@ -689,7 +672,7 @@
       text-align: right;
       overflow-wrap: anywhere;
       word-break: break-word;
-      max-width: 52%;
+      max-width: min(320px, 100%);
     }
 
     .ops-actions {
@@ -828,10 +811,10 @@
 
     .ops-topology {
       position: relative;
-      min-height: 560px;
-      padding: 22px;
+      min-height: 430px;
+      padding: 18px;
       overflow: hidden;
-      border-radius: 32px;
+      border-radius: 26px;
       border: 1px solid rgba(147, 197, 253, 0.28);
       background:
         radial-gradient(circle at top center, rgba(191, 219, 254, 0.46), transparent 22%),
@@ -841,20 +824,20 @@
 
     .ops-topology-grid {
       display: grid;
-      grid-template-columns: 170px minmax(0, 1fr) 170px;
-      gap: 18px;
+      grid-template-columns: 200px minmax(0, 1fr) 200px;
+      gap: 16px;
       align-items: center;
-      min-height: 500px;
+      min-height: 360px;
     }
 
     .ops-topology-side {
       display: grid;
-      gap: 14px;
+      gap: 12px;
     }
 
     .ops-node {
-      padding: 14px 16px;
-      border-radius: 22px;
+      padding: 12px 14px;
+      border-radius: 18px;
       border: 1px solid rgba(96, 165, 250, 0.24);
       background: rgba(255, 255, 255, 0.78);
       box-shadow: 0 12px 24px rgba(37, 99, 235, 0.08);
@@ -878,14 +861,14 @@
     }
 
     .ops-node-user {
-      width: 180px;
-      margin: 0 auto 16px;
+      width: min(100%, 220px);
+      margin: 0 auto 12px;
     }
 
     .ops-topology-core {
       position: relative;
-      padding: 30px 24px;
-      border-radius: 34px;
+      padding: 20px 18px;
+      border-radius: 24px;
       border: 1px solid rgba(96, 165, 250, 0.34);
       background:
         radial-gradient(circle at top center, rgba(219, 234, 254, 0.6), transparent 30%),
@@ -899,7 +882,7 @@
       display: flex;
       justify-content: space-between;
       gap: 12px;
-      margin-bottom: 18px;
+      margin-bottom: 14px;
       color: #0f172a;
       font-weight: 700;
       overflow-wrap: anywhere;
@@ -908,12 +891,12 @@
     .ops-core-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 16px;
+      gap: 12px;
     }
 
     .ops-core-node {
-      padding: 16px;
-      border-radius: 22px;
+      padding: 14px 12px;
+      border-radius: 18px;
       border: 1px solid rgba(147, 197, 253, 0.34);
       background: linear-gradient(180deg, rgba(255,255,255,0.86), rgba(239, 246, 255, 0.76));
       text-align: center;
@@ -924,7 +907,7 @@
       display: block;
       margin-bottom: 6px;
       color: #0f172a;
-      font-size: 18px;
+      font-size: 16px;
     }
 
     .ops-core-node span {
@@ -941,7 +924,7 @@
     }
 
     .ops-link-line {
-      height: 28px;
+      height: 18px;
       margin: 0 auto;
       border-left: 2px dashed rgba(37, 99, 235, 0.35);
     }
@@ -956,11 +939,11 @@
     .ops-bottom-panels {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 18px;
+      gap: 16px;
     }
 
     .ops-chart-box {
-      min-height: 248px;
+      min-height: 220px;
       padding: 14px 10px 8px;
       border-radius: 26px;
       border: 1px solid rgba(191, 219, 254, 0.34);
@@ -998,7 +981,7 @@
     }
 
     .ops-events-list {
-      min-height: 248px;
+      min-height: 220px;
       align-content: start;
     }
 
@@ -1026,14 +1009,14 @@
 
     .ops-recovery-grid {
       display: grid;
-      grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr) minmax(280px, 0.9fr);
-      gap: 18px;
+      grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.9fr) minmax(320px, 0.9fr);
+      gap: 16px;
       align-items: start;
     }
 
     .ops-recovery-column {
       display: grid;
-      gap: 12px;
+      gap: 10px;
       min-width: 0;
     }
 
@@ -1061,8 +1044,8 @@
     .ops-restore-item {
       display: grid;
       gap: 12px;
-      padding: 14px 16px;
-      border-radius: 20px;
+      padding: 13px 14px;
+      border-radius: 18px;
       border: 1px solid rgba(191, 219, 254, 0.34);
       background: linear-gradient(180deg, rgba(255,255,255,0.84), rgba(246,250,255,0.74));
     }
@@ -1097,7 +1080,7 @@
     }
 
     .ops-log-card {
-      padding: 14px 16px;
+      padding: 13px 14px;
       border-radius: 20px;
       border: 1px solid rgba(191, 219, 254, 0.34);
       background: linear-gradient(180deg, rgba(255,255,255,0.84), rgba(246,250,255,0.74));
@@ -1137,11 +1120,44 @@
       font-size: 12px;
       font-weight: 700;
     }
+
+    .ops-restore-list .secondary,
+    .ops-recovery-actions .primary {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .ops-compact-text {
+      margin-top: 8px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(191, 219, 254, 0.36);
+      background: rgba(255, 255, 255, 0.7);
+      color: #475569;
+      font-size: 13px;
+      line-height: 1.6;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
     /* OPS_CENTER_END */
+
+    @media (max-width: 1680px) {
+      .ops-board {
+        grid-template-columns: 300px minmax(0, 1fr) 300px;
+      }
+
+      .ops-recovery-grid {
+        grid-template-columns: minmax(0, 1fr) minmax(300px, 0.9fr);
+      }
+
+      .ops-recovery-column:last-child {
+        grid-column: 1 / -1;
+      }
+    }
 
     @media (max-width: 1500px) {
       .ops-board {
-        grid-template-columns: minmax(280px, 0.92fr) minmax(0, 1.2fr);
+        grid-template-columns: minmax(300px, 0.92fr) minmax(0, 1.2fr);
       }
 
       .ops-column-center {
@@ -1154,7 +1170,7 @@
       }
 
       .ops-recovery-grid {
-        grid-template-columns: minmax(0, 1.1fr) repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(240px, 1fr));
       }
     }
 
@@ -1187,13 +1203,22 @@
 
       .ops-hero-meta,
       .ops-top-stats,
-      .ops-board,
-      .ops-recovery-grid,
-      .ops-bottom-panels,
       .ops-mini-grid,
       .stats,
       .grid-2 {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .ops-board,
+      .ops-recovery-grid,
+      .ops-bottom-panels,
+      .ops-column-right {
+        grid-template-columns: 1fr;
+      }
+
+      .ops-column-center,
+      .ops-column-right {
+        grid-column: auto;
       }
 
       .ops-topology-grid {
@@ -1250,6 +1275,7 @@
       }
 
       .ops-topology {
+        min-height: 0;
         padding: 16px;
       }
     }
@@ -1866,6 +1892,14 @@
         + '</div>';
     }
 
+    function opsCompactText(title, text) {
+      return ''
+        + '<div class="ops-compact-text">'
+        + '<strong>' + escapeHtml(title) + '：</strong>'
+        + escapeHtml(text || "--")
+        + '</div>';
+    }
+
     function opsStatusCard(icon, label, value, subtext, tone) {
       return ''
         + '<div class="ops-stat-card">'
@@ -2278,12 +2312,12 @@
           + '<div class="ops-node"><strong>OSS ' + renderBadge(topo.oss || "unknown") + '</strong><span>静态资源 / 对象存储 / 备份上传</span></div>'
           + '</div>'
           + '<div class="ops-topology-core">'
-          + '<div class="ops-core-title"><span>ECS 云服务器</span><span>Docker Compose</span></div>'
+          + '<div class="ops-core-title"><span>ECS 云服务器</span><span>Docker Compose 编排</span></div>'
           + '<div class="ops-core-grid">'
           + '<div class="ops-core-node"><strong>FastAPI api1</strong><span>' + escapeHtml(containers.api1 || "unknown") + '</span></div>'
           + '<div class="ops-core-node"><strong>FastAPI api2</strong><span>' + escapeHtml(containers.api2 || "unknown") + '</span></div>'
           + '<div class="ops-core-node"><strong>Redis</strong><span>' + escapeHtml(containers.redis || "unknown") + '</span></div>'
-          + '<div class="ops-core-node"><strong>SQLite</strong><span>站点内容 / 留言 / 日志</span></div>'
+          + '<div class="ops-core-node"><strong>SQLite</strong><span>站点内容 / 留言 / 审计日志</span></div>'
           + '</div>'
           + '</div>'
           + '<div class="ops-topology-side">'
@@ -2313,7 +2347,7 @@
           + opsMetricRow("备份大小", backup.size || "--", "压缩归档大小")
           + opsMetricRow("OSS 上传状态", "", "对象存储同步结果", renderBadge(backup.oss_uploaded ? "success" : (backup.oss_status || "warning")))
           + opsMetricRow("恢复点数量", String(backup.restore_points || 0), "当前可用备份归档")
-          + opsMetricRow("备份归档", backup.archive || "--", "最新归档文件路径");
+          + opsCompactText("备份归档", backup.archive || "--");
       }
 
       if (els.opsRestoreList) {
@@ -2341,7 +2375,7 @@
       if (els.opsRestoreSummary) {
         els.opsRestoreSummary.innerHTML = ''
           + '<div class="ops-card-head"><div><h4 class="ops-recovery-section-title">最近恢复状态</h4><p>恢复会自动创建 pre-restore 保护备份，并在完成后回写状态。</p></div></div>'
-          + opsMetricRow("最近恢复文件", recovery.last_restore_file || "--", "仅允许恢复 backups 目录中的 .tar.gz 归档")
+          + opsCompactText("最近恢复文件", recovery.last_restore_file || "--")
           + opsMetricRow("恢复状态", "", recovery.last_restore_message || "暂时还没有恢复记录", renderBadge(recovery.last_restore_status || "unknown"))
           + opsMetricRow("恢复时间", recovery.last_restore_time || "--", "完成时间 / 请求时间");
       }
