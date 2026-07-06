@@ -2057,12 +2057,12 @@
         options.related_module || ""
       ].join("|");
       if (Date.now() - (uploadCooldowns[cooldownKey] || 0) < 5000) {
-        throw new Error("??????");
+        throw new Error("请勿重复上传");
       }
       uploadCooldowns[cooldownKey] = Date.now();
       button.disabled = true;
       var original = button.textContent;
-      button.textContent = "???...";
+      button.textContent = "上传中...";
       try {
         var initData = await api("/api/media/init-upload", {
           method: "POST",
@@ -2082,7 +2082,7 @@
           body: file
         });
         if (!uploadResponse.ok) {
-          throw new Error("??? OSS ??");
+          throw new Error("上传 OSS 失败");
         }
 
         return await api("/api/media/complete-upload", {

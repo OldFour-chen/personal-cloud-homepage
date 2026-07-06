@@ -1865,7 +1865,7 @@ def query_media_assets(media_type: Optional[str] = None, category: Optional[str]
     filters = []
     params: list[object] = []
     normalized_type = normalize_media_type(media_type) if media_type else ""
-    normalized_category = normalize_media_category(category)
+    normalized_category = normalize_media_category(category) if category else ""
     normalized_related_module = normalize_related_module(related_module)
     if normalized_type:
         filters.append(
@@ -2657,12 +2657,11 @@ def admin_dashboard(authorization: str = Header(default="", alias="Authorization
     with get_conn() as conn:
         message_count = conn.execute("SELECT COUNT(*) AS cnt FROM messages").fetchone()["cnt"]
         experience_count = conn.execute("SELECT COUNT(*) AS cnt FROM experiences").fetchone()["cnt"]
-        skill_count = conn.execute(
+        pdf_count = conn.execute(
             """
             SELECT COUNT(*) AS cnt
             FROM media_assets
-            WHERE lower(ifnull(category, '')) = 'skill'
-              AND lower(
+            WHERE lower(
                 CASE
                     WHEN ifnull(type, '') != '' THEN type
                     WHEN lower(ifnull(content_type, '')) = 'application/pdf' THEN 'pdf'
@@ -2679,7 +2678,7 @@ def admin_dashboard(authorization: str = Header(default="", alias="Authorization
     return {
         "messages": message_count,
         "experiences": experience_count,
-        "skill_documents": skill_count,
+        "skill_documents": pdf_count,
         "content_blocks": content_count,
         "media_assets": media_count,
         "audit_logs": audit_count,
